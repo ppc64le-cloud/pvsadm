@@ -8,7 +8,7 @@ import (
 func AskYesOrNo(message string) bool {
 	prompt := promptui.Select{
 		Label: message,
-		Items: []string{"Yes", "No"},
+		Items: []string{"No", "Yes"},
 	}
 
 	_, result, err := prompt.Run()

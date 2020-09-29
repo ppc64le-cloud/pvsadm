@@ -32,6 +32,15 @@ jobs:
             dep ensure
         fi
 
+    - name: Go Formatting
+      run: |
+        unformatted=$(gofmt -l -e -d .)
+        if [[ ! -z "${unformatted}" ]]; then
+          echo "fix the formatting...."
+          echo "${unformatted}"
+          exit 1
+        fi
+
     - name: Build
       run: |
         mkdir -p bin
