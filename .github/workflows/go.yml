@@ -2,6 +2,8 @@ name: Go
 
 on:
   push:
+    tags:
+      - '*'
     branches: [ master ]
   pull_request:
     branches: [ master ]
@@ -31,7 +33,21 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v .
+      run: |
+        mkdir -p bin
+        export CGO_ENABLED=0
+        for platform in darwin/amd64 linux/amd64 linux/ppc64le
+        do
+          os_name=$(echo "$platform" | cut -d "/" -f 1)
+          arch=$(echo "$platform" | cut -d "/" -f 2)
+          CGO_ENABLED=0 GOOS=${os_name} GOARCH=${arch} go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o bin/pvsadm-${os_name}-${arch} .
+        done
+        tar -czvf pvsadm-binaries.tar.gz bin/
 
     - name: Test
       run: go test -v ./...
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: pvsadm-binaries
+        path: pvsadm-binaries.tar.gz
