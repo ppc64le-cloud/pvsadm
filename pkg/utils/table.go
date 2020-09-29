@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/olekukonko/tablewriter"
 	"k8s.io/klog/v2"
@@ -29,10 +30,12 @@ func (t *Table) SetHeader(keys []string) {
 }
 
 func (t *Table) Render(rows interface{}, fields []string) {
+	noData := true
 	switch reflect.TypeOf(rows).Kind() {
 	case reflect.Slice:
 		s := reflect.ValueOf(rows)
 		for i := 0; i < s.Len(); i++ {
+			noData = false
 			var headers []string
 			val := s.Index(i).Elem()
 			var row []string
@@ -47,6 +50,9 @@ func (t *Table) Render(rows interface{}, fields []string) {
 			t.SetHeader(headers)
 			t.Append(row)
 		}
+	}
+	if noData {
+		fmt.Println("\n--NO DATA FOUND--")
 	}
 	t.Table.Render()
 }
