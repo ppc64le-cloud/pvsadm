@@ -7,6 +7,7 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/image"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/instance"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client/network"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/volume"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"k8s.io/klog/v2"
@@ -22,6 +23,7 @@ type PVMClient struct {
 	InstanceClient *instance.Client
 	ImgClient      *image.Client
 	VolumeClient   *volume.Client
+	NetworkClient  *network.Client
 }
 
 func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error) {
@@ -55,16 +57,11 @@ func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error
 	}
 
 	pvmclient.Zone = svc.RegionID
-
-	//re, err := regexp.Compile("[^a-zA-Z]+")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//region := re.ReplaceAllString(pvmclient.Zone, "")
 	pvmclient.Region, err = utils.GetRegion(pvmclient.Zone)
 	if err != nil {
 		return nil, err
 	}
+
 	pvmclient.PISession, err = ibmpisession.New(c.Config.IAMAccessToken, pvmclient.Region, pkg.Options.Debug, 60*time.Minute, c.User.Account, pvmclient.Zone)
 	if err != nil {
 		return nil, err
@@ -73,5 +70,6 @@ func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error
 	pvmclient.ImgClient = image.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.InstanceClient = instance.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }
