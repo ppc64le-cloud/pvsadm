@@ -3,8 +3,8 @@ package purge
 import (
 	"fmt"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/images"
-	"github.com/ppc64le-cloud/pvsadm/cmd/purge/instances"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/networks"
+	"github.com/ppc64le-cloud/pvsadm/cmd/purge/vms"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/volumes"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/spf13/cobra"
@@ -28,10 +28,9 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(images.Cmd)
-	Cmd.AddCommand(instances.Cmd)
+	Cmd.AddCommand(vms.Cmd)
 	Cmd.AddCommand(networks.Cmd)
 	Cmd.AddCommand(volumes.Cmd)
-	Cmd.AddCommand(instances.Cmd)
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceName, "instance-name", "n", "", "Instance name of the PowerVS")
 	Cmd.PersistentFlags().BoolVar(&pkg.Options.DryRun, "dry-run", false, "dry run the action and don't delete the actual resources")
