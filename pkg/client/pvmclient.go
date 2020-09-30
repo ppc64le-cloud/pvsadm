@@ -15,9 +15,10 @@ import (
 )
 
 type PVMClient struct {
-	InstanceID string
-	Region     string
-	Zone       string
+	InstanceName string
+	InstanceID   string
+	Region       string
+	Zone         string
 
 	PISession      *ibmpisession.IBMPISession
 	InstanceClient *instance.Client
@@ -56,6 +57,7 @@ func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error
 		return nil, fmt.Errorf("failed to get a service with ID: %s, err: %v", instanceID, err)
 	}
 
+	pvmclient.InstanceName = svc.Name
 	pvmclient.Zone = svc.RegionID
 	pvmclient.Region, err = utils.GetRegion(pvmclient.Zone)
 	if err != nil {

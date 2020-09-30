@@ -3,6 +3,7 @@ package networks
 import (
 	"fmt"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/spf13/cobra"
@@ -48,6 +49,7 @@ var Cmd = &cobra.Command{
 							return err
 						}
 					}
+					audit.Log("networks", "delete", pvmclient.InstanceName+":"+*network.Name)
 				}
 			}
 		}

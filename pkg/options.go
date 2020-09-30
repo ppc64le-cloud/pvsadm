@@ -16,4 +16,5 @@ type options struct {
 	InstanceName string
 	NoPrompt     bool
 	IgnoreErrors bool
+	AuditFile    string
 }
