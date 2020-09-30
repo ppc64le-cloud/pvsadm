@@ -31,7 +31,7 @@ Use "pvsadm [command] --help" for more information about a command.
 ## Purge PowerVS Resources:
 
 ```shell script
-./pvsadm purge --help
+$ ./pvsadm purge --help
 Purge the powervs resources
 
 Usage:
@@ -39,9 +39,8 @@ Usage:
 
 Available Commands:
   images      Purge the powervs images
-  instances   Purge the powervs instances
-  instances   Purge the powervs instances
   networks    Purge the powervs networks
+  vms         Purge the powervs vms
   volumes     Purge the powervs volumes
 
 Flags:
@@ -59,5 +58,4 @@ Global Flags:
       --debug            Enable PowerVS debug option
 
 Use "pvsadm purge [command] --help" for more information about a command.
-
 ```

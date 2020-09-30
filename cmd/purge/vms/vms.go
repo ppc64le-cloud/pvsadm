@@ -1,4 +1,4 @@
-package instances
+package vms
 
 import (
 	"fmt"
@@ -13,9 +13,9 @@ import (
 const deletePromptMessage = "Deleting all the above instances, instances can't be claimed back once deleted. Do you really want to continue?"
 
 var Cmd = &cobra.Command{
-	Use:   "instances",
-	Short: "Purge the powervs instances",
-	Long:  `Purge the powervs instances!`,
+	Use:   "vms",
+	Short: "Purge the powervs vms",
+	Long:  `Purge the powervs vms!`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 
