@@ -3,6 +3,7 @@ package volumes
 import (
 	"fmt"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/spf13/cobra"
@@ -50,9 +51,14 @@ var Cmd = &cobra.Command{
 					if *volume.State == "available" {
 						klog.Infof("Deleting the %s, and ID: %s", *volume.Name, *volume.VolumeID)
 						err = pvmclient.VolumeClient.DeleteVolume(*volume.VolumeID)
-						if err != nil && !opt.IgnoreErrors {
-							return err
+						if err != nil {
+							if opt.IgnoreErrors {
+								klog.Infof("error occurred while deleting the volume: %v", err)
+							} else {
+								return err
+							}
 						}
+						audit.Log("volumes", "delete", pvmclient.InstanceName+":"+*volume.Name)
 					}
 				}
 			}

@@ -3,6 +3,7 @@ package images
 import (
 	"fmt"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/spf13/cobra"
@@ -41,10 +42,14 @@ var Cmd = &cobra.Command{
 				for _, image := range images.Images {
 					klog.Infof("Deleting the %s, and ID: %s", *image.Name, *image.ImageID)
 					err = pvmclient.ImgClient.Delete(*image.ImageID)
-					if err != nil && !opt.IgnoreErrors {
-						return err
+					if err != nil {
+						if opt.IgnoreErrors {
+							klog.Infof("error occurred while deleting the image: %v", err)
+						} else {
+							return err
+						}
 					}
-
+					audit.Log("images", "delete", pvmclient.InstanceName+":"+*image.Name)
 				}
 			}
 		}
