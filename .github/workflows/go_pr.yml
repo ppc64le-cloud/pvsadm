@@ -1,0 +1,58 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
+
+      - name: Go Formatting
+        run: |
+          unformatted=$(gofmt -l -e -d .)
+          if [[ ! -z "${unformatted}" ]]; then
+            echo "fix the formatting...."
+            echo "${unformatted}"
+            exit 1
+          fi
+
+      - name: Build
+        run: |
+          mkdir -p bin
+          # workaround for https://github.com/actions/checkout/issues/290
+          git fetch --tags --force
+          VERSION=$(git rev-parse --short HEAD)
+          STATIC_FLAG='-w -extldflags "-static"'
+          for platform in darwin/amd64 linux/amd64 linux/ppc64le
+          do
+            os_name=$(echo "$platform" | cut -d "/" -f 1)
+            arch=$(echo "$platform" | cut -d "/" -f 2)
+            CGO_ENABLED=0 GOOS=${os_name} GOARCH=${arch} go build -a -tags netgo -ldflags "-X github.com/ppc64le-cloud/pvsadm/pkg/version.Version=${VERSION} ${STATIC_FLAG}" -o bin/pvsadm-${os_name}-${arch} .
+          done
+          tar -czvf pvsadm-binaries.tar.gz bin/
+
+      - name: Test
+        run: go test -v ./...

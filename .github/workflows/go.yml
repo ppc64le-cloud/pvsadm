@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - '*'
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
 
@@ -32,24 +29,18 @@ jobs:
             dep ensure
         fi
 
-    - name: Go Formatting
-      run: |
-        unformatted=$(gofmt -l -e -d .)
-        if [[ ! -z "${unformatted}" ]]; then
-          echo "fix the formatting...."
-          echo "${unformatted}"
-          exit 1
-        fi
-
     - name: Build
       run: |
         mkdir -p bin
-        export CGO_ENABLED=0
+        # workaround for https://github.com/actions/checkout/issues/290
+        git fetch --tags --force
+        VERSION=$(git describe --tags --dirty)
+        STATIC_FLAG='-w -extldflags "-static"'
         for platform in darwin/amd64 linux/amd64 linux/ppc64le
         do
           os_name=$(echo "$platform" | cut -d "/" -f 1)
           arch=$(echo "$platform" | cut -d "/" -f 2)
-          CGO_ENABLED=0 GOOS=${os_name} GOARCH=${arch} go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o bin/pvsadm-${os_name}-${arch} .
+          CGO_ENABLED=0 GOOS=${os_name} GOARCH=${arch} go build -a -tags netgo -ldflags "-X github.com/ppc64le-cloud/pvsadm/pkg/version.Version=${VERSION} ${STATIC_FLAG}" -o bin/pvsadm-${os_name}-${arch} .
         done
         tar -czvf pvsadm-binaries.tar.gz bin/
 
