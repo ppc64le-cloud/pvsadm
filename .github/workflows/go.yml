@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - '*'
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
 
@@ -20,6 +23,8 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Get dependencies
       run: |
@@ -33,7 +38,7 @@ jobs:
       run: |
         mkdir -p bin
         # workaround for https://github.com/actions/checkout/issues/290
-        git fetch --tags --force
+        git fetch --tags --force --prune
         VERSION=$(git describe --tags --dirty)
         STATIC_FLAG='-w -extldflags "-static"'
         for platform in darwin/amd64 linux/amd64 linux/ppc64le
