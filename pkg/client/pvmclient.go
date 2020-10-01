@@ -5,6 +5,7 @@ import (
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client/events"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/image"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/instance"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/network"
@@ -25,6 +26,7 @@ type PVMClient struct {
 	ImgClient      *image.Client
 	VolumeClient   *volume.Client
 	NetworkClient  *network.Client
+	EventsClient   *events.Client
 }
 
 func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error) {
@@ -73,5 +75,6 @@ func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error
 	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.InstanceClient = instance.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.EventsClient = events.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }

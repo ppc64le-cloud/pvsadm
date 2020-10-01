@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/olekukonko/tablewriter"
-	"k8s.io/klog/v2"
 	"os"
 	"reflect"
 	"strconv"
@@ -29,7 +28,16 @@ func (t *Table) SetHeader(keys []string) {
 	})
 }
 
-func (t *Table) Render(rows interface{}, fields []string) {
+func Contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *Table) Render(rows interface{}, exclude []string) {
 	noData := true
 	switch reflect.TypeOf(rows).Kind() {
 	case reflect.Slice:
@@ -40,7 +48,7 @@ func (t *Table) Render(rows interface{}, fields []string) {
 			val := s.Index(i).Elem()
 			var row []string
 			for i := 0; i < val.NumField(); i++ {
-				if f := strings.ToLower(val.Type().Field(i).Name); f == "href" || f == "specifications" {
+				if f := strings.ToLower(val.Type().Field(i).Name); Contains(exclude, f) {
 					continue
 				}
 				headers = append(headers, val.Type().Field(i).Name)
@@ -82,8 +90,7 @@ func getcontent(value reflect.Value) (strVal string) {
 			}
 			strVal = strings.Join(st, ",")
 		default:
-			klog.Infof("I'm here at default type, unable to handle: %s", value.Kind())
-			strVal = value.String()
+			strVal = fmt.Sprintf("%+v", value)
 		}
 	}
 	return
