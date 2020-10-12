@@ -38,4 +38,5 @@ func init() {
 	Cmd.PersistentFlags().DurationVar(&pkg.Options.Before, "before", 0*time.Second, "Remove resources before mentioned duration(format: 99h99m00s), mutually exclusive with --since")
 	Cmd.PersistentFlags().BoolVar(&pkg.Options.NoPrompt, "no-prompt", false, "Show prompt before doing any destructive operations")
 	Cmd.PersistentFlags().BoolVar(&pkg.Options.IgnoreErrors, "ignore-errors", false, "Ignore any errors during the operations")
+	Cmd.PersistentFlags().StringVar(&pkg.Options.Expr, "regexp", "", "Regular Expressions for filtering the selection")
 }

@@ -30,16 +30,16 @@ var Cmd = &cobra.Command{
 			return err
 		}
 
-		images, err := pvmclient.ImgClient.GetAll()
+		images, err := pvmclient.ImgClient.GetAllPurgeable(opt.Before, opt.Since, opt.Expr)
 		if err != nil {
 			return fmt.Errorf("failed to get the list of images: %v", err)
 		}
 		table := utils.NewTable()
 
-		table.Render(images.Images, []string{})
-		if !opt.DryRun && len(images.Images) != 0 {
+		table.Render(images, []string{"href", "specifications"})
+		if !opt.DryRun && len(images) != 0 {
 			if opt.NoPrompt || utils.AskYesOrNo(deletePromptMessage) {
-				for _, image := range images.Images {
+				for _, image := range images {
 					klog.Infof("Deleting the %s, and ID: %s", *image.Name, *image.ImageID)
 					err = pvmclient.ImgClient.Delete(*image.ImageID)
 					if err != nil {

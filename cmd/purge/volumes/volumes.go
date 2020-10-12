@@ -32,7 +32,7 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		volumes, err := pvmclient.VolumeClient.GetAllPurgeableByLastUpdateDate(opt.Before, opt.Since)
+		volumes, err := pvmclient.VolumeClient.GetAllPurgeableByLastUpdateDate(opt.Before, opt.Since, opt.Expr)
 		if err != nil {
 			return fmt.Errorf("failed to get the list of volumes: %v", err)
 		}

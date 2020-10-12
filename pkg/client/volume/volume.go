@@ -11,6 +11,7 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
 	"reflect"
+	"regexp"
 	"time"
 )
 
@@ -47,7 +48,7 @@ func (c *Client) GetAll() (*models.Volumes, error) {
 	return resp.Payload, nil
 }
 
-func (c *Client) getAllPurgeable(field string, before, since time.Duration) ([]*models.VolumeReference, error) {
+func (c *Client) getAllPurgeable(field string, before, since time.Duration, expr string) ([]*models.VolumeReference, error) {
 	volumes, err := c.GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the list of volumes: %v", err)
@@ -55,6 +56,11 @@ func (c *Client) getAllPurgeable(field string, before, since time.Duration) ([]*
 
 	var candidates []*models.VolumeReference
 	for _, vol := range volumes.Volumes {
+		if expr != "" {
+			if r, _ := regexp.Compile(expr); !r.MatchString(*vol.Name) {
+				continue
+			}
+		}
 		r := reflect.ValueOf(vol)
 		f := reflect.Indirect(r).FieldByName(field)
 		fieldValue := f.Interface()
@@ -67,6 +73,6 @@ func (c *Client) getAllPurgeable(field string, before, since time.Duration) ([]*
 }
 
 // Returns all the Purgeable volumes by Last Update Date
-func (c *Client) GetAllPurgeableByLastUpdateDate(before, since time.Duration) ([]*models.VolumeReference, error) {
-	return c.getAllPurgeable("LastUpdateDate", before, since)
+func (c *Client) GetAllPurgeableByLastUpdateDate(before, since time.Duration, expr string) ([]*models.VolumeReference, error) {
+	return c.getAllPurgeable("LastUpdateDate", before, since, expr)
 }

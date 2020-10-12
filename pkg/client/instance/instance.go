@@ -6,6 +6,7 @@ import (
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"regexp"
 	"time"
 )
 
@@ -34,7 +35,7 @@ func (c *Client) Delete(id string) error {
 	return c.client.Delete(id, c.instanceID, pkg.TIMEOUT)
 }
 
-func (c *Client) GetAllPurgeable(before, since time.Duration) ([]*models.PVMInstanceReference, error) {
+func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*models.PVMInstanceReference, error) {
 	instances, err := c.GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the list of instances: %v", err)
@@ -42,6 +43,11 @@ func (c *Client) GetAllPurgeable(before, since time.Duration) ([]*models.PVMInst
 
 	var candidates []*models.PVMInstanceReference
 	for _, ins := range instances.PvmInstances {
+		if expr != "" {
+			if r, _ := regexp.Compile(expr); !r.MatchString(*ins.ServerName) {
+				continue
+			}
+		}
 		if !pkg.IsPurgeable(time.Time(ins.CreationDate), before, since) {
 			continue
 		}
