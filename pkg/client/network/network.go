@@ -9,6 +9,7 @@ import (
 	"github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
+	"regexp"
 	"time"
 )
 
@@ -51,7 +52,7 @@ func (c *Client) Delete(id string) error {
 	return c.client.Delete(id, c.instanceID, pkg.TIMEOUT)
 }
 
-func (c *Client) GetAllPurgeable(before, since time.Duration) ([]*models.NetworkReference, error) {
+func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*models.NetworkReference, error) {
 	networks, err := c.GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the list of instances: %v", err)
@@ -59,6 +60,11 @@ func (c *Client) GetAllPurgeable(before, since time.Duration) ([]*models.Network
 
 	var candidates []*models.NetworkReference
 	for _, network := range networks.Networks {
+		if expr != "" {
+			if r, _ := regexp.Compile(expr); !r.MatchString(*network.Name) {
+				continue
+			}
+		}
 		candidates = append(candidates, network)
 	}
 	return candidates, nil

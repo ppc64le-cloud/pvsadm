@@ -56,7 +56,7 @@ var Cmd = &cobra.Command{
 		})
 		tu.Table.Render()
 
-		instances, err := pvmclient.InstanceClient.GetAllPurgeable(pkg.Options.Before, pkg.Options.Since)
+		instances, err := pvmclient.InstanceClient.GetAllPurgeable(pkg.Options.Before, pkg.Options.Since, pkg.Options.Expr)
 		if err != nil {
 			return err
 		}

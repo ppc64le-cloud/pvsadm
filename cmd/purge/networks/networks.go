@@ -30,16 +30,16 @@ var Cmd = &cobra.Command{
 		}
 		klog.Infof("Purging the networks for the instance: %v", pvmclient.InstanceID)
 
-		networks, err := pvmclient.NetworkClient.GetAll()
+		networks, err := pvmclient.NetworkClient.GetAllPurgeable(opt.Before, opt.Since, opt.Expr)
 		if err != nil {
 			return fmt.Errorf("failed to get the list of networks: %v", err)
 		}
 		table := utils.NewTable()
 
-		table.Render(networks.Networks, []string{})
-		if !opt.DryRun && len(networks.Networks) != 0 {
+		table.Render(networks, []string{"href"})
+		if !opt.DryRun && len(networks) != 0 {
 			if opt.NoPrompt || utils.AskYesOrNo(deletePromptMessage) {
-				for _, network := range networks.Networks {
+				for _, network := range networks {
 					klog.Infof("Deleting the %s, and ID: %s", *network.Name, *network.NetworkID)
 					err = pvmclient.NetworkClient.Delete(*network.NetworkID)
 					if err != nil {

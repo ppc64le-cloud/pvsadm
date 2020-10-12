@@ -17,4 +17,5 @@ type options struct {
 	NoPrompt     bool
 	IgnoreErrors bool
 	AuditFile    string
+	Expr         string
 }
