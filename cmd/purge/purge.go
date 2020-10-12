@@ -14,7 +14,36 @@ import (
 var Cmd = &cobra.Command{
 	Use:   "purge",
 	Short: "Purge the powervs resources",
-	Long:  `Purge the powervs resources`,
+	Long: `Purge the powervs resources
+
+# Set the API key or feed the --api-key commandline argument
+export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
+
+Examples:
+  # Delete all the virtual machines which are created before 4hrs
+  pvsadm purge vms --instance-name upstream-core --before 4h
+
+  # Delete all the virtual machines created since 24hrs
+  pvsadm purge vms --instance-name upstream-core --since 24h
+
+  # Delete all the volumes which aren't assigned to any virtual machines
+  pvsadm purge volumes --instance-name upstream-core
+
+  # Delete all the networks and ignore if any errors during the delete operation
+  pvsadm purge networks --instance-name upstream-core --ignore-errors
+
+  # Delete all the images without asking any confirmation
+  pvsadm purge images --instance-name upstream-core --no-prompt
+
+  # Delete all the images with debugging logs for IBM cloud APIs
+  pvsadm purge images --instance-name upstream-core --debug
+
+  # Delete all the virtual machines starts with k8s-cluster-
+  pvsadm purge vms --instance-name upstream-core --regexp "^k8s-cluster-.*"
+
+  # List the purgeable candidate virtual machines and exit without deleting
+  pvsadm purge vms --instance-name upstream-core --dry-run
+`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.Since != 0 && pkg.Options.Before != 0 {
 			return fmt.Errorf("--since and --before options can not be set at a time")

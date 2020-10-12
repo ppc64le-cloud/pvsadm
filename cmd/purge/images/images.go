@@ -15,7 +15,9 @@ const deletePromptMessage = "Deleting all the above images, images can't be clai
 var Cmd = &cobra.Command{
 	Use:   "images",
 	Short: "Purge the powervs images",
-	Long:  `Purge the powervs images!`,
+	Long: `Purge the powervs images!
+pvsadm purge --help for information
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		klog.Infof("Purge the images for the instance: %v", pkg.Options.InstanceID)
 		opt := pkg.Options
