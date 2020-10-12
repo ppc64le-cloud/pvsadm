@@ -15,7 +15,9 @@ const deletePromptMessage = "Deleting all the above networks, networks can't be 
 var Cmd = &cobra.Command{
 	Use:   "networks",
 	Short: "Purge the powervs networks",
-	Long:  `Purge the powervs networks!`,
+	Long: `Purge the powervs networks!
+pvsadm purge --help for information
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 

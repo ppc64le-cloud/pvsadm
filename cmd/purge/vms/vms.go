@@ -20,7 +20,9 @@ const deletePromptMessage = "Deleting all the above instances, instances can't b
 var Cmd = &cobra.Command{
 	Use:   "vms",
 	Short: "Purge the powervs vms",
-	Long:  `Purge the powervs vms!`,
+	Long: `Purge the powervs vms!
+pvsadm purge --help for information
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 
