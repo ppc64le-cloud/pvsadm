@@ -19,3 +19,9 @@ type options struct {
 	AuditFile    string
 	Expr         string
 }
+
+// Options for pvsadm image command
+var ImageCMDOptions = &imageCMDOptions{}
+
+type imageCMDOptions struct {
+}
