@@ -42,6 +42,10 @@ jobs:
           echo "${unformatted}"	
           exit 1	
         fi
+    
+    - name: Go Vet	
+      run: |	
+        go vet ./...
 
     - name: Build
       run: |
