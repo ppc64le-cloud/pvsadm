@@ -28,15 +28,6 @@ func (t *Table) SetHeader(keys []string) {
 	})
 }
 
-func Contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
-}
-
 func (t *Table) Render(rows interface{}, exclude []string) {
 	noData := true
 	switch reflect.TypeOf(rows).Kind() {

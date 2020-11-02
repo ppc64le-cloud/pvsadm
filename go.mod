@@ -7,6 +7,8 @@ require (
 	github.com/IBM-Cloud/power-go-client v1.0.51
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-openapi/strfmt v0.19.4
+	github.com/klauspost/compress v1.11.1 // indirect
+	github.com/klauspost/pgzip v1.2.5
 	github.com/manifoldco/promptui v0.7.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/ginkgo v1.14.1 // indirect
