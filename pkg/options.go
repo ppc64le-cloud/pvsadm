@@ -34,4 +34,10 @@ type imageCMDOptions struct {
 	RHNUser       string
 	RHNPassword   string
 	TempDir       string
+	//upload options
+	InstanceName string
+	Region       string
+	BucketName   string
+	ResourceGrp  string
+	ServicePlan  string
 }
