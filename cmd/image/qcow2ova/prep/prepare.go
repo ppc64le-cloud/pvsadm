@@ -89,6 +89,11 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 		return err
 	}
 
+	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/ds-identify.conf"), []byte(dsIdentify), 644)
+	if err != nil {
+		return err
+	}
+
 	err = Chroot(mnt)
 	if err != nil {
 		return err

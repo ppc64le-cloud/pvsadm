@@ -18,7 +18,8 @@ echo "nameserver 9.9.9.9" | tee /etc/resolv.conf
 subscription-manager register --force --auto-attach --username={{ .RHNUser }} --password={{ .RHNPassword }}
 {{end}}
 yum update -y
-yum install http://public.dhe.ibm.com/systems/virtualization/powervc/rhel8_cloud_init/cloud-init-19.1-8.ibm.el8.noarch.rpm -y
+# yum install http://public.dhe.ibm.com/systems/virtualization/powervc/rhel8_cloud_init/cloud-init-19.1-8.ibm.el8.noarch.rpm -y
+yum install http://people.redhat.com/~eterrell/cloud-init/cloud-init-19.4-11.el8_3.1.noarch.rpm -y
 ln -s /usr/lib/systemd/system/cloud-init-local.service /etc/systemd/system/multi-user.target.wants/cloud-init-local.service
 ln -s /usr/lib/systemd/system/cloud-init.service /etc/systemd/system/multi-user.target.wants/cloud-init.service
 ln -s /usr/lib/systemd/system/cloud-config.service /etc/systemd/system/multi-user.target.wants/cloud-config.service
@@ -83,7 +84,7 @@ preserve_hostname: false
 #      metadata_urls: [ 'blah.com' ]
 #      timeout: 5 # (defaults to 50 seconds)
 #      max_wait: 10 # (defaults to 120 seconds)
-datasource_list: [ ConfigDrive, None ]
+datasource_list: [ ConfigDrive, NoCloud, None ]
 datasource:
   ConfigDrive:
     dsmode: local
@@ -106,8 +107,6 @@ cloud_init_modules:
  - ssh
 # The modules that run in the 'config' stage
 cloud_config_modules:
- - reset_rmc
- - refresh_rmc_and_interface
  - ssh-import-id
  - locale
  - set-passwords
@@ -135,6 +134,7 @@ cloud_final_modules:
  - phone-home
  - final-message
  - power-state-change
+ - reset_rmc
 # System and/or distro specific settings
 # (not accessible to handlers/transforms)
 system_info:
@@ -152,7 +152,12 @@ system_info:
    paths:
       cloud_dir: /var/lib/cloud/
       templates_dir: /etc/cloud/templates/
-   ssh_svcname: sshd`
+   ssh_svcname: sshd
+
+bootcmd:
+    - 'echo "IPV6_AUTOCONF=no" >> /etc/sysconfig/network-scripts/ifcfg-$(ls  /sys/class/net -1| grep env.|sort -n -r|head -1)'`
+
+var dsIdentify = `policy: search,found=all,maybe=all,notfound=disabled`
 
 type Setup struct {
 	Dist, RHNUser, RHNPassword, RootPasswd string
