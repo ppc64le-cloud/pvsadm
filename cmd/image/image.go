@@ -10,8 +10,8 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:   "image",
-	Short: "Image management",
-	Long:  `Image management`,
+	Short: "PowerVS Image management",
+	Long:  `PowerVS Image management`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("To Be Implemented...")
 		return nil
