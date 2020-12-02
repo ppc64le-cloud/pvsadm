@@ -54,17 +54,12 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 		return nil, fmt.Errorf("instance: %s not found", instanceName)
 	}
 	s3client.InstanceID = instanceID
-	svc, err := c.ResourceClient.GetInstance(instanceID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get a service with ID: %s, err: %v", instanceID, err)
-	}
 
 	if pkg.Options.APIKey == "" {
 		s3client.ApiKey = os.Getenv("IBMCLOUD_API_KEY")
 	} else {
 		s3client.ApiKey = pkg.Options.APIKey
 	}
-	s3client.InstanceName = svc.Name
 	s3client.SvcEndpoint = fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region)
 	s3client.StorageClass = fmt.Sprintf("%s-standard", region)
 	conf := aws.NewConfig().
