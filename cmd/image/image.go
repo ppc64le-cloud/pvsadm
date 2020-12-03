@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	_import "github.com/ppc64le-cloud/pvsadm/cmd/image/import"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image/qcow2ova"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image/upload"
@@ -12,10 +11,6 @@ var Cmd = &cobra.Command{
 	Use:   "image",
 	Short: "PowerVS Image management",
 	Long:  `PowerVS Image management`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("To Be Implemented...")
-		return nil
-	},
 }
 
 func init() {
