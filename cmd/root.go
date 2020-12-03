@@ -1,15 +1,19 @@
 package cmd
 
 import (
+	goflag "flag"
+	"os"
+
+	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
+	"k8s.io/klog/v2"
+
 	"github.com/ppc64le-cloud/pvsadm/cmd/get"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge"
 	"github.com/ppc64le-cloud/pvsadm/cmd/version"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
-	"github.com/spf13/cobra"
-	"k8s.io/klog/v2"
-	"os"
 )
 
 var rootCmd = &cobra.Command{
@@ -32,6 +36,10 @@ This is a tool built for the Power Systems Virtual Server helps managing and mai
 }
 
 func init() {
+	// Initilize the klog flags
+	klog.InitFlags(nil)
+	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+
 	rootCmd.AddCommand(purge.Cmd)
 	rootCmd.AddCommand(get.Cmd)
 	rootCmd.AddCommand(version.Cmd)
