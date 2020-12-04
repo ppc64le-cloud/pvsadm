@@ -34,7 +34,8 @@ jobs:
         do
           os_name=$(echo "$platform" | cut -d "/" -f 1)
           arch=$(echo "$platform" | cut -d "/" -f 2)
-          CGO_ENABLED=0 GOOS=${os_name} GOARCH=${arch} go build -a -tags netgo -ldflags "-X github.com/ppc64le-cloud/pvsadm/pkg/version.Version=${VERSION} ${STATIC_FLAG}" -o bin/pvsadm-${os_name}-${arch} .
+          CGO_ENABLED=0 GOOS=${os_name} GOARCH=${arch} go build -a -tags netgo -ldflags "-X github.com/ppc64le-cloud/pvsadm/pkg/version.Version=${VERSION} ${STATIC_FLAG}" -o bin/${os_name}-${arch}/pvsadm .
+          tar -czvf pvsadm-${os_name}-${arch}.tar.gz -C bin/${os_name}-${arch} pvsadm
         done
         tar -czvf pvsadm-binaries.tar.gz bin/
 
@@ -55,9 +56,19 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/pvsadm-linux-amd64
+        asset_path: ./bin/linux-amd64/pvsadm
         asset_name: pvsadm-linux-amd64
         asset_content_type: application/octet-stream
+
+    - name: Upload linux - amd64 - tar.gz
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: pvsadm-linux-amd64.tar.gz
+        asset_name: pvsadm-linux-amd64.tar.gz
+        asset_content_type: application/tar+gzip
 
     - name: Upload linux - ppc64le
       uses: actions/upload-release-asset@v1
@@ -65,9 +76,19 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/pvsadm-linux-ppc64le
+        asset_path: ./bin/linux-ppc64le/pvsadm
         asset_name: pvsadm-linux-ppc64le
         asset_content_type: application/octet-stream
+
+    - name: Upload linux - ppc64le - tar.gz
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: pvsadm-linux-ppc64le.tar.gz
+        asset_name: pvsadm-linux-ppc64le.tar.gz
+        asset_content_type: application/tar+gzip
 
     - name: Upload macos
       uses: actions/upload-release-asset@v1
@@ -75,9 +96,19 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/pvsadm-darwin-amd64
+        asset_path: ./bin/darwin-amd64/pvsadm
         asset_name: pvsadm-darwin-amd64
         asset_content_type: application/octet-stream
+
+    - name: Upload macos - tar.gz
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: pvsadm-darwin-amd64.tar.gz
+        asset_name: pvsadm-darwin-amd64.tar.gz
+        asset_content_type: application/tar+gzip
 
     - name: Upload all
       uses: actions/upload-release-asset@v1
