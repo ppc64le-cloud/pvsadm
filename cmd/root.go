@@ -45,10 +45,12 @@ func init() {
 	rootCmd.AddCommand(version.Cmd)
 	rootCmd.AddCommand(image.Cmd)
 	rootCmd.PersistentFlags().StringVarP(&pkg.Options.APIKey, "api-key", "k", "", "IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)")
-	rootCmd.PersistentFlags().BoolVar(&pkg.Options.Debug, "debug", false, "Enable PowerVS debug option")
+	rootCmd.PersistentFlags().BoolVar(&pkg.Options.Debug, "debug", false, "Enable PowerVS debug option(ATTENTION: dev only option, may print sensitive data from APIs)")
 	rootCmd.PersistentFlags().StringVar(&pkg.Options.AuditFile, "audit-file", "pvsadm.log", "Audit logs for the tool")
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false
+	_ = rootCmd.Flags().MarkHidden("debug")
+
 	audit.Logger = audit.New(pkg.Options.AuditFile)
 }
 
