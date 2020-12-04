@@ -14,6 +14,7 @@ require (
 	github.com/klauspost/pgzip v1.2.5
 	github.com/manifoldco/promptui v0.7.0
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/ppc64le-cloud/powervs-utils v0.0.0-20201204143607-84386ece4f49
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.3
 	k8s.io/klog/v2 v2.3.0

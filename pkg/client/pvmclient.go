@@ -2,17 +2,19 @@ package client
 
 import (
 	"fmt"
+	"k8s.io/klog/v2"
+	"time"
+
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
+	"github.com/ppc64le-cloud/powervs-utils"
+
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/events"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/image"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/instance"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/network"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/volume"
-	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
-	"k8s.io/klog/v2"
-	"time"
 )
 
 type PVMClient struct {
