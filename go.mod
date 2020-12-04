@@ -15,5 +15,6 @@ require (
 	github.com/manifoldco/promptui v0.7.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.3
 	k8s.io/klog/v2 v2.3.0
 )
