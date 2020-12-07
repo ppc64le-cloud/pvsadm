@@ -2,6 +2,8 @@ package utils
 
 import (
 	"bytes"
+	"io"
+	"os"
 	"os/exec"
 )
 
@@ -11,8 +13,8 @@ func RunCMD(cmd string, args ...string) (int, string, string) {
 	var stdout, stderr bytes.Buffer
 	c := exec.Command(cmd, args...)
 
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	c.Stdout = io.MultiWriter(os.Stdout, &stdout)
+	c.Stderr = io.MultiWriter(os.Stderr, &stderr)
 	if err := c.Run(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			return exitError.ExitCode(), stdout.String(), stderr.String()

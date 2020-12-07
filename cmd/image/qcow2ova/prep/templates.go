@@ -11,7 +11,7 @@ var setup = `#!/bin/bash
 set -o errexit
 set -o nounset
 set -o pipefail
-set -o xtrace
+
 mv /etc/resolv.conf /etc/resolv.conf.orig | true
 echo "nameserver 9.9.9.9" | tee /etc/resolv.conf
 {{if eq .Dist "rhel"}}
