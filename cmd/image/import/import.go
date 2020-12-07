@@ -40,6 +40,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> -r <REGION> --storage
 pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83-10032020.ova.gz --image-name test-image --ostype <OSTYPE> -r <REGION>
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var s3client *client.S3Client
 		opt := pkg.ImageCMDOptions
 		apikey := pkg.Options.APIKey
 		//validate inputs
@@ -56,57 +57,64 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 			os.Exit(1)
 		}
 
-		if opt.AccessKey == "" || opt.SecretKey == "" {
-			auth, err := core.NewIamAuthenticator(apikey, "", "", "", false, nil)
-			if err != nil {
-				return err
-			}
+		bxCli, err := client.NewClient(apikey)
+		if err != nil {
+			return err
+		}
 
-			bxCli, err := client.NewClient(apikey)
-			if err != nil {
-				return err
-			}
+		auth, err := core.NewIamAuthenticator(apikey, "", "", "", false, nil)
+		if err != nil {
+			return err
+		}
 
-			resourceController, err := client.NewResourceControllerV2(&rcv2.ResourceControllerV2Options{
-				Authenticator: auth,
-			})
-			if err != nil {
-				return err
-			}
+		resourceController, err := client.NewResourceControllerV2(&rcv2.ResourceControllerV2Options{
+			Authenticator: auth,
+		})
+		if err != nil {
+			return err
+		}
 
-			instances, _, err := resourceController.ResourceControllerV2.ListResourceInstances(resourceController.ResourceControllerV2.NewListResourceInstancesOptions().SetType("service_instance"))
-			if err != nil {
-				return err
-			}
+		instances, _, err := resourceController.ResourceControllerV2.ListResourceInstances(resourceController.ResourceControllerV2.NewListResourceInstancesOptions().SetType("service_instance"))
+		if err != nil {
+			return err
+		}
 
-			// Step 1: Find where COS for the bucket
-			cosOfBucket := func(resources []rcv2.ResourceInstance) *rcv2.ResourceInstance {
-				for _, resource := range resources {
-					if strings.Contains(*resource.Crn, "cloud-object-storage") {
-						s3client, err := client.NewS3Client(bxCli, *resource.Name, opt.Region)
-						if err != nil {
-							continue
-						}
-						buckets, err := s3client.S3Session.ListBuckets(nil)
-						if err != nil {
-							continue
-						}
-						for _, bucket := range buckets.Buckets {
-							if *bucket.Name == opt.BucketName {
-								return &resource
-							}
+		// Step 1: Find where COS for the bucket
+		cosOfBucket := func(resources []rcv2.ResourceInstance) *rcv2.ResourceInstance {
+			for _, resource := range resources {
+				if strings.Contains(*resource.Crn, "cloud-object-storage") {
+					s3client, err = client.NewS3Client(bxCli, *resource.Name, opt.Region)
+					if err != nil {
+						continue
+					}
+					buckets, err := s3client.S3Session.ListBuckets(nil)
+					if err != nil {
+						continue
+					}
+					for _, bucket := range buckets.Buckets {
+						if *bucket.Name == opt.BucketName {
+							return &resource
 						}
 					}
 				}
-				return nil
-			}(instances.Resources)
-
-			if cosOfBucket == nil {
-				return fmt.Errorf("failed to find the COS instance for the bucket mentioned: %s", opt.BucketName)
 			}
-			klog.Infof("%s bucket found in the %s[ID:%s] COS instance", opt.BucketName, *cosOfBucket.Name, *cosOfBucket.ID)
+			return nil
+		}(instances.Resources)
 
-			// Step 2: Create the Service Credential in the found COS instance
+		if cosOfBucket == nil {
+			return fmt.Errorf("failed to find the COS instance for the bucket mentioned: %s", opt.BucketName)
+		}
+		klog.Infof("%s bucket found in the %s[ID:%s] COS instance", opt.BucketName, *cosOfBucket.Name, *cosOfBucket.ID)
+
+		//Step 2: Check if s3 object exists
+		objectExists := s3client.CheckIfObjectExists(opt.BucketName, opt.ImageFilename)
+		if !objectExists {
+			return fmt.Errorf("failed to found the object %s in %s bucket", opt.ImageFilename, opt.BucketName)
+		}
+		klog.Infof("%s object found in the %s bucket\n", opt.ImageFilename, opt.BucketName)
+
+		if opt.AccessKey == "" || opt.SecretKey == "" {
+			// Step 3: Check if Service Credential exists for the found COS instance
 			keys, _, err := resourceController.ResourceControllerV2.ListResourceKeys(resourceController.ResourceControllerV2.NewListResourceKeysOptions().SetName(opt.ServiceCredName))
 			if err != nil {
 				return fmt.Errorf("failed to list the service credentials: %v", err)
@@ -147,18 +155,13 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 				return err
 			}
 
-			// Step 3: Assign the Access Key and Secret Key for further operation
+			// Step 4: Assign the Access Key and Secret Key for further operation
 			opt.AccessKey = h.AccessKeyID
 			opt.SecretKey = h.SecretKeyID
 
 		}
 
-		c, err := client.NewClient(apikey)
-		if err != nil {
-			return err
-		}
-
-		pvmclient, err := client.NewPVMClient(c, opt.InstanceID, opt.InstanceName)
+		pvmclient, err := client.NewPVMClient(bxCli, opt.InstanceID, opt.InstanceName)
 		if err != nil {
 			return err
 		}

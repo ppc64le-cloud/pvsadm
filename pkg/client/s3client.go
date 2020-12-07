@@ -75,7 +75,7 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 }
 
 //Func CheckBucketExists will verify for the existence of the bucket in the particular account
-func (c *S3Client) CheckBucketExists(bucketname string) (bool, error) {
+func (c *S3Client) CheckBucketExists(bucketName string) (bool, error) {
 	result, err := c.S3Session.ListBuckets(nil)
 	if err != nil {
 		klog.Infof("Unable to list buckets, %v\n", err)
@@ -84,7 +84,7 @@ func (c *S3Client) CheckBucketExists(bucketname string) (bool, error) {
 
 	bucketExists := false
 	for _, b := range result.Buckets {
-		if aws.StringValue(b.Name) == bucketname {
+		if aws.StringValue(b.Name) == bucketName {
 			bucketExists = true
 		}
 	}
@@ -93,6 +93,19 @@ func (c *S3Client) CheckBucketExists(bucketname string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) bool {
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(objectName),
+	}
+
+	_, err := c.S3Session.GetObject(input)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 //To create a new bucket in the provided instance
