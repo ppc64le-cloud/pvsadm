@@ -16,10 +16,6 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
-const (
-	ServiceCredName = "pvsadm-service-cred"
-)
-
 var Cmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import the image into PowerVS instances",
@@ -61,7 +57,6 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 		}
 
 		if opt.AccessKey == "" || opt.SecretKey == "" {
-			klog.Info("Auto Generating the COS Service credential for importing the image")
 			auth, err := core.NewIamAuthenticator(apikey, "", "", "", false, nil)
 			if err != nil {
 				return err
@@ -112,18 +107,33 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 			klog.Infof("%s bucket found in the %s[ID:%s] COS instance", opt.BucketName, *cosOfBucket.Name, *cosOfBucket.ID)
 
 			// Step 2: Create the Service Credential in the found COS instance
-			createResourceKeyOptions := &client.CreateResourceKeyOptions{
-				CreateResourceKeyOptions: resourceController.ResourceControllerV2.NewCreateResourceKeyOptions(ServiceCredName, *cosOfBucket.ID),
-				Parameters:               map[string]interface{}{"HMAC": true},
-			}
-
-			key, _, err := resourceController.CreateResourceKey(createResourceKeyOptions)
+			keys, _, err := resourceController.ResourceControllerV2.ListResourceKeys(resourceController.ResourceControllerV2.NewListResourceKeysOptions().SetName(opt.ServiceCredName))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to list the service credentials: %v", err)
 			}
-			defer resourceController.ResourceControllerV2.DeleteResourceKey(&rcv2.DeleteResourceKeyOptions{ID: key.ID})
 
-			jsonString, err := json.Marshal(key.Credentials.GetProperty("cos_hmac_keys"))
+			cred := new(rcv2.Credentials)
+			if len(keys.Resources) == 0 {
+				// Create the service credential if does not exist
+				klog.Infof("Auto Generating the COS Service credential for importing the image with name: %s", opt.ServiceCredName)
+				createResourceKeyOptions := &client.CreateResourceKeyOptions{
+					CreateResourceKeyOptions: resourceController.ResourceControllerV2.NewCreateResourceKeyOptions(opt.ServiceCredName, *cosOfBucket.ID),
+					Parameters:               map[string]interface{}{"HMAC": true},
+				}
+
+				key, _, err := resourceController.CreateResourceKey(createResourceKeyOptions)
+				if err != nil {
+					return err
+				}
+				cred = key.Credentials
+
+			} else {
+				// Use the service credential already created
+				klog.Infof("Reading the existing service credential: %s", opt.ServiceCredName)
+				cred = keys.Resources[0].Credentials
+			}
+
+			jsonString, err := json.Marshal(cred.GetProperty("cos_hmac_keys"))
 			if err != nil {
 				return err
 			}
@@ -140,6 +150,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 			// Step 3: Assign the Access Key and Secret Key for further operation
 			opt.AccessKey = h.AccessKeyID
 			opt.SecretKey = h.SecretKeyID
+
 		}
 
 		c, err := client.NewClient(apikey)
@@ -174,6 +185,8 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageFilename, "object-name", "", "Cloud Storage image filename")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OsType, "ostype", "redhat", "Image OS Type, accepted values are[aix, ibmi, redhat, sles]")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "storagetype", "tier3", "Storage type, accepted values are [tier1, tier3]")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "service-credential-name", "pvsadm-service-cred", "Service Credential name to be auto generated")
+
 	_ = Cmd.MarkFlagRequired("bucket")
 	_ = Cmd.MarkFlagRequired("image-name")
 	_ = Cmd.MarkFlagRequired("object-name")
