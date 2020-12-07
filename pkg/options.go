@@ -41,10 +41,11 @@ type imageCMDOptions struct {
 	ResourceGrp  string
 	ServicePlan  string
 	//import options
-	ImageFilename string
-	AccessKey     string
-	SecretKey     string
-	OsType        string
-	StorageType   string
-	InstanceID    string
+	ImageFilename   string
+	AccessKey       string
+	SecretKey       string
+	OsType          string
+	StorageType     string
+	InstanceID      string
+	ServiceCredName string
 }
