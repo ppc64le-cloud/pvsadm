@@ -28,16 +28,16 @@ export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
 Examples:
 
 # using InstanceName
-pvsadm image upload --bucket bucket0711 -i rhcos-461.ova.gz --instance-name pvsadm-cos-instance
+pvsadm image upload --bucket bucket0711 -o rhcos-461.ova.gz --instance-name pvsadm-cos-instance
 
 #If user is planning to use available cos instance
-pvsadm image upload  --bucket bucket0911 -i rhcos-461.ova.gz
+pvsadm image upload  --bucket bucket0911 -o rhcos-461.ova.gz
 
 #If user intents to create a new COS instance
-pvsadm image upload --bucket-name basheerbucket1320 -i centos-8-latest.ova.gz --resource-group <ResourceGroup_Name>
+pvsadm image upload --bucket basheerbucket1320 -o centos-8-latest.ova.gz --resource-group <ResourceGroup_Name>
 
 #if user is planning to create a bucket in particular region
-pvsadm image upload --bucket-name basheerbucket1320 -i centos-8-latest.ova.gz --region <Region>
+pvsadm image upload --bucket basheerbucket1320 -o centos-8-latest.ova.gz --region <Region>
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var s3Cli *client.S3Client
@@ -155,13 +155,13 @@ pvsadm image upload --bucket-name basheerbucket1320 -i centos-8-latest.ova.gz --
 }
 
 func init() {
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.InstanceName, "instance-name", "", "Instance Name of the COS to be used")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ResourceGrp, "resource-group", "default", "Provide Resource-Group")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServicePlan, "service-plan", "standard", "Provide serviceplan type")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket-name", "b", "", "Region of the COS instance")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageName, "image-name", "i", "", "S3 object name to be uploaded to the COS")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "instance-name", "n", "", "Instance Name of the COS to be used")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Region of the COS instance")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageName, "object-name", "o", "", "S3 object name to be uploaded to the COS")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "region", "r", "us-south", "Region of the COS instance")
-	_ = Cmd.MarkFlagRequired("bucket-name")
-	_ = Cmd.MarkFlagRequired("image-name")
+	_ = Cmd.MarkFlagRequired("bucket")
+	_ = Cmd.MarkFlagRequired("object-name")
 	Cmd.Flags().SortFlags = false
 }
