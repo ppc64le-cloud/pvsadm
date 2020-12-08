@@ -62,7 +62,7 @@ subscription-manager clean
 {{end}}
 
 # Remove the ibm repositories used for the rsct installation
-rpm -e ibm-power-repo-latest.noarch
+rpm -e ibm-power-repo-*.noarch
 
 mv /etc/resolv.conf.orig /etc/resolv.conf | true
 touch /.autorelabel`
