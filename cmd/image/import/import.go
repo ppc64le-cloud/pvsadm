@@ -181,7 +181,7 @@ func init() {
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "instance-name", "n", "", "Instance name of the PowerVS")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Storage bucket name")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "region", "r", "", "Cloud Storage Region")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "region", "r", "", "COS bucket location")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageFilename, "object-name", "o", "", "Cloud Storage image filename")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.AccessKey, "accesskey", "", "Cloud Storage access key")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.SecretKey, "secretkey", "", "Cloud Storage secret key")
