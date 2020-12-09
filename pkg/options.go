@@ -25,15 +25,17 @@ var ImageCMDOptions = &imageCMDOptions{}
 
 type imageCMDOptions struct {
 	//qcow2ova options
-	ImageDist     string
-	ImageName     string
-	ImageSize     uint64
-	ImageURL      string
-	OSPassword    string
-	PreflightSkip []string
-	RHNUser       string
-	RHNPassword   string
-	TempDir       string
+	ImageDist           string
+	ImageName           string
+	ImageSize           uint64
+	ImageURL            string
+	OSPassword          string
+	PreflightSkip       []string
+	RHNUser             string
+	RHNPassword         string
+	TempDir             string
+	PrepTemplate        string
+	PrepTemplateDefault bool
 	//upload options
 	InstanceName string
 	Region       string
