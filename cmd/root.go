@@ -23,7 +23,6 @@ var rootCmd = &cobra.Command{
 Integrated with the IBM Cloud platform for on-demand provisioning.
 
 This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily`,
-	SilenceUsage: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.APIKey == "" {
 			if key := os.Getenv("IBMCLOUD_API_KEY"); key != "" {
