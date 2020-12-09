@@ -7,7 +7,7 @@ import (
 )
 
 // TODO: add a logic to make the package versions as an argument
-var setup = `#!/bin/bash
+var SetupTemplate = `#!/usr/bin/env bash
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -172,7 +172,7 @@ func Render(dist, rhnuser, rhnpasswd, rootpasswd string) (string, error) {
 		dist, rhnuser, rhnpasswd, rootpasswd,
 	}
 	var wr bytes.Buffer
-	t := template.Must(template.New("setup").Parse(setup))
+	t := template.Must(template.New("setup").Parse(SetupTemplate))
 	err := t.Execute(&wr, s)
 	if err != nil {
 		return "", fmt.Errorf("error while rendoring the script template: %v", err)

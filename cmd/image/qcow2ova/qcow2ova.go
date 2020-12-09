@@ -37,9 +37,36 @@ Examples:
 
   # Converts the CentOS image from the local filesystem with OS password set
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos --os-password s0meC0mplexPassword --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2
+
+  # Customize the image preparation script for RHEL/CentOS distro, e.g: add additional yum repository or packages, change name servers etc. 
+  # Step 1 - Dump the default image preparation template
+  pvsadm image qcow2ova --prep-template-default > image-prep.template
+  # Step 2 - Make the necessary changes to the above generated template file(bash shell script) - image-prep.template
+  # Step 3 - Run the qcow2ova with the modified image preparation template
+  pvsadm image qcow2ova --image-name centos-82 --image-dist centos --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --prep-template image-prep.template
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.ImageCMDOptions
+
+		if opt.PrepTemplateDefault {
+			fmt.Println(prep.SetupTemplate)
+			os.Exit(0)
+		}
+
+		// Override the prep.SetupTemplate if --prep-template supplied
+		if opt.PrepTemplate != "" {
+			if strings.ToLower(opt.ImageDist) == "coreos" {
+				return fmt.Errorf("--prep-template option is not supported for coreos distro")
+			} else {
+				klog.Info("Overriding with the user defined image preparation template.")
+				content, err := ioutil.ReadFile(opt.PrepTemplate)
+				if err != nil {
+					return err
+				}
+				prep.SetupTemplate = string(content)
+			}
+		}
+
 		if !utils.Contains([]string{"rhel", "centos", "coreos"}, strings.ToLower(opt.ImageDist)) {
 			klog.Errorln("--image-dist is a mandatory flag and one of these [rhel, centos, coreos]")
 			os.Exit(1)
@@ -209,6 +236,8 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.RHNPassword, "rhn-password", "", "RedHat Subscription password. Required when Image distribution is rhel")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OSPassword, "os-password", "", "Root user password, will auto-generate the 12 bits password(applicable only for redhat and cento distro)")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.TempDir, "temp-dir", "t", os.TempDir(), "Scratch space to use for OVA generation")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.PrepTemplate, "prep-template", "", "Image preparation script template, use --prep-template-default to print the default template(supported distros: rhel and centos)")
+	Cmd.Flags().BoolVar(&pkg.ImageCMDOptions.PrepTemplateDefault, "prep-template-default", false, "Prints the default image preparation script template, use --prep-template to set the custom template script(supported distros: rhel and centos)")
 	Cmd.Flags().StringSliceVar(&pkg.ImageCMDOptions.PreflightSkip, "skip-preflight-checks", []string{}, "Skip the preflight checks(e.g: diskspace, platform, tools) - dev-only option")
 	_ = Cmd.Flags().MarkHidden("skip-preflight-checks")
 	_ = Cmd.MarkFlagRequired("image-name")
