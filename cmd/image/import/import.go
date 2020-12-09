@@ -178,8 +178,8 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "instance-name", "n", "", "Instance name of the PowerVS")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "powervs-instance-name", "n", "", "Name of the PowerVS instance")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceID, "powervs-instance-id", "i", "", "ID of the PowerVS instance")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Storage bucket name")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "region", "r", "", "COS bucket location")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageFilename, "object-name", "o", "", "Cloud Storage image filename")
@@ -191,6 +191,7 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "service-credential-name", "pvsadm-service-cred", "Service Credential name to be auto generated")
 
 	_ = Cmd.MarkFlagRequired("bucket")
+	_ = Cmd.MarkFlagRequired("powervs-instance-name")
 	_ = Cmd.MarkFlagRequired("image-name")
 	_ = Cmd.MarkFlagRequired("object-name")
 	_ = Cmd.MarkFlagRequired("region")

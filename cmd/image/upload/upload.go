@@ -28,7 +28,7 @@ export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
 Examples:
 
 # using InstanceName
-pvsadm image upload --bucket bucket0711 -o rhcos-461.ova.gz --instance-name pvsadm-cos-instance
+pvsadm image upload --bucket bucket0711 -o rhcos-461.ova.gz --cos-instance-name pvsadm-cos-instance
 
 #If user is planning to use available cos instance
 pvsadm image upload  --bucket bucket0911 -o rhcos-461.ova.gz
@@ -157,10 +157,10 @@ pvsadm image upload --bucket basheerbucket1320 -o centos-8-latest.ova.gz --regio
 func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ResourceGrp, "resource-group", "default", "Provide Resource-Group")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServicePlan, "service-plan", "standard", "Provide serviceplan type")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "instance-name", "n", "", "Instance Name of the COS to be used")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Region of the COS instance")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageName, "object-name", "o", "", "S3 object name to be uploaded to the COS")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "region", "r", "us-south", "Region of the COS instance")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "cos-instance-name", "n", "", "Name of the COS instance")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "cloud-object-storage bucket name")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageName, "object-name", "o", "", "S3 object name to be uploaded")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "region", "r", "us-south", "COS bucket location")
 	_ = Cmd.MarkFlagRequired("bucket")
 	_ = Cmd.MarkFlagRequired("object-name")
 	Cmd.Flags().SortFlags = false
