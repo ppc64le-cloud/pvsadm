@@ -50,6 +50,16 @@ func init() {
 	rootCmd.PersistentFlags().SortFlags = false
 	_ = rootCmd.Flags().MarkHidden("debug")
 
+	// Hide the --audit-file for the image subcommand
+	// TODO: Remove this after adding audit support to image subcommand
+	origHelpFunc := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		if cmd.Name() == "image" || (cmd.Parent() != nil && cmd.Parent().Name() == "image") {
+			cmd.Flags().MarkHidden("audit-file")
+		}
+		origHelpFunc(cmd, args)
+	})
+
 	audit.Logger = audit.New(pkg.Options.AuditFile)
 }
 
