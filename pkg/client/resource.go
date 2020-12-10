@@ -72,7 +72,7 @@ func CreateServiceInstance(sess *session.Session, instanceName, serviceName, ser
 		return "", err
 	}
 
-	var resourceGroupID string
+	var resourceGroup models.ResourceGroup
 	resGrpAPI := managementClient.ResourceGroup()
 
 	if resourceGrp == "" {
@@ -84,15 +84,16 @@ func CreateServiceInstance(sess *session.Session, instanceName, serviceName, ser
 		if err != nil {
 			return "", err
 		}
-		resourceGroupID = grpList[0].ID
+		resourceGroup = grpList[0]
 
 	} else {
 		grp, err := resGrpAPI.FindByName(nil, resourceGrp)
 		if err != nil {
 			return "", err
 		}
-		resourceGroupID = grp[0].ID
+		resourceGroup = grp[0]
 	}
+	klog.Infof("Resource group: %s and ID: %s", resourceGroup.Name, resourceGroup.ID)
 
 	controllerClient, err := controller.New(sess)
 	if err != nil {
@@ -104,7 +105,7 @@ func CreateServiceInstance(sess *session.Session, instanceName, serviceName, ser
 	var serviceInstancePayload = controller.CreateServiceInstanceRequest{
 		Name:            instanceName,
 		ServicePlanID:   servicePlanID,
-		ResourceGroupID: resourceGroupID,
+		ResourceGroupID: resourceGroup.ID,
 		TargetCrn:       supportedDeployments[0].CatalogCRN,
 	}
 

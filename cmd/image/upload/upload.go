@@ -155,7 +155,7 @@ pvsadm image upload --bucket basheerbucket1320 -o centos-8-latest.ova.gz --regio
 }
 
 func init() {
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ResourceGrp, "resource-group", "default", "Provide Resource-Group")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ResourceGrp, "resource-group", "", "Provide Resource-Group(default: default resource group set for the account")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServicePlan, "service-plan", "standard", "Provide serviceplan type")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "instance-name", "n", "", "Instance Name of the COS to be used")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Region of the COS instance")
