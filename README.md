@@ -6,26 +6,10 @@ Integrated with the IBM Cloud platform for on-demand provisioning.
 
 This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily
 
-```shell script
-./pvsadm --help
-Power Systems Virtual Server projects deliver flexible compute capacity for Power Systems workloads.
-Integrated with the IBM Cloud platform for on-demand provisioning.
-
-This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily
-
-Usage:
-  pvsadm [command]
-
-Available Commands:
-  help        Help about any command
-  purge       Purge the powervs resources
-
-Flags:
-  -k, --api-key string   IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)
-      --debug            Enable PowerVS debug option
-  -h, --help             help for pvsadm
-
-Use "pvsadm [command] --help" for more information about a command.
+```
+Download the pvsadm binary from the location https://github.com/ppc64le-cloud/pvsadm/releases/
+Select the latest release and download the relevant binary under the Assets section.
+Run the ./pvsadm --help command to check the menu options for the pvsadm image sub command.
 ```
 
 ## Purge PowerVS Resources:
