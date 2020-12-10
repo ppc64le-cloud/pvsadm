@@ -16,6 +16,10 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
+const (
+	serviceCredPrefix = "pvsadm-service-cred"
+)
+
 var Cmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import the image into PowerVS instances",
@@ -115,6 +119,12 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 
 		if opt.AccessKey == "" || opt.SecretKey == "" {
 			// Step 3: Check if Service Credential exists for the found COS instance
+
+			// frame the unique name for the service credential
+			if opt.ServiceCredName == "" {
+				opt.ServiceCredName = serviceCredPrefix + "-" + bxCli.User.ID
+			}
+
 			keys, _, err := resourceController.ResourceControllerV2.ListResourceKeys(resourceController.ResourceControllerV2.NewListResourceKeysOptions().SetName(opt.ServiceCredName))
 			if err != nil {
 				return fmt.Errorf("failed to list the service credentials: %v", err)
@@ -188,7 +198,7 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageName, "image-name", "", "Name to give imported image")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OsType, "ostype", "redhat", "Image OS Type, accepted values are[aix, ibmi, redhat, sles]")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "storagetype", "tier3", "Storage type, accepted values are [tier1, tier3]")
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "service-credential-name", "pvsadm-service-cred", "Service Credential name to be auto generated")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "service-credential-name", "", "Service Credential name to be auto generated(default \""+serviceCredPrefix+"-<USERID>\")")
 
 	_ = Cmd.MarkFlagRequired("bucket")
 	_ = Cmd.MarkFlagRequired("image-name")
