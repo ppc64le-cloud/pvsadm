@@ -16,6 +16,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/ppc64le-cloud/powervs-utils v0.0.0-20201204143607-84386ece4f49
 	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.3
-	k8s.io/klog/v2 v2.3.0
+	github.com/spf13/pflag v1.0.5
+	k8s.io/apimachinery v0.20.0
+	k8s.io/klog/v2 v2.4.0
 )
