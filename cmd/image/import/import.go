@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/IBM/go-sdk-core/v4/core"
 	rcv2 "github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
@@ -172,7 +174,33 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object-name rhel-83
 			return err
 		}
 
-		klog.Infof("Importing Image %s is currently in %s state, Please check the Progress in the IBM Cloud UI\n", *image.Name, image.State)
+		if !opt.Watch {
+			klog.Infof("Importing Image %s is currently in %s state, Please check the Progress in the IBM Cloud UI\n", *image.Name, image.State)
+			return nil
+		}
+
+		start := time.Now()
+		pollErr := wait.PollImmediate(2*time.Minute, opt.WatchTimeout, func() (bool, error) {
+			img, err := pvmclient.ImgClient.Get(*image.ImageID)
+			if err != nil {
+				return false, err
+			}
+			if img.State == "active" {
+				return true, nil
+			}
+			klog.Infof("Import in-progress, current state: %s", img.State)
+			return false, nil
+		})
+		if pollErr == wait.ErrWaitTimeout {
+			pollErr = fmt.Errorf("timed out while waiting for image to become ready state")
+		}
+
+		if pollErr != nil {
+			return fmt.Errorf("failed to import the image, err: %v\n\nRun this command to get more information for the failure: pvsadm get events -i %s", pollErr, pvmclient.InstanceID)
+		}
+
+		klog.Infof("Successfully imported the image: %s with ID: %s within %s", *image.Name, *image.ImageID, time.Since(start))
+
 		return nil
 	},
 }
@@ -187,6 +215,8 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.SecretKey, "secretkey", "", "Cloud Storage secret key")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageName, "image-name", "", "Name to give imported image")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OsType, "ostype", "redhat", "Image OS Type, accepted values are[aix, ibmi, redhat, sles]")
+	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Watch, "watch", "w", false, "After image import watch for image to be published and ready to use")
+	Cmd.Flags().DurationVar(&pkg.ImageCMDOptions.WatchTimeout, "watch-timeout", 1*time.Hour, "watch timeout")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "storagetype", "tier3", "Storage type, accepted values are [tier1, tier3]")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "service-credential-name", "pvsadm-service-cred", "Service Credential name to be auto generated")
 
