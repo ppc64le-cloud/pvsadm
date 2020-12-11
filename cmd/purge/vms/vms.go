@@ -68,7 +68,8 @@ pvsadm purge --help for information
 		for _, instance := range instances {
 			ins, err := pvmclient.InstanceClient.Get(*instance.PvmInstanceID)
 			if err != nil {
-				return fmt.Errorf("failed to get the instance: %v", err)
+				klog.Infof("Error occurred while getting the vm %s", err)
+				continue
 			}
 			var ipAddrsPrivate, ipAddrsPublic []string
 			for _, ip := range ins.Networks {
