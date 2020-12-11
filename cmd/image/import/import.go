@@ -45,7 +45,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --pvs-storagetype <ST
 # If user wants to specify the type of OS
 pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image --ostype <OSTYPE> -r <REGION>
 `,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.ImageCMDOptions.InstanceID == "" && pkg.ImageCMDOptions.InstanceName == "" {
 			return fmt.Errorf("--pvs-instance-name or --pvs-instance-id required")
 		}
@@ -232,8 +232,10 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.SecretKey, "secretkey", "", "Cloud Object Storage HMAC secret key.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageName, "pvs-image-name", "", "Name to PowerVS imported image.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OsType, "ostype", "redhat", "Image OS Type, accepted values are[aix, ibmi, redhat, sles].")
+	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Watch, "watch", "w", false, "After image import watch for image to be published and ready to use")
+	Cmd.Flags().DurationVar(&pkg.ImageCMDOptions.WatchTimeout, "watch-timeout", 1*time.Hour, "watch timeout")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", "PowerVS Storage type, accepted values are [tier1, tier3].")
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "pvs-service-cred", "pvsadm-service-cred", "Service Credential name to be auto generated.")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "cos-service-cred", "", "IBM COS Service Credential name to be auto generated(default \""+serviceCredPrefix+"-<USERID>\")")
 
 	_ = Cmd.MarkFlagRequired("bucket")
 	_ = Cmd.MarkFlagRequired("bucket-region")
