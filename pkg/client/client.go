@@ -119,3 +119,23 @@ func NewClient(apikey string) (*Client, error) {
 	c.ResourceClient = ctrlv2.ResourceServiceInstanceV2()
 	return c, nil
 }
+
+//Func GetInstances, list all available instances of particular servicetype
+func (c *Client) GetInstances(serviceType string) (map[string]string, error) {
+	svcs, err := c.ResourceClient.ListInstances(controllerv2.ServiceInstanceQuery{
+		Type: "service_instance",
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	instances := make(map[string]string)
+
+	for _, svc := range svcs {
+		if svc.Crn.ServiceName == serviceType {
+			instances[svc.Name] = svc.Guid
+		}
+	}
+	return instances, nil
+}
