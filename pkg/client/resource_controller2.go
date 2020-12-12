@@ -24,6 +24,21 @@ func (resourceController *ResourceControllerV2) CreateResourceKey(createResource
 	return resourceController.CreateResourceKeyWithContext(context.Background(), createResourceKeyOptions)
 }
 
+// ListResourceKeysBySourceCrn will return all the resource keys by name belongs to a sourceCrn
+func (resourceController *ResourceControllerV2) ListResourceKeysBySourceCrn(name, sourceCrn string) (keys []rcv2.ResourceKey, err error) {
+	ks, _, err := resourceController.ResourceControllerV2.ListResourceKeys(resourceController.ResourceControllerV2.NewListResourceKeysOptions().SetName(name))
+	if err != nil {
+		return
+	}
+
+	for _, k := range ks.Resources {
+		if *k.SourceCrn == sourceCrn {
+			keys = append(keys, k)
+		}
+	}
+	return
+}
+
 type CreateResourceKeyOptions struct {
 	*rcv2.CreateResourceKeyOptions
 
