@@ -131,16 +131,16 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 
 			// frame the unique name for the service credential
 			if opt.ServiceCredName == "" {
-				opt.ServiceCredName = serviceCredPrefix + "-" + bxCli.User.ID
+				opt.ServiceCredName = serviceCredPrefix + "-" + *cosOfBucket.Name
 			}
 
-			keys, _, err := resourceController.ResourceControllerV2.ListResourceKeys(resourceController.ResourceControllerV2.NewListResourceKeysOptions().SetName(opt.ServiceCredName))
+			keys, err := resourceController.ListResourceKeysBySourceCrn(opt.ServiceCredName, *cosOfBucket.Crn)
 			if err != nil {
 				return fmt.Errorf("failed to list the service credentials: %v", err)
 			}
 
 			cred := new(rcv2.Credentials)
-			if len(keys.Resources) == 0 {
+			if len(keys) == 0 {
 				// Create the service credential if does not exist
 				klog.Infof("Auto Generating the COS Service credential for importing the image with name: %s", opt.ServiceCredName)
 				createResourceKeyOptions := &client.CreateResourceKeyOptions{
@@ -153,11 +153,10 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 					return err
 				}
 				cred = key.Credentials
-
 			} else {
 				// Use the service credential already created
 				klog.Infof("Reading the existing service credential: %s", opt.ServiceCredName)
-				cred = keys.Resources[0].Credentials
+				cred = keys[0].Credentials
 			}
 
 			jsonString, err := json.Marshal(cred.GetProperty("cos_hmac_keys"))
@@ -235,7 +234,7 @@ func init() {
 	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Watch, "watch", "w", false, "After image import watch for image to be published and ready to use")
 	Cmd.Flags().DurationVar(&pkg.ImageCMDOptions.WatchTimeout, "watch-timeout", 1*time.Hour, "watch timeout")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", "PowerVS Storage type, accepted values are [tier1, tier3].")
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "cos-service-cred", "", "IBM COS Service Credential name to be auto generated(default \""+serviceCredPrefix+"-<USERID>\")")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "cos-service-cred", "", "IBM COS Service Credential name to be auto generated(default \""+serviceCredPrefix+"-<COS Name>\")")
 
 	_ = Cmd.MarkFlagRequired("bucket")
 	_ = Cmd.MarkFlagRequired("bucket-region")
