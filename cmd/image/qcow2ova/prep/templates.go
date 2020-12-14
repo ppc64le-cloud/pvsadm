@@ -65,7 +65,8 @@ subscription-manager clean
 rpm -e ibm-power-repo-*.noarch
 
 mv /etc/resolv.conf.orig /etc/resolv.conf | true
-touch /.autorelabel`
+touch /.autorelabel
+`
 
 var cloudConfig = `# The top level settings are used as module
 # and system configuration.
@@ -159,9 +160,11 @@ system_info:
    ssh_svcname: sshd
 
 bootcmd:
-    - 'echo "IPV6_AUTOCONF=no" >> /etc/sysconfig/network-scripts/ifcfg-$(ls  /sys/class/net -1| grep env.|sort -n -r|head -1)'`
+    - 'echo "IPV6_AUTOCONF=no" >> /etc/sysconfig/network-scripts/ifcfg-$(ls  /sys/class/net -1| grep env.|sort -n -r|head -1)'
+`
 
-var dsIdentify = `policy: search,found=all,maybe=all,notfound=disabled`
+var dsIdentify = `policy: search,found=all,maybe=all,notfound=disabled
+`
 
 type Setup struct {
 	Dist, RHNUser, RHNPassword, RootPasswd string
