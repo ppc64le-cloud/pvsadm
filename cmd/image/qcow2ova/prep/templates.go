@@ -17,7 +17,7 @@ echo "nameserver 9.9.9.9" | tee /etc/resolv.conf
 {{if eq .Dist "rhel"}}
 subscription-manager register --force --auto-attach --username={{ .RHNUser }} --password={{ .RHNPassword }}
 {{end}}
-yum update -y
+yum update -y && yum install -y yum-utils
 # yum install http://public.dhe.ibm.com/systems/virtualization/powervc/rhel8_cloud_init/cloud-init-19.1-8.ibm.el8.noarch.rpm -y
 yum install http://people.redhat.com/~eterrell/cloud-init/cloud-init-19.4-11.el8_3.1.noarch.rpm -y
 ln -s /usr/lib/systemd/system/cloud-init-local.service /etc/systemd/system/multi-user.target.wants/cloud-init-local.service
@@ -28,6 +28,8 @@ rm -rf /etc/systemd/system/multi-user.target.wants/firewalld.service
 rpm -vih --nodeps http://public.dhe.ibm.com/software/server/POWER/Linux/yum/download/ibm-power-repo-latest.noarch.rpm
 sed -i 's/^more \/opt\/ibm\/lop\/notice/#more \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
 echo 'y' | /opt/ibm/lop/configure
+# Disable the AT repository due to slowness in nature
+yum-config-manager --disable Advance_Toolchain
 yum install  powerpc-utils librtas DynamicRM  devices.chrp.base.ServiceRM rsct.opt.storagerm rsct.core rsct.basic rsct.core src -y
 yum install -y device-mapper-multipath
 cat <<EOF > /etc/multipath.conf
