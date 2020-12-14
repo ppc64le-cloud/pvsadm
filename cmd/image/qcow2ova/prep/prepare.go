@@ -79,17 +79,17 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(mnt, "setup.sh"), []byte(setupStr), 744)
+	err = ioutil.WriteFile(filepath.Join(mnt, "setup.sh"), []byte(setupStr), 0744)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(cloudConfig), 644)
+	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(cloudConfig), 0644)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/ds-identify.conf"), []byte(dsIdentify), 644)
+	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/ds-identify.cfg"), []byte(dsIdentify), 0644)
 	if err != nil {
 		return err
 	}
