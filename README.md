@@ -1,61 +1,18 @@
-# pvsadm
-
 ## Overview
-Power Systems Virtual Server projects deliver flexible compute capacity for Power Systems workloads.
-Integrated with the IBM Cloud platform for on-demand provisioning.
 
-This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily
+This is a tool to help with managing of resources in IBM Power Systems Virtual Server.
 
-```shell script
-./pvsadm --help
-Power Systems Virtual Server projects deliver flexible compute capacity for Power Systems workloads.
-Integrated with the IBM Cloud platform for on-demand provisioning.
+## Installation
+1. Go to the [releases page](https://github.com/ppc64le-cloud/pvsadm/releases/)
+2. Select the latest release and download the relevant binary under the Assets section.
+3. Run the `pvsadm --help` command to check the available subcommands and the options.
 
-This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily
+## Image Management
+Sub command under the pvsadm tool to perform image related tasks like image conversion, uploading and importing into the IBM Power Systems Virtual Server instances. For more information, refer to the `pvsadm image --help` command.
 
-Usage:
-  pvsadm [command]
+The typical image workflow comprises of the following steps:
 
-Available Commands:
-  help        Help about any command
-  purge       Purge the powervs resources
-
-Flags:
-  -k, --api-key string   IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)
-      --debug            Enable PowerVS debug option
-  -h, --help             help for pvsadm
-
-Use "pvsadm [command] --help" for more information about a command.
-```
-
-## Purge PowerVS Resources:
-
-```shell script
-$ ./pvsadm purge --help
-Purge the powervs resources
-
-Usage:
-  pvsadm purge [command]
-
-Available Commands:
-  images      Purge the powervs images
-  networks    Purge the powervs networks
-  vms         Purge the powervs vms
-  volumes     Purge the powervs volumes
-
-Flags:
-      --before duration        Remove resources before mentioned duration(format: 99h99m00s), mutually exclusive with --since
-      --dry-run                dry run the action and don't delete the actual resources
-  -h, --help                   help for purge
-      --ignore-errors          Ignore any errors during the operations
-  -i, --instance-id string     Instance ID of the PowerVS instance
-  -n, --instance-name string   Instance name of the PowerVS
-      --no-prompt              Show prompt before doing any destructive operations
-      --since duration         Remove resources since mentioned duration(format: 99h99m00s), mutually exclusive with --before
-
-Global Flags:
-  -k, --api-key string   IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)
-      --debug            Enable PowerVS debug option
-
-Use "pvsadm purge [command] --help" for more information about a command.
-```
+1. Download the qcow2 image.
+2. Convert the downloaded qcow2 image to ova using `pvsadm image qcow2ova` command.
+3. Upload the ova image to IBM Cloud Object Store Bucket using `pvsadm image upload` command.
+4. Import the ova image to IBM Power Systems Virtual Server instances using `pvsadm image import` command.
