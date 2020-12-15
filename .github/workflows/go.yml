@@ -54,7 +54,7 @@ jobs:
         git fetch --tags --force --prune
         VERSION=$(git describe --tags --dirty)
         STATIC_FLAG='-w -extldflags "-static"'
-        for platform in darwin/amd64 linux/amd64 linux/ppc64le
+        for platform in darwin/amd64 linux/amd64 linux/ppc64le windows/amd64
         do
           os_name=$(echo "$platform" | cut -d "/" -f 1)
           arch=$(echo "$platform" | cut -d "/" -f 2)
