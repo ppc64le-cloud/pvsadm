@@ -9,12 +9,31 @@
     configuration for the pvsadm tool. 
 '
 
+: '
+ Usage ./get.sh
+ Examples:
+   # Download the latest released version of pvsadm tool
+   ./get.sh
+
+   # Download the 0.1 release
+   VERSION=0.1 ./get.sh
+
+   # Run script via curl + bash
+   curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | bash
+
+   # Run script via curl + bash, replace if any existing version exist in the /usr/local/bin path
+   curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | FORCE=1 bash
+'
+
 # Trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
 
 function ctrl_c() {
     echo "Bye!"
 }
+
+VERSION=${VERSION:=latest}
+FORCE=${FORCE:=0}
 
 function identify_os() {
 
@@ -33,37 +52,43 @@ function identify_os() {
         ARCH=amd64
     fi
 
-    export $ARCH
-    export $DISTRO
+    export ARCH
+    export DISTRO
 }
 
 function check_connectivity() {
     
-    curl --output /dev/null --silent --head --fail http://github.com
-    if [ ! $? -eq 0 ]; then
+    if ! curl --output /dev/null --silent --head --fail http://github.com; then
         echo
-        echo "ERROR: please, check your internet connection."
-        exit
+        echo "ERROR: unable to reach github.com, please check your internet connection."
+        exit 1
     fi
 }
 
-function install_pvsadmin() {
+function install_pvsadm() {
 
-    if [[ "$1" == *"--force"* ]]; then
+    if [[ "${FORCE}" -eq 1 ]]; then
        if command -v "pvsadm" &> /dev/null; then
            rm -f /usr/local/bin/pvsadm
        fi
     fi
-    
-    LATEST_RELEASE=$(curl --silent "https://api.github.com/repos/ppc64le-cloud/pvsadm/releases/latest" | jq -r '.tag_name') 
 
     if command -v "pvsadm" &> /dev/null; then
         echo "pvsadm is already installed!"
-	pvsadm version
-        exit
+        pvsadm version
+        exit 1
     fi
 
-    curl --progress-bar -LJ "https://github.com/ppc64le-cloud/pvsadm/releases/download/$LATEST_RELEASE/pvsadm-$DISTRO-$ARCH" --output /usr/local/bin/pvsadm
+    if [[ "${VERSION}" == "latest" ]]; then
+        DL_URL="https://github.com/ppc64le-cloud/pvsadm/releases/latest/download"
+    else
+        DL_URL="https://github.com/ppc64le-cloud/pvsadm/releases/download/${VERSION}"
+    fi
+
+    if ! curl --fail --progress-bar -LJ "${DL_URL}/pvsadm-$DISTRO-$ARCH" --output /usr/local/bin/pvsadm; then
+        echo "Failed to download the pvsadm with mentioned ${VERSION} version, please check the VERSION"
+        exit 1
+    fi
 
     chmod +x /usr/local/bin/pvsadm
     pvsadm version
@@ -71,15 +96,15 @@ function install_pvsadmin() {
 
 function run (){
 
-    if [ -z $1 ]; then
+    if [[ "${FORCE}" -ne 1 ]]; then
        echo
-       echo "To replace an old version of pvsadm, run this script as ./get.sh --force"
+       echo "To replace an old version of pvsadm, run this script with an environment variable: FORCE=1"
        echo
     fi
 
     identify_os
     check_connectivity
-    install_pvsadmin $1
+    install_pvsadm
 }
 
-run "$@"
+run
