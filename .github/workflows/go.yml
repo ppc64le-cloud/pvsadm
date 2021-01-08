@@ -63,7 +63,7 @@ jobs:
         tar -czvf pvsadm-binaries.tar.gz bin/
 
     - name: Test
-      run: go test -v ./...
+      run: make unit
 
     - uses: actions/upload-artifact@v2
       with:
