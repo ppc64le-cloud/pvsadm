@@ -20,5 +20,5 @@ func (p *Rule) Verify() error {
 }
 
 func (p *Rule) Hint() string {
-	return "supported only on linux/ppc64le platform"
+	return "supported only on linux/ppc64le platform, please run it on RHEL/CentOS(ppc64le)"
 }
