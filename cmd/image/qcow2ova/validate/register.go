@@ -10,8 +10,8 @@ import (
 
 func init() {
 	//TODO: Add Operating system check
-	AddRule(&user.Rule{})
 	AddRule(&platform.Rule{})
+	AddRule(&user.Rule{})
 	AddRule(&image_name.Rule{})
 	AddRule(&tools.Rule{})
 	AddRule(&diskspace.Rule{})
