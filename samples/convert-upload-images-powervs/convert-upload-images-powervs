@@ -1,0 +1,728 @@
+#!/usr/bin/env bash
+: '
+Copyright (C) 2021 IBM Corporation
+Licensed under the Apache License, Version 2.0 (the “License”);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'
+#-------------------------------------------------------------------------
+set -e
+#set -x
+
+source <(curl -L https://raw.githubusercontent.com/ocp-power-automation/openshift-install-power/fb8dd54019982f2b645084ae3886d73f1ed4ccce/openshift-install-powervs 2> /dev/null | sed  's/main "$@"//g')
+
+function help {
+  cat <<-EOF
+
+Automation for creating RHCOS/RHEL images to PowerVS Services. This is a wrapper for pvsadm tool.
+
+Usage:
+  ./convert-upload-images-powervs [ --rhel-url <url> | --rhcos-url <url> ] --service-name  <service name> --region <bucket region> --cos-bucket <bucket name> --cos-resource-group <resource group> [ --cos-instance-name <cos instance name> ]
+
+Args:
+      --service-name string         A service name in cloud.ibm.com you have access(Mandatory)
+      --region string               Object store bucket region(Mandatory)
+      --cos-bucket string           Object store bucket name(Mandatory)
+      --cos-resource-group string   COS resource group(Mandatory)
+      --cos-instance-name string    COS instance name(Mandatory)
+      --rhel-url  url               url pointing to the rhel qcow2 image(optional)
+      --rhcos-url  url              url pointing to the rhcos qcow2 image(optional)
+      --help                        help for upload
+
+EOF
+  exit 0
+}
+
+ARTIFACTS_VERSION="master"
+
+
+
+TF='./terraform'
+CLI_PATH='./ibmcloud'
+TMP_DIR=$(mktemp -d tmp.XXXXXXXXXXX)
+
+ARTIFACTS_DIR="automation"
+LOGFILE="$(date "+%Y%m%d%H%M%S")"
+GIT_URL="https://github.com/ocp-power-automation/infra"
+
+TRACE=0
+TF_TRACE=0
+FORCE_DESTROY=1
+
+NO_OF_RETRY=${NO_OF_RETRY:-"5"}
+SLEEP_TIME=10
+REBOOT_TIMEOUT=30
+
+PVSADM_VERSION="v0.1.1-alpha.2"
+IMAGE_SIZE="120"
+
+# Default Centos image name
+CENTOS_VM_IMAGE_NAME='Linux-CentOS-8-3'
+
+#-------------------------------------------------------------------------
+# Check and run setup
+#-------------------------------------------------------------------------
+function precheck_tools {
+  # Run setup if no artifacts
+  if [[ ! -d $ARTIFACTS_DIR ]]; then
+    warn "Cannot find artifacts directory... running setup command"
+    setup
+  else
+    setup_tools
+  fi
+}
+
+#-------------------------------------------------------------------------
+# Display the CentOS VM access information
+#-------------------------------------------------------------------------
+function vm_access_info {
+  if [[ -f ./terraform.tfstate ]] && checkState "module.prepare.null_resource.rhel83_fix[0]"; then
+    BASTION_PUBLIC_IP=$($TF output "bastion_public_ip" 2>/dev/null)
+    # TODO: Find a way to change the bastion user as per TF variable; default is root
+    if [ -s "$VAR_PRIVATE_KEY_FILE" ]; then
+      echo "Login to bastion: '$($TF output bastion_ssh_command | sed 's/,.*//')' and start using the 'oc' command."
+    else
+      echo "Login to bastion: '$($TF output bastion_ssh_command | sed 's/,.*//' | sed 's/data/'"$ARTIFACTS_DIR"'\/data/')' and start using the 'oc' command."
+    fi
+  else
+    return 1
+  fi
+}
+
+#-------------------------------------------------------------------------
+# Verify if pull-secret.txt exists
+# Check if SSH key-pair is provided else use users key or create a new one
+#-------------------------------------------------------------------------
+function verify_data {
+  if [ ! -s "$VAR_PRIVATE_KEY_FILE" ] && [ ! -s "$VAR_PUBLIC_KEY_FILE" ]; then
+    if [ -s "./id_rsa" ] && [ -s "./id_rsa.pub" ]; then
+      log "Found id_rsa & id_rsa.pub in current directory"
+      chmod 600 ./id_rsa*
+      cp -f ./id_rsa ./id_rsa.pub ./"$ARTIFACTS_DIR"/data/
+      VAR_PRIVATE_KEY_FILE="$PWD/id_rsa"
+    else
+      warn "Creating new SSH key-pair..."
+      ssh-keygen -t rsa -f ./id_rsa -N '' > /dev/null 2>&1
+      chmod 600 ./id_rsa*
+      mkdir -p ./"$ARTIFACTS_DIR"/data/
+      cp -f "./id_rsa" "./id_rsa.pub" ./"$ARTIFACTS_DIR"/data/
+      VAR_PRIVATE_KEY_FILE="$PWD/id_rsa"
+    fi
+  fi
+}
+
+#-------------------------------------------------------------------------
+# Interactive prompts to populate the var.tfvars file
+#-------------------------------------------------------------------------
+function variables {
+  precheck_tools
+
+  VAR_TEMPLATE="./var.tfvars.tmp"
+  VAR_FILE="./var.tfvars"
+  rm -f "$VAR_TEMPLATE" "$VAR_FILE"
+
+  debug_switch
+  [ "${IBMCLOUD_API_KEY}" == "" ] && error "Please export IBMCLOUD_API_KEY"
+  log "Trying to login with the provided IBMCLOUD_API_KEY..."
+  $CLI_PATH login --apikey "$IBMCLOUD_API_KEY" -q --no-region > /dev/null
+  debug_switch
+
+  service_instance=$SERVICE_NAME
+
+  CRN=$($CLI_PATH pi service-list | grep "${service_instance}" | awk '{print $1}')
+  $CLI_PATH pi service-target "$CRN"
+
+  log "Gathering information from the selected Service Instance... Please wait"
+  ZONE=$(echo "$CRN" | cut -f6 -d":")
+  REGION=$(echo "$ZONE" | sed 's/-*[0-9].*//')
+  SERVICE_INSTANCE_ID=$(echo "$CRN" | cut -f8 -d":")
+
+  # FIXME: Filter out only pub-vlan from the list; using grep currently
+  ALL_NETS=$($CLI_PATH pi nets --json| grep name | cut -f4 -d'"' | grep -v pub-net | grep -v public-)
+  [ -z "$ALL_NETS" ] && error "No private network found"
+
+  # TODO: Get region from a map of `zone:region` or any other good way
+  {
+    echo "ibmcloud_region = \"${REGION}\""
+    echo "ibmcloud_zone = \"${ZONE}\""
+    echo "service_instance_id = \"${SERVICE_INSTANCE_ID}\""
+  } >> $VAR_TEMPLATE
+
+  # RHEL image name
+  echo "rhel_image_name =  \"${CENTOS_VM_IMAGE_NAME}\"" >>$VAR_TEMPLATE
+
+  # PowerVS private network
+  value=$(echo $ALL_NETS | head -n 1)
+  echo "network_name =  \"${value}\"" >> $VAR_TEMPLATE
+
+  value="inf"-$(echo $((1 + $RANDOM % 9999)))
+  echo "vm_id_prefix = \"${value}\"" >>$VAR_TEMPLATE
+
+  if ! [ -z "$RHEL_URL" ];then
+    if [[ -z "${RHEL_SUBSCRIPTION_USERNAME}" ]] ; then
+      question "Enter RHEL subscription username for bastion nodes"
+      RHEL_SUBSCRIPTION_USERNAME=${value}
+      if [ "${value}" == "" ]; then
+        warn "Skipping subscription information since no username is provided"
+      else
+        if [[ "${RHEL_SUBSCRIPTION_PASSWORD}" != "" ]]; then
+          warn "Using the subscription password from environment variables"
+        else
+          question "Enter the password for above username. WARNING: If you do not wish to store the subscription password please export RHEL_SUBSCRIPTION_PASSWORD" "-sensitive"
+          if [[ "${value}" != "" ]]; then
+            RHEL_SUBSCRIPTION_PASSWORD=${value}
+          fi
+        fi
+      fi
+    fi
+    if [[ -z "${RHEL_ROOT_PASSWORD}"  ]] ; then
+      warn "Using autogenerated rhel root  password from environment variables, please export RHEL_ROOT_PASSWORD if you want to set your own"
+    fi
+  fi
+  # Bastion node config
+  echo "bastion = {memory = \"16\", processors = \".25\", \"count\" = 1}" >>"$VAR_TEMPLATE"
+
+  if [ -s "./id_rsa" ] && [ -s "./id_rsa.pub" ]; then
+    log "Found id_rsa & id_rsa.pub in current directory"
+    echo "private_key_file = \"$PWD/id_rsa\"" >> $VAR_TEMPLATE
+    echo "public_key_file = \"$PWD/id_rsa.pub\"" >> $VAR_TEMPLATE
+   fi
+
+  cp $VAR_TEMPLATE $VAR_FILE
+  rm -f $VAR_TEMPLATE
+
+  success "variables command completed!"
+}
+
+#-------------------------------------------------------------------------
+# Download the ocp4-upi-powervs tag/branch artifact
+#-------------------------------------------------------------------------
+function setup_artifacts {
+  if [[ -f ./"$ARTIFACTS_DIR"/terraform.tfstate ]]; then
+    if [[ $($TF version | grep 'Terraform v0') != "Terraform v$(grep terraform_version ./"$ARTIFACTS_DIR"/terraform.tfstate | awk '{print $2}' |  cut -d'"' -f2)" ]]; then
+      error "Existing state file was created using a different terraform version. Please destroy the resources by running the destroy command."
+    fi
+    if [[ $($TF state list -state=./"$ARTIFACTS_DIR"/terraform.tfstate | wc -l) -gt 0 ]]; then
+      error "Existing state file contains resources. Please destroy the resources by running the destroy command."
+    fi
+  fi
+
+  log "Downloading code artifacts $ARTIFACTS_VERSION in ./$ARTIFACTS_DIR"
+  retry "curl -fsSL $GIT_URL/archive/$ARTIFACTS_VERSION.zip -o ./automation.zip"
+  unzip -o "./automation.zip" > /dev/null 2>&1
+  rm -rf ./"$ARTIFACTS_DIR" ./automation.zip
+  cp -rf "infra-$ARTIFACTS_VERSION" ./"$ARTIFACTS_DIR-1"
+  rm -rf "infra-$ARTIFACTS_VERSION"
+  mv ./"$ARTIFACTS_DIR"-1/infra-node ./"$ARTIFACTS_DIR"
+  rm -rf ./"$ARTIFACTS_DIR"-1
+}
+
+#-------------------------------------------------------------------------
+# Create the centos vm
+#-------------------------------------------------------------------------
+function apply {
+  # Run setup if no artifacts
+  precheck_tools
+  precheck_input
+  powervs_login
+  init_terraform
+  log "Running terraform apply... please wait"
+  retry_terraform apply "$vars -input=false"
+  vm_access_info && success "Congratulations! create command completed"
+}
+
+#-------------------------------------------------------------------------
+# Destroy VM
+#-------------------------------------------------------------------------
+function destroy_vm {
+    TF='./terraform'
+    SECONDS=0
+    message="VM Destroy completed in"
+    destroy # Destroying the VM
+    time_taken "$message"
+}
+
+#-------------------------------------------------------------------------
+# Create VM
+#-------------------------------------------------------------------------
+function create_vm {
+  PWD_SAVED="$PWD"
+  SECONDS=0
+  message="VM Creation completed in"
+  apply
+  time_taken "$message"
+  cd $PWD_SAVED # Going back to the script directory
+
+}
+
+#-------------------------------------------------------------------------
+# Configure cos resource crn
+#-------------------------------------------------------------------------
+function get_cos_service_id {
+  log "get crn for cos instance"
+  LOG_FILE="logs/get_cos_service_id_${LOGFILE}.log"
+  $CLI_PATH plugin install cloud-object-storage -q -f  > /dev/null
+  $CLI_PATH resource service-instance "${COS_INSTANCE_NAME}" --id  2>&1 > $LOG_FILE
+  if grep -c "Service instance ${COS_INSTANCE_NAME} was not found" "$LOG_FILE" >/dev/null; then
+    log "Unable to find the cos instance ${COS_INSTANCE_NAME}"
+    return 1
+  fi
+  COS_INSTANCE_ID=$(grep crn "$LOG_FILE" | awk '{print $2}')
+  return 0
+  #$CLI_PATH cos config crn --crn "${COS_CRN}" --force > /dev/null
+}
+
+#-------------------------------------------------------------------------
+# Download and setup pvsadm tool in the remote CentOS instance
+#-------------------------------------------------------------------------
+function setup_pvsadm_remote {
+  # Sets up pvsadm in the VM created
+  LOG_FILE="logs/setup_pvsadm_remote_${i}_${LOGFILE}.log"
+  log "Setting up pvsadm"
+  for i in $(seq 1 "$NO_OF_RETRY"); do
+    echo "Attempt: $i/$NO_OF_RETRY"
+    ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "cd $REMOTE_TEMP_DIR; curl -fsSL  https://github.com/ppc64le-cloud/pvsadm/releases/download/${PVSADM_VERSION}/pvsadm-linux-ppc64le.tar.gz -o ./pvsadm-linux-ppc64le.tar.gz; tar -xzvf ./pvsadm-linux-ppc64le.tar.gz --directory /usr/local/bin; pvsadm version"
+    if [[ $? -eq 0 ]]; then
+      success "pvsadm setup in the remote infra machine"
+      return 0
+    else
+      failure "Failed to connect to the remote machine"
+    fi
+  done
+  destroy_vm
+  return 1
+}
+
+#-------------------------------------------------------------------------
+# Install required packages and also creates tmp work directory
+#-------------------------------------------------------------------------
+function prepare_remote {
+  # Prepare the VM created
+  log "Preparing the remote machine for image management"
+  for i in $(seq 1 "$NO_OF_RETRY"); do
+    echo "Attempt: $i/$NO_OF_RETRY"
+    if ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "yum install qemu-img -y 2>&1" >/dev/null; then
+      break
+    fi
+  done
+  if [[ $i -le 0 ]];then
+    failure "Failed to install qemu packages the remote machine"
+    return 1
+  fi
+  for i in $(seq 1 "$NO_OF_RETRY"); do
+    echo "Attempt: $i/$NO_OF_RETRY"
+    REMOTE_TEMP_DIR=$(ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "mktemp -d")
+    REMOTE_TEMP_FILE=$(ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "mktemp $REMOTE_TEMP_DIR/demo.XXXXXXXXXX")
+    if [[ $? -eq 0 ]]; then
+      break
+    fi
+  done
+  if [[ $i -le 0 ]];then
+    failure "Failed to create temporary directory in the remote machine"
+    return 1
+  fi
+  success "Remote machine preparation completed"
+  return 0
+}
+
+#-------------------------------------------------------------------------
+# Download and convert qcow2 image to ova image
+#-------------------------------------------------------------------------
+function convert_image_remote {
+  # Convert the image to be uploaded to ova
+  local image_dist=$1
+  local image_name=$2
+  local image_url=$3
+  log "Converting $image_name from qcow2 to ova"
+  if [[ "$image_dist" == "coreos" ]];then
+    RHEL_SUBSCRIPTION_USERNAME="dummy"
+    RHEL_SUBSCRIPTION_PASSWORD="dummy"
+  fi
+  SECONDS=0
+  local message="Converting $2 image to OVA completed in"
+  for i in $(seq 1 "$NO_OF_RETRY"); do
+    echo "Attempt: $i/$NO_OF_RETRY"
+      LOG_FILE="logs/convert_image_remote_${i}_${LOGFILE}.log"
+      ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "cd \"$REMOTE_TEMP_DIR\"; pvsadm image qcow2ova --os-password \"$RHEL_ROOT_PASSWORD\" --rhn-user \"$RHEL_SUBSCRIPTION_USERNAME\" --rhn-password \"$RHEL_SUBSCRIPTION_PASSWORD\" --image-dist \"$image_dist\" --image-name \"$image_name\" --image-url \"$image_url\" --image-size \"$IMAGE_SIZE\" 2>&1" > $LOG_FILE || true
+      if grep -c "Successfully converted" "$LOG_FILE" >/dev/null;then
+        if [[ -z "${RHEL_ROOT_PASSWORD}"  ]] ; then
+          ROOT_PASSWORD=$(grep "OS root password:" "$LOG_FILE"| awk '{print $4}')
+          log "Autogenerated root password $ROOT_PASSWORD"
+        fi
+        IMAGE_PATH=$(grep "Successfully converted Qcow2 image to OVA format" "$LOG_FILE" | awk '{print $10}')
+        success "Converting $2 completed"
+        time_taken "$message"
+        return 0
+      fi
+  done
+  failure "Converting $image_name failed"
+  return 1
+}
+
+#-------------------------------------------------------------------------
+# Copy the downloaded qcow2 image to the CentOS instance
+#-------------------------------------------------------------------------
+function copy_image_to_remote {
+  # scp the locally downloaded images to the newly created VM
+  log "Copying downloaded rhel image to centos vm"
+  SECONDS=0
+  local message=""
+  if [[ "$COPY_RHEL_IMAGE" == "1" ]];then
+    message="Copying rhel image to target centos VM completed in"
+    for i in $(seq 1 "$NO_OF_RETRY"); do
+      echo "Attempt: $i/$NO_OF_RETRY"
+      scp -o 'StrictHostKeyChecking no' -i $VAR_PRIVATE_KEY_FILE $RHEL_IMAGE root@${BASTION_PUBLIC_IP}:$REMOTE_TEMP_DIR/rhel
+      if [[ $? -eq 0 ]] ;then
+        success "Copied $RHEL_IMAGE to remote machine completed"
+        RHEL_URL=$REMOTE_TEMP_DIR/"rhel"
+        time_taken "$message"
+        return 0
+      fi
+    done
+  else
+    log "urls are being used, no need of copy"
+    return 0
+  fi
+  failure "Copying rhel image failed"
+  return 1
+}
+
+#-------------------------------------------------------------------------
+# Upload converted image to the COS bucket via pvsadm tool
+#-------------------------------------------------------------------------
+function upload_image_remote {
+  # Upload the ova image to the object storage bucket
+  log "Uploading image $2 to the cos bucket $1"
+  local cos_bucket_name=$1
+  local image_name=$2
+  local cos_region_name=$3
+  SECONDS=0
+  local message="Uploading $2 image to $1 completed in"
+  for i in $(seq 1 "$NO_OF_RETRY"); do
+    echo "Attempt: $i/$NO_OF_RETRY"
+    LOG_FILE="logs/upload_image_remote_${i}_${LOGFILE}.log"
+    ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "cd \"$REMOTE_TEMP_DIR\"; pvsadm image upload --api-key \"$IBMCLOUD_API_KEY\"  --bucket \"$cos_bucket_name\" --file \"$image_name\" --bucket-region \"$cos_region_name\" 2>&1" > $LOG_FILE || true
+    if grep -c "object already exists in the $cos_bucket_name bucket" "$LOG_FILE" >/dev/null; then
+      warn "$image_name object already exists in the $cos_bucket_name bucket. Skipping upload"
+      time_taken "$message"
+      return 0
+    fi
+    if ! grep -c "Upload completed successfully" "$LOG_FILE" >/dev/null; then
+      failure "Uploading image failed"
+    else
+      success "Uploading $2 to $1 completed"
+      time_taken "$message"
+      return 0
+    fi
+  done
+  failure "Uploading image failed"
+  return 1
+}
+
+#-------------------------------------------------------------------------
+# Wait for import completion
+#-------------------------------------------------------------------------
+function wait_for_import {
+  # Wait until the image import successful
+  local service_name=$1
+  local image_name=$2
+  count=180;
+  while : ; do
+    sleep 10 ;
+    ret=$($PVSADM_CLI get events -n "$service_name" | grep -A 4 '\| *import'| grep -A 3  "$image_name"  | grep -A 4 -c  'successfully imported') >/dev/null  2>/dev/null
+    if [[ "$ret" == "0" ]]; then
+      return 0
+    fi ;
+    if [[ $count -le 0 ]];then
+      return 1
+    else
+      count=$((count - 1));
+    fi;
+  done
+}
+
+function time_taken {
+  # This function calculate the time taken to do an operation.
+  # This uses bash env variable SECONDS, this has to be set to 0 before each operation
+  # for which you want to calculate the time time_taken
+  ELAPSED=""$1": ${GRN}$(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec${NRM}"
+  echo -e "${CYN}[${FUNCNAME[1]}]${NRM} $ELAPSED"
+}
+
+#-------------------------------------------------------------------------
+# Import images from the given COS bucket
+#-------------------------------------------------------------------------
+function import_image_remote {
+  # Importing the the rhel/rhcos ova images
+  log "Importing $3 to $1"
+  local service_name=$1
+  local cos_bucket_name=$2
+  local object_name=$3
+  local image_name=$4
+  local cos_bucket_region=$5
+  SECONDS=0
+  local message="Importing $3 image to $1 completed in"
+  for i in $(seq 1 "$NO_OF_RETRY"); do
+    echo "Attempt: $i/$NO_OF_RETRY"
+    LOG_FILE="logs/import_image_remote_${service_name}_${i}_${LOGFILE}.log"
+    ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP}  "cd \"$REMOTE_TEMP_DIR\"; pvsadm image import --pvs-instance-name \"$service_name\" --bucket \"$cos_bucket_name\" --bucket-region \"$cos_bucket_region\" --object \"$object_name\" --pvs-image-name \"$image_name\" --api-key \"$IBMCLOUD_API_KEY\" -w  --watch-timeout 2h 2>&1" > $LOG_FILE || true
+    if grep -c  "${image_name} already exists" $LOG_FILE >/dev/null; then
+      warn "Image ${image_name} already exists in ${service_name}. Skipping"
+      time_taken "$message"
+      return 0
+    elif grep -c  "region not found for the zone" $LOG_FILE >/dev/null; then
+      warn "region not found for the zone. Check the $LOG_FILE  for more details. Skipping"
+      return 0
+    else
+      if ! grep -c "Successfully imported the image" $LOG_FILE >/dev/null; then
+        if grep -c 'context deadline exceeded\|connection timed out'  "$LOG_FILE" >/dev/null; then
+          wait_for_import "${service_name}" "${image_name}"
+          if [[ $? -eq 0 ]];then
+            success "Importing $3 to $1 completed"
+            time_taken "$message"
+            return 0
+          fi
+        fi
+      else
+        success "Importing $3 to $1 completed"
+        time_taken "$message"
+        return 0
+      fi
+    fi
+  done
+  failure "Importing image $3 to $1 failed"
+  return 1
+}
+
+#-------------------------------------------------------------------------
+# Creates the required COS bucket if not present
+#-------------------------------------------------------------------------
+function create_cos_bucket {
+  # Create os bucket
+  CLI_PATH='./ibmcloud'
+  log "Creating a new cos instance and bucket $1(if not present)"
+  local cos_bucket_name=$1
+  local cos_region_name=$2
+  local cos_resource_group=$3
+  if ! get_cos_service_id ; then 
+    echo "Unable to get the cos instance id"
+    return  1
+  fi
+  for i in $(seq 1 "$NO_OF_RETRY"); do
+    LOG_FILE="logs/create_cos_bucket-${i}_${LOGFILE}.log"
+    echo "Attempt: $i/$NO_OF_RETRY"
+    $CLI_PATH cos buckets --ibm-service-instance-id  "${COS_INSTANCE_ID}" > $LOG_FILE 2>&1 
+    if grep -Ec "(^| )${cos_bucket_name}( |$)" $LOG_FILE >/dev/null; then 
+      log "The bucket name already exist; Press ctrl+c to exit and give a new bucket name else will proceed in 10 seconds"
+      sleep 10
+      return 0
+    fi
+    $CLI_PATH cos bucket-create --bucket "${cos_bucket_name}" --ibm-service-instance-id "${COS_INSTANCE_ID}" --region "${cos_region_name}"> $LOG_FILE 2>&1 
+    if grep -c "The requested bucket name is not available" $LOG_FILE >/dev/null; then
+      log "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Select a different name and try again"
+      return 1
+    fi
+    if grep -c "Details about bucket ${cos_bucket_name}" $LOG_FILE >/dev/null; then 
+      success "Created new bucket ${cos_bucket_name} in cos instance ${COS_INSTANCE_NAME}"
+      return 0
+    fi 
+  done
+  failure "Failed Creating new bucket"
+  return 1
+}
+
+#-------------------------------------------------------------------------
+# Defining name of the images from the URLs
+#-------------------------------------------------------------------------
+function standardize_object_name {
+  # setting the image name in <distribution-date> format
+  local object_original_url=$1
+  local object_original_name=${object_original_url##*/}
+  local object_extension=""
+  local object_temp_name=""
+  object_extension="ova.gz"
+  object_temp_name=${object_original_name%.*}
+  IMAGE_NAME=`echo $object_temp_name | sed 's/\.//g'| sed 's/ppc64le//g'|sed 's/ova//g'|sed 's/qcow2//g' | sed 's/openstack//g' | sed 's/kvm//g' | sed -e 's/---*//g' | sed -e 's/_/-/g'| sed -e 's/[0-9]-GenericCloud-//g' | tr '[:upper:]' '[:lower:]' | grep -o -E '^[a-z]*-[0-9]{2}'`-$(date +%m%d%Y)
+  OBJECT_NAME=$IMAGE_NAME.${object_extension}
+}
+
+
+#-------------------------------------------------------------------------
+# Setting up the environment variables for images
+#-------------------------------------------------------------------------
+function setup_image_env_variables {
+  if [[ "${RHEL_IMAGE_NAME}" != "" ]]; then
+    RHEL_OBJECT_NAME=$RHEL_IMAGE_NAME.ova.gz
+  else
+    standardize_object_name $RHEL_URL
+    RHEL_OBJECT_NAME=$OBJECT_NAME
+    RHEL_IMAGE_NAME=$IMAGE_NAME
+  fi
+  if [[ "${RHCOS_IMAGE_NAME}" != "" ]]; then
+    RHCOS_OBJECT_NAME=$RHCOS_IMAGE_NAME.ova.gz
+  else
+    standardize_object_name $RHCOS_URL
+    RHCOS_OBJECT_NAME=$OBJECT_NAME
+    RHCOS_IMAGE_NAME=$IMAGE_NAME
+  fi
+}
+
+#-------------------------------------------------------------------------
+# Copy the image to temp directy for further operation
+#-------------------------------------------------------------------------
+function copy_image_file {
+  local image_path=$1
+  local object_name=$2
+  cp $image_path ./"$TMP_DIR"/$object_name
+  chmod 777 ./"$TMP_DIR"/$object_name
+  IMAGE_NEW_PATH=./"$TMP_DIR"/$object_name
+}
+
+function download_url() {
+  local url=$1
+  local image_name=${url##*/}
+  rm -rf $image_name
+  retry "curl -fsSL $url -o ./$image_name"
+  if [[ $? -eq 0 ]]; then
+    #IMAGE_PATH=$(realpath ./$image_name)
+    IMAGE_PATH=./$image_name
+    DOWNLOAD_IMAGE_NAME=$image_name
+  else
+    error "Unable to fetch the url"
+  fi
+}
+
+#-------------------------------------------------------------------------
+# Download the images if needed
+#-------------------------------------------------------------------------
+function download_image {
+  if [[ "$1" == "rhel" ]];then
+    if echo $RHEL_URL | grep -q -i  'access.cdn.redhat.com' ; then
+      log "downloading rhel image"
+      download_url $RHEL_URL
+      RHEL_IMAGE=$IMAGE_PATH
+      RHEL_DOWNLOADED_IMAGE_NAME=$DOWNLOAD_IMAGE_NAME
+      RHEL_NEW_IMAGE_PATH=$IMAGE_NEW_PATH
+      COPY_RHEL_IMAGE=1
+    fi
+  elif [[ "$1" == "rhcos" ]];then
+    download_url $RHCOS_URL
+    RHCOS_IMAGE=IMAGE_PATH
+    RHCOS_DOWNLOAD_IMAGE_NAME=$DOWNLOAD_IMAGE_NAME
+    copy_image_file $RHCOS_IMAGE $RHCOS_OBJECT_NAME
+    RHCOS_NEW_IMAGE_PATH=$IMAGE_NEW_PATH
+    COPY_RHCOS_IMAGE=1
+  else
+    warn "Unknown image"
+  fi
+}
+
+function main {
+  mkdir -p ./logs
+  vars=""
+
+  # Only use sudo if not running as root
+  [ "$(id -u)" -ne 0 ] && SUDO=sudo || SUDO=""
+  platform_checks
+
+  # Parse commands and arguments
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    "--rhel-url")
+      shift
+      RHEL_URL="$1"
+      ;;
+    "--rhcos-url")
+      shift
+      RHCOS_URL="$1"
+      ;;
+    "--cos-bucket")
+      shift
+      COS_BUCKET_NAME="$1"
+      ;;
+    "--service-name")
+      shift
+      SERVICE_NAMES="$1"
+      SERVICE_NAME=${SERVICE_NAMES%%,*}
+      SERVICE_NAMES=$(echo $SERVICE_NAMES | sed 's/,/ /g')
+      ;;
+    "--region")
+      shift
+      COS_BUCKET_REGION="$1"
+      ;;
+    "--cos-resource-group")
+      shift
+      COS_RESOURCE_GROUP="$1"
+      ;;
+    "--cos-instance-name")
+      shift
+      COS_INSTANCE_NAME="$1"
+      ;;
+    "--help")
+      help
+      ;;
+    esac
+    shift
+  done
+
+  if [ -z "${COS_BUCKET_NAME}" ] ||  [ -z "${SERVICE_NAME}" ] || [ -z "${COS_BUCKET_REGION}" ]  || [ -z "${COS_RESOURCE_GROUP}" ]; then
+    log "Some or all of the parameters are empty"
+    help
+  fi
+
+  if [ -z "${RHCOS_URL}" ] && [ -z "${RHEL_URL}" ] ; then
+    error "No RHEL/RHCOS/s provided"
+  fi
+  RHEL_SUBS_PASSWORD="${RHEL_SUBSCRIPTION_PASSWORD}"
+  VAR_RHEL_SUBS_USER="${RHEL_SUBSCRIPTION_USERNAME}"
+  setup_image_env_variables
+  setup
+  variables
+
+  if ! create_cos_bucket "${COS_BUCKET_NAME}" "${COS_BUCKET_REGION}" "${COS_RESOURCE_GROUP}" ; then exit 1 ; fi
+
+  # Downloading rhel locally, else the url may expire by the time the VM comes up
+  if ! [ -z "${RHEL_URL}" ];then
+    SECONDS=0
+    MSG="Downloading rhel qcow2 image completed in"
+    download_image "rhel"
+    time_taken "$MSG"
+  fi
+  create_vm
+
+  if !  prepare_remote; then  destroy_vm && exit 1 ; fi
+  if !  setup_pvsadm_remote; then  destroy_vm && exit 1 ; fi
+  
+  if ! [ -z "${RHEL_URL}" ];then
+    if ! copy_image_to_remote; then  destroy_vm && exit 1 ; fi
+    if ! convert_image_remote "rhel" "${RHEL_IMAGE_NAME}" "${RHEL_URL}"; then  destroy_vm && exit 1 ; fi
+    RHEL_IMAGE_PATH_REMOTE=${IMAGE_PATH}
+    if ! upload_image_remote "${COS_BUCKET_NAME}" "${RHEL_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}"; then  destroy_vm && exit 1 ; fi
+    for SERV_NAME in `echo ${SERVICE_NAMES}`; do 
+      if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHEL_OBJECT_NAME}" "${RHEL_IMAGE_NAME}" "${COS_BUCKET_REGION}"; then
+        warn "Unable to import "${RHEL_OBJECT_NAME}" to "${SERV_NAME}"" 
+      fi
+    done
+  fi
+  if ! [ -z "${RHCOS_URL}" ];then
+    if ! convert_image_remote "coreos" "${RHCOS_IMAGE_NAME}" "${RHCOS_URL}" ; then  destroy_vm && exit 1 ; fi
+    RHCOS_IMAGE_PATH_REMOTE=${IMAGE_PATH}
+    if !  upload_image_remote "${COS_BUCKET_NAME}" "${RHCOS_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}" ; then  destroy_vm && exit 1 ; fi
+    for SERV_NAME in `echo ${SERVICE_NAMES}`; do 
+      if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHCOS_OBJECT_NAME}" "${RHCOS_IMAGE_NAME}" "${COS_BUCKET_REGION}" ; then 
+        warn "Unable to import "${RHCOS_OBJECT_NAME}" to "${SERV_NAME}"" 
+      fi
+    done
+  fi
+
+  destroy_vm # Destroying the VM
+
+}
+
+main "$@"
