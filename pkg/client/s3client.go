@@ -16,6 +16,9 @@ package client
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM/ibm-cos-sdk-go/aws"
 	"github.com/IBM/ibm-cos-sdk-go/aws/credentials/ibmiam"
@@ -24,9 +27,6 @@ import (
 	"github.com/IBM/ibm-cos-sdk-go/service/s3/s3manager"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type S3Client struct {
@@ -140,12 +140,12 @@ func (c *S3Client) CreateBucket(bucketName string) error {
 }
 
 //To upload a object to S3 bucket
-func (c *S3Client) UploadObject(object, bucketName string) error {
-	klog.Infof("uploading the object %s\n", object)
-	//Read the content of the object
-	file, err := os.Open(object)
+func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
+	klog.Infof("uploading the file %s\n", fileName)
+	//Read the content of the file
+	file, err := os.Open(fileName)
 	if err != nil {
-		return fmt.Errorf("err opening file %s: %s", object, err)
+		return fmt.Errorf("err opening file %s: %s", fileName, err)
 	}
 	defer file.Close()
 
@@ -157,7 +157,7 @@ func (c *S3Client) UploadObject(object, bucketName string) error {
 	// Upload input parameters
 	upParams := &s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(filepath.Base(object)),
+		Key:    aws.String(objectName),
 		Body:   file,
 	}
 
