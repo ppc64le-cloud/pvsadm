@@ -58,6 +58,7 @@ type imageCMDOptions struct {
 	ServicePlan  string
 	ObjectName   string
 	//import options
+	COSInstanceName string
 	ImageFilename   string
 	AccessKey       string
 	SecretKey       string
