@@ -175,8 +175,24 @@ system_info:
       templates_dir: /etc/cloud/templates/
    ssh_svcname: sshd
 
+write_files:
+- path: /usr/local/bin/disable_cloud_init_nw.sh
+  permissions: 0755
+  owner: root
+  content: |
+    #!/usr/bin/env bash
+    set -e
+    cat <<EOF > /etc/cloud/cloud.cfg.d/01_disable_cloud_nw.cfg
+    #cloud-config
+    network:
+      config: disabled
+    EOF
+
 bootcmd:
     - 'echo "IPV6_AUTOCONF=no" >> /etc/sysconfig/network-scripts/ifcfg-$(ls  /sys/class/net -1| grep env.|sort -n -r|head -1)'
+
+runcmd:
+    - bash /usr/local/bin/disable_cloud_init_nw.sh
 `
 
 var dsIdentify = `policy: search,found=all,maybe=all,notfound=disabled
