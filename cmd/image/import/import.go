@@ -101,7 +101,11 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return err
 		}
 
-		instances, _, err := resourceController.ResourceControllerV2.ListResourceInstances(resourceController.ResourceControllerV2.NewListResourceInstancesOptions().SetType("service_instance"))
+		serviceListOptions := resourceController.ResourceControllerV2.NewListResourceInstancesOptions().SetType("service_instance")
+		if opt.COSInstanceName != "" {
+			serviceListOptions.SetName(opt.COSInstanceName)
+		}
+		instances, _, err := resourceController.ResourceControllerV2.ListResourceInstances(serviceListOptions)
 		if err != nil {
 			return err
 		}
@@ -239,6 +243,7 @@ func init() {
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "pvs-instance-name", "n", "", "PowerVS Instance name.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceID, "pvs-instance-id", "i", "", "PowerVS Instance ID.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Object Storage bucket name.")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.COSInstanceName, "cos-instance-name", "s", "", "Cloud Object Storage instance name.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "bucket-region", "r", "", "Cloud Object Storage bucket location.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageFilename, "object", "o", "", "Cloud Object Storage object name.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.AccessKey, "accesskey", "", "Cloud Object Storage HMAC access key.")
