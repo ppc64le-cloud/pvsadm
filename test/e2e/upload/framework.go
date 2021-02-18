@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e
+package upload
 
 import (
-	"testing"
-
-	_ "github.com/ppc64le-cloud/pvsadm/test/e2e/qcow2ova"
-	_ "github.com/ppc64le-cloud/pvsadm/test/e2e/upload"
+	"github.com/ppc64le-cloud/pvsadm/test/e2e/framework"
 )
 
-func TestE2E(t *testing.T) {
-	RunE2ETests(t)
+const (
+	command = "upload"
+)
+
+// CMDDescribe annotates the test with the subcommand label.
+func CMDDescribe(text string, body func()) bool {
+	return framework.Describe(command, text, body)
 }
