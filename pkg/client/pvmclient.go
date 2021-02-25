@@ -48,7 +48,7 @@ type PVMClient struct {
 func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error) {
 	pvmclient := &PVMClient{}
 	if instanceID == "" {
-		svcs, err := c.ResourceClient.ListInstances(controllerv2.ServiceInstanceQuery{
+		svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
 			Type: "service_instance",
 		})
 		if err != nil {
@@ -70,7 +70,7 @@ func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error
 	}
 
 	pvmclient.InstanceID = instanceID
-	svc, err := c.ResourceClient.GetInstance(instanceID)
+	svc, err := c.ResourceClientV2.GetInstance(instanceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get a service with ID: %s, err: %v", instanceID, err)
 	}
