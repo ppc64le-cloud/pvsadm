@@ -36,12 +36,13 @@ pvsadm purge --help for information
 		klog.Infof("Purge the images for the instance: %v", pkg.Options.InstanceID)
 		opt := pkg.Options
 
-		c, err := client.NewClient(opt.APIKey)
+		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
+
 		if err != nil {
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClient(c, opt.InstanceID, opt.InstanceName)
+		pvmclient, err := client.NewPVMClientWithEnv(c, opt.InstanceID, opt.InstanceName, pkg.Options.Environment)
 		if err != nil {
 			return err
 		}

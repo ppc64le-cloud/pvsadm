@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	_ "github.com/ppc64le-cloud/pvsadm/test/e2e/qcow2ova"
+	_ "github.com/ppc64le-cloud/pvsadm/test/e2e/rootcmd"
 )
 
 func TestE2E(t *testing.T) {

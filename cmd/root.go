@@ -16,7 +16,10 @@ package cmd
 
 import (
 	goflag "flag"
+	"fmt"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -44,6 +47,9 @@ This is a tool built for the Power Systems Virtual Server helps managing and mai
 				pkg.Options.APIKey = key
 			}
 		}
+		if _, err := client.GetEnvironment(pkg.Options.Environment); err != nil {
+			return fmt.Errorf("invalid \"%s\" IBM Cloud Environment passed, valid values are: %s", pkg.Options.Environment, strings.Join(client.ListEnvironments(), ", "))
+		}
 		return nil
 	},
 }
@@ -58,6 +64,7 @@ func init() {
 	rootCmd.AddCommand(version.Cmd)
 	rootCmd.AddCommand(image.Cmd)
 	rootCmd.PersistentFlags().StringVarP(&pkg.Options.APIKey, "api-key", "k", "", "IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)")
+	rootCmd.PersistentFlags().StringVar(&pkg.Options.Environment, "env", client.DefaultEnv, "IBM Cloud Environments, supported are: ["+strings.Join(client.ListEnvironments(), ", ")+"]")
 	rootCmd.PersistentFlags().BoolVar(&pkg.Options.Debug, "debug", false, "Enable PowerVS debug option(ATTENTION: dev only option, may print sensitive data from APIs)")
 	rootCmd.PersistentFlags().StringVar(&pkg.Options.AuditFile, "audit-file", "pvsadm.log", "Audit logs for the tool")
 	rootCmd.Flags().SortFlags = false
