@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/management"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
@@ -70,7 +71,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 			return err
 		}
 
-		instances, err := bxCli.GetInstances(ServiceType)
+		instances, err := bxCli.ListServiceInstances(ServiceType)
 		if err != nil {
 			return err
 		}
@@ -128,9 +129,28 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 			if !utils.AskConfirmation(CreatePromptMessage) {
 				return fmt.Errorf("Create Cloud Object Storage instance either offline or use the pvsadm command\n")
 			}
+			if opt.ResourceGrp == "" {
+				resourceGroupQuery := management.ResourceGroupQuery{
+					AccountID: bxCli.User.Account,
+				}
+
+				resGrpList, err := bxCli.ResGroupAPI.List(&resourceGroupQuery)
+				if err != nil {
+					return err
+				}
+
+				var resourceGroupNames []string
+				for _, resgrp := range resGrpList {
+					resourceGroupNames = append(resourceGroupNames, resgrp.Name)
+				}
+
+				opt.ResourceGrp = utils.SelectItem("Select ResourceGroup having required permissions for creating a service instance from the below:", resourceGroupNames)
+			}
+
 			opt.InstanceName = utils.ReadUserInput("Type Name of the Cloud Object Storage instance:")
 			klog.Infof("Creating a new cos %s instance\n", opt.InstanceName)
-			_, err = client.CreateServiceInstance(bxCli.Session, opt.InstanceName, ServiceType, opt.ServicePlan,
+
+			_, err = bxCli.CreateServiceInstance(opt.InstanceName, ServiceType, opt.ServicePlan,
 				opt.ResourceGrp, ResourceGroupAPIRegion)
 			if err != nil {
 				return err
@@ -176,7 +196,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 }
 
 func init() {
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ResourceGrp, "resource-group", "default", "Name of user resource group.")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ResourceGrp, "resource-group", "", "Name of user resource group.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServicePlan, "cos-serviceplan", "standard", "Cloud Object Storage Class type, available values are [standard, lite].")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "cos-instance-name", "n", "", "Cloud Object Storage instance name.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Object Storage bucket name.")

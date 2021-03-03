@@ -48,7 +48,7 @@ const (
 func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, err error) {
 	s3client = &S3Client{}
 	var instanceID string
-	svcs, err := c.ResourceClient.ListInstances(controllerv2.ServiceInstanceQuery{
+	svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
 		Type: "service_instance",
 		Name: instanceName,
 	})
