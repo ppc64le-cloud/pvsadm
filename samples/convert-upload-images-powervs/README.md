@@ -1,5 +1,5 @@
 #### Overview
-The `convert-upload-images-powervs` script helps to create RHEL/RHCOS/CENTOS images in PowerVS services. This script creates its own CentOS vm to do all the conversion tasks.
+The `convert-upload-images-powervs` script helps to create RHEL/RHCOS images in PowerVS services. This script creates its own CentOS vm to do all the conversion tasks.
 
 #### What this script does - High Level Steps
 1. Spin up a CentOS instance in PowerVS using the default CentOS image [call Terraform code]
@@ -24,13 +24,13 @@ Usage:
   ./convert-upload-images-powervs [ --rhel-url <url> | --rhcos-url <url> ] --service-name  <service name> --region <bucket region> --cos-bucket <bucket name> --cos-resource-group <resource group> [ --cos-instance-name <cos instance name> ]
 
 Args:
-      --service-name string         A service name in cloud.ibm.com you have access(Mandatory)
+      --service-name string         A list of PowerVS service instances with comma-separated(Mandatory)
       --region string               Object store bucket region(Mandatory)
       --cos-bucket string           Object store bucket name(Mandatory)
       --cos-resource-group string   COS resource group(Mandatory)
       --cos-instance-name string    COS instance name(Mandatory)
-      --rhel-url  url               url pointing to the rhel qcow2 image(optional)
-      --rhcos-url  url              url pointing to the rhcos qcow2 image(optional)
+      --rhel-url url                url pointing to the RHEL qcow2 image(optional)
+      --rhcos-url url               url pointing to the RHCOS qcow2 image(optional)
       --help                        help for upload
 ```
 #### How to download and use script
@@ -45,15 +45,14 @@ curl -O -fsSL https://raw.github.com/ppc64le-cloud/pvsadm/master/samples/convert
 3. Export Required KEYS and Credentials
 ```shell
 export IBMCLOUD_API_KEY="<ibm cloud api key>"
-export RHEL_SUBSCRIPTION_USERNAME="<redhat subscription username>" (only if you are creating rhel image)
-export RHEL_SUBSCRIPTION_PASSWORD="<redhat subscription password>" (only if you are creating rhel image)
-export RHEL_ROOT_PASSWORD="<rhel/centos root password>" (if the user doesnt set this variable, the script will generate a password )
-
+export RHEL_SUBSCRIPTION_USERNAME="<redhat subscription username>" (only if you are creating RHEL image)
+export RHEL_SUBSCRIPTION_PASSWORD="<redhat subscription password>" (only if you are creating RHEL image)
+export RHEL_ROOT_PASSWORD="<RHEL root password>" (if the user doesnt set this variable, the script will generate a password )
 ```
 4. Running the script
 ```shell
 Example:
-./convert-upload-images-powervs  --service-name  my-powervs-service  --region us-south --cos-bucket my-test-bucket-2001 --cos-resource-group my-resource-group --cos-instance-name my-cos --rhel-url  https://access.cdn.redhat.com/content/origin/files/sha256/4e/xxxxxx/rhel-8.3-ppc64le-kvm.qcow2\?user\=xxxxxxxxxxx\&_auth_\=xxxxxxx  --rhcos-url  https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/4.7/4.7.0/rhcos-4.7.0-ppc64le-openstack.ppc64le.qcow2.gz
+./convert-upload-images-powervs  --service-name  my-powervs-service  --region us-south --cos-bucket my-cos-bucket --cos-resource-group my-resource-group --cos-instance-name my-cos-instance --rhel-url  https://access.cdn.redhat.com/content/origin/files/sha256/4e/xxxxxx/rhel-8.3-ppc64le-kvm.qcow2\?user\=xxxxxxxxxxx\&_auth_\=xxxxxxx  --rhcos-url  https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/4.7/4.7.0/rhcos-4.7.0-ppc64le-openstack.ppc64le.qcow2.gz
 ```
 
 !!! Note
@@ -61,4 +60,3 @@ User needs to provide any of RHEL/RHCOS urls.
 If the RHEL url is pointing to access.cdn.redhat.com, please use a newly created one. User should have access to the support site to get the RHEL url.
 Official RHCOS images can get from https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/
 The first service name in the list would be used for creating the CentOS VM with the default OVA image.
-
