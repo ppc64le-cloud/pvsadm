@@ -21,6 +21,7 @@ var Options = &options{}
 type options struct {
 	InstanceID   string
 	APIKey       string
+	Environment  string
 	Region       string
 	Zone         string
 	DryRun       bool

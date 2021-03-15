@@ -101,10 +101,14 @@ func fetchUserDetails(sess *bxsession.Session, generation int) (*User, error) {
 	return &user, nil
 }
 
-func NewClient(apikey string) (*Client, error) {
+func NewClient(apikey, ep string, debug bool) (*Client, error) {
 	c := &Client{}
 
-	bxSess, err := bxsession.New(&bluemix.Config{BluemixAPIKey: apikey})
+	bxSess, err := bxsession.New(&bluemix.Config{
+		BluemixAPIKey:         apikey,
+		TokenProviderEndpoint: &ep,
+		Debug:                 debug,
+	})
 	if err != nil {
 		return nil, err
 	}

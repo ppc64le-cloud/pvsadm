@@ -20,6 +20,7 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 	"time"
 )
 
@@ -31,7 +32,7 @@ var Cmd = &cobra.Command{
 	Use:   "events",
 	Short: "Get Powervs events",
 	Long:  `Get the PowerVS events`,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.InstanceID == "" && pkg.Options.InstanceName == "" {
 			return fmt.Errorf("--instance-name or --instance-name required")
 		}
@@ -40,12 +41,13 @@ var Cmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 
-		c, err := client.NewClient(opt.APIKey)
+		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {
+			klog.Errorf("failed to create a session with IBM cloud: %v", err)
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClient(c, opt.InstanceID, opt.InstanceName)
+		pvmclient, err := client.NewPVMClientWithEnv(c, opt.InstanceID, opt.InstanceName, opt.Environment)
 		if err != nil {
 			return err
 		}

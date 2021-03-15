@@ -17,6 +17,7 @@ package client
 import (
 	"fmt"
 	"k8s.io/klog/v2"
+	"os"
 	"time"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
@@ -45,7 +46,7 @@ type PVMClient struct {
 	EventsClient   *events.Client
 }
 
-func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error) {
+func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, error) {
 	pvmclient := &PVMClient{}
 	if instanceID == "" {
 		svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
@@ -81,6 +82,8 @@ func NewPVMClient(c *Client, instanceID, instanceName string) (*PVMClient, error
 	if err != nil {
 		return nil, err
 	}
+
+	os.Setenv("IBMCLOUD_POWER_API_ENDPOINT", fmt.Sprintf("%s.%s", pvmclient.Region, ep))
 
 	pvmclient.PISession, err = ibmpisession.New(c.Config.IAMAccessToken, pvmclient.Region, pkg.Options.Debug, 60*time.Minute, c.User.Account, pvmclient.Zone)
 	if err != nil {

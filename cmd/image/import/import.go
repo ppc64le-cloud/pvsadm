@@ -84,7 +84,8 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			os.Exit(1)
 		}
 
-		bxCli, err := client.NewClient(apikey)
+		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+
 		if err != nil {
 			return err
 		}
@@ -197,7 +198,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 
 		}
 
-		pvmclient, err := client.NewPVMClient(bxCli, opt.InstanceID, opt.InstanceName)
+		pvmclient, err := client.NewPVMClientWithEnv(bxCli, opt.InstanceID, opt.InstanceName, pkg.Options.Environment)
 		if err != nil {
 			return err
 		}

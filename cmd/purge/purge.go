@@ -59,6 +59,16 @@ Examples:
   pvsadm purge vms --instance-name upstream-core --dry-run
 `,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Code block to execute the strict check mentioned in the rootcmd for the environment.
+		// This block is needed as a workaround mentioned in https://github.com/spf13/cobra/issues/252
+		// if multiple PersistentPreRunE present in the code
+		root := cmd
+		for ; root.HasParent(); root = root.Parent() {
+		}
+		if err := root.PersistentPreRunE(cmd, args); err != nil {
+			return err
+		}
+
 		if pkg.Options.Since != 0 && pkg.Options.Before != 0 {
 			return fmt.Errorf("--since and --before options can not be set at a time")
 		}

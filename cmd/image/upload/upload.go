@@ -66,7 +66,8 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 		opt := pkg.ImageCMDOptions
 
 		//Create bluemix client
-		bxCli, err := client.NewClient(apikey)
+		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+
 		if err != nil {
 			return err
 		}
