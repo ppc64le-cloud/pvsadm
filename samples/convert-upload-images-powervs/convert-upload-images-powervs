@@ -23,16 +23,16 @@ function help {
 Automation for creating RHCOS/RHEL images to PowerVS Services. This is a wrapper for pvsadm tool.
 
 Usage:
-  ./convert-upload-images-powervs [ --rhel-url <url> | --rhcos-url <url> ] --service-name  <service name> --region <bucket region> --cos-bucket <bucket name> --cos-resource-group <resource group> [ --cos-instance-name <cos instance name> ]
+  ./convert-upload-images-powervs [ --rhel-url <url> | --rhcos-url <url> ] --service-name  <service name> --region <bucket region> --cos-bucket <bucket name> --cos-resource-group <resource group>  --cos-instance-name <cos instance name>
 
 Args:
-      --service-name string         A service name in cloud.ibm.com you have access(Mandatory)
+      --service-name string         A list of PowerVS service instances with comma-separated(Mandatory)
       --region string               Object store bucket region(Mandatory)
       --cos-bucket string           Object store bucket name(Mandatory)
       --cos-resource-group string   COS resource group(Mandatory)
       --cos-instance-name string    COS instance name(Mandatory)
-      --rhel-url  url               url pointing to the rhel qcow2 image(optional)
-      --rhcos-url  url              url pointing to the rhcos qcow2 image(optional)
+      --rhel-url url                url pointing to the RHEL qcow2 image(optional)
+      --rhcos-url url               url pointing to the RHCOS qcow2 image(optional)
       --help                        help for upload
 
 EOF
@@ -158,7 +158,7 @@ function variables {
   echo "rhel_image_name =  \"${CENTOS_VM_IMAGE_NAME}\"" >>$VAR_TEMPLATE
 
   # PowerVS private network
-  value=$(echo $ALL_NETS | head -n 1)
+  value=$(echo "$ALL_NETS" | head -n 1)
   echo "network_name =  \"${value}\"" >> $VAR_TEMPLATE
 
   value="inf"-$(echo $((1 + $RANDOM % 9999)))
@@ -671,7 +671,7 @@ function main {
     shift
   done
 
-  if [ -z "${COS_BUCKET_NAME}" ] ||  [ -z "${SERVICE_NAME}" ] || [ -z "${COS_BUCKET_REGION}" ]  || [ -z "${COS_RESOURCE_GROUP}" ]; then
+  if [ -z "${COS_BUCKET_NAME}" ] ||  [ -z "${SERVICE_NAME}" ] || [ -z "${COS_BUCKET_REGION}" ]  || [ -z "${COS_RESOURCE_GROUP}" ] || [ -z "${COS_INSTANCE_NAME}" ]; then
     log "Some or all of the parameters are empty"
     help
   fi
