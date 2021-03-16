@@ -21,7 +21,7 @@ The `convert-upload-images-powervs` script helps to create RHEL/RHCOS images in 
 Automation for creating RHCOS/RHEL images to PowerVS Services. This is a wrapper for pvsadm tool.
 
 Usage:
-  ./convert-upload-images-powervs [ --rhel-url <url> | --rhcos-url <url> ] --service-name  <service name> --region <bucket region> --cos-bucket <bucket name> --cos-resource-group <resource group> [ --cos-instance-name <cos instance name> ]
+  ./convert-upload-images-powervs [ --rhel-url <url> | --rhcos-url <url> ] --service-name  <service name> --region <bucket region> --cos-bucket <bucket name> --cos-resource-group <resource group>  --cos-instance-name <cos instance name>
 
 Args:
       --service-name string         A list of PowerVS service instances with comma-separated(Mandatory)
@@ -36,7 +36,7 @@ Args:
 #### How to download and use script
 1. Download the script
 ```shell
-curl -O -fsSL https://raw.github.com/ppc64le-cloud/pvsadm/master/samples/convert-upload-images-powervss-pvs/convert-upload-images-powervs
+curl -O -fsSL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/samples/convert-upload-images-powervs/convert-upload-images-powervs
 ```
 2. Give execute permission
 ```shell
@@ -47,7 +47,7 @@ curl -O -fsSL https://raw.github.com/ppc64le-cloud/pvsadm/master/samples/convert
 export IBMCLOUD_API_KEY="<ibm cloud api key>"
 export RHEL_SUBSCRIPTION_USERNAME="<redhat subscription username>" (only if you are creating RHEL image)
 export RHEL_SUBSCRIPTION_PASSWORD="<redhat subscription password>" (only if you are creating RHEL image)
-export RHEL_ROOT_PASSWORD="<RHEL root password>" (if the user doesnt set this variable, the script will generate a password )
+export RHEL_ROOT_PASSWORD="<RHEL root password>" (if the user doesnt set this variable, the script will generate a password. Only if you are creating RHEL image)
 ```
 4. Running the script
 ```shell
