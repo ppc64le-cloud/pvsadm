@@ -58,6 +58,7 @@ type imageCMDOptions struct {
 	ResourceGrp  string
 	ServicePlan  string
 	ObjectName   string
+	NoPrompt     bool
 	//import options
 	COSInstanceName string
 	ImageFilename   string
