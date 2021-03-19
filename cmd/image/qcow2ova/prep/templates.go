@@ -32,8 +32,7 @@ echo "nameserver 9.9.9.9" | tee /etc/resolv.conf
 subscription-manager register --force --auto-attach --username={{ .RHNUser }} --password={{ .RHNPassword }}
 {{end}}
 yum update -y && yum install -y yum-utils
-# yum install http://public.dhe.ibm.com/systems/virtualization/powervc/rhel8_cloud_init/cloud-init-19.1-8.ibm.el8.noarch.rpm -y
-yum install http://people.redhat.com/~eterrell/cloud-init/cloud-init-19.4-11.el8_3.1.noarch.rpm -y
+yum install -y cloud-init
 ln -s /usr/lib/systemd/system/cloud-init-local.service /etc/systemd/system/multi-user.target.wants/cloud-init-local.service
 ln -s /usr/lib/systemd/system/cloud-init.service /etc/systemd/system/multi-user.target.wants/cloud-init.service
 ln -s /usr/lib/systemd/system/cloud-config.service /etc/systemd/system/multi-user.target.wants/cloud-config.service
@@ -84,68 +83,52 @@ mv /etc/resolv.conf.orig /etc/resolv.conf | true
 touch /.autorelabel
 `
 
-var cloudConfig = `# The top level settings are used as module
-# and system configuration.
-# A set of users which may be applied and/or used by various modules
-# when a 'default' entry is found it will reference the 'default_user'
-# from the distro configuration specified below
+var cloudConfig = `# latest file from cloud-init-19.4-11.el8_3.2.noarch
 users:
-   - default
-# If this is set, 'root' will not be able to ssh in and they
-# will get a message to login instead as the default $user
-disable_root: false
-mount_default_fields: [~, ~, 'auto', 'defaults,nofail', '0', '2']
-resize_rootfs_tmp: /dev
+ - default
+
+## Change 1: Enabling the root login
+disable_root: 0
 ssh_pwauth:   0
-# This will cause the set+update hostname module to not operate (if true)
-preserve_hostname: false
-# Example datasource config
-# datasource:
-#    Ec2:
-#      metadata_urls: [ 'blah.com' ]
-#      timeout: 5 # (defaults to 50 seconds)
-#      max_wait: 10 # (defaults to 120 seconds)
-datasource_list: [ ConfigDrive, NoCloud, None ]
-datasource:
-  ConfigDrive:
-    dsmode: local
-# The modules that run in the 'init' stage
+
+mount_default_fields: [~, ~, 'auto', 'defaults,nofail,x-systemd.requires=cloud-init.service', '0', '2']
+resize_rootfs_tmp: /dev
+ssh_deletekeys:   1
+ssh_genkeytypes:  ~
+syslog_fix_perms: ~
+disable_vmware_customization: false
+
 cloud_init_modules:
+ - disk_setup
  - migrator
- - seed_random
  - bootcmd
  - write-files
  - growpart
  - resizefs
- - disk_setup
- - mounts
  - set_hostname
  - update_hostname
  - update_etc_hosts
- - ca-certs
  - rsyslog
  - users-groups
  - ssh
-# The modules that run in the 'config' stage
+
 cloud_config_modules:
- - ssh-import-id
+ - mounts
  - locale
  - set-passwords
- - spacewalk
+ - rh_subscription
  - yum-add-repo
- - ntp
- - timezone
- - disable-ec2-metadata
- - runcmd
-# The modules that run in the 'final' stage
-cloud_final_modules:
  - package-update-upgrade-install
+ - timezone
  - puppet
  - chef
- - mcollective
  - salt-minion
+ - mcollective
+ - disable-ec2-metadata
+ - runcmd
+
+cloud_final_modules:
  - rightscale_userdata
- - scripts-vendor
  - scripts-per-once
  - scripts-per-boot
  - scripts-per-instance
@@ -156,25 +139,32 @@ cloud_final_modules:
  - final-message
  - power-state-change
  - reset_rmc
-# System and/or distro specific settings
-# (not accessible to handlers/transforms)
-system_info:
-   # This will affect which distro class gets used
-   distro: rhel
-   # Default user name + that default users groups (if added/used)
-   default_user:
-     name: rhel
-     lock_passwd: True
-     gecos: rhel Cloud User
-     groups: [wheel, adm, systemd-journal]
-     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
-     shell: /bin/bash
-   # Other config here will be given to the distro class and/or path classes
-   paths:
-      cloud_dir: /var/lib/cloud/
-      templates_dir: /etc/cloud/templates/
-   ssh_svcname: sshd
+### ^^^ Change 2: Recommendation from PowerVC
 
+system_info:
+  default_user:
+    name: cloud-user
+    lock_passwd: true
+    gecos: Cloud User
+    groups: [adm, systemd-journal]
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    shell: /bin/bash
+  distro: rhel
+  paths:
+    cloud_dir: /var/lib/cloud
+    templates_dir: /etc/cloud/templates
+  ssh_svcname: sshd
+
+###############################################
+### Change 3: Recommendation from PowerVC######
+datasource_list: [ ConfigDrive, NoCloud, None ]
+datasource:
+  ConfigDrive:
+    dsmode: local
+###############################################
+
+######################################################################################################################
+### Change 4: Disable the network config in cloud-init post deployment, known issue when deployed with multipath disks
 write_files:
 - path: /usr/local/bin/disable_cloud_init_nw.sh
   permissions: 0755
@@ -188,11 +178,12 @@ write_files:
       config: disabled
     EOF
 
-bootcmd:
-    - 'echo "IPV6_AUTOCONF=no" >> /etc/sysconfig/network-scripts/ifcfg-$(ls  /sys/class/net -1| grep env.|sort -n -r|head -1)'
-
 runcmd:
     - bash /usr/local/bin/disable_cloud_init_nw.sh
+
+######################################################################################################################
+
+# vim:syntax=yaml
 `
 
 var dsIdentify = `policy: search,found=all,maybe=all,notfound=disabled
