@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package get
+package delete
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ppc64le-cloud/pvsadm/cmd/get/events"
-	"github.com/ppc64le-cloud/pvsadm/cmd/get/ports"
+	"github.com/ppc64le-cloud/pvsadm/cmd/delete/port"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 )
 
 var Cmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get the resources",
-	Long:  `Get the resources`,
+	Use:   "delete",
+	Short: "Delete the resources",
+	Long:  `Delete the resources`,
 }
 
 func init() {
-	Cmd.AddCommand(events.Cmd)
-	Cmd.AddCommand(ports.Cmd)
+	Cmd.AddCommand(port.Cmd)
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
-	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceName, "instance-name", "n", "", "Instance name of the PowerVS")
+	_ = Cmd.MarkPersistentFlagRequired("instance-id")
 }

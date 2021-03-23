@@ -83,3 +83,19 @@ func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*m
 	}
 	return candidates, nil
 }
+
+func (c *Client) CreatePort(id string, params *p_cloud_networks.PcloudNetworksPortsPostParams) (*models.NetworkPort, error) {
+	return c.client.CreatePort(id, c.instanceID, params, pkg.TIMEOUT)
+}
+
+func (c *Client) DeletePort(id, portID string) (*models.Object, error) {
+	return c.client.DeletePort(id, c.instanceID, portID, pkg.TIMEOUT)
+}
+
+func (c *Client) GetPort(id, portID string) (*models.NetworkPort, error) {
+	return c.client.GetPort(id, c.instanceID, portID, pkg.TIMEOUT)
+}
+
+func (c *Client) GetAllPort(id string) (*models.NetworkPorts, error) {
+	return c.client.GetAllPort(id, c.instanceID, pkg.TIMEOUT)
+}

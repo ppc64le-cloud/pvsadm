@@ -17,7 +17,6 @@ package cmd
 import (
 	goflag "flag"
 	"fmt"
-	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"os"
 	"strings"
 
@@ -25,12 +24,15 @@ import (
 	flag "github.com/spf13/pflag"
 	"k8s.io/klog/v2"
 
+	"github.com/ppc64le-cloud/pvsadm/cmd/create"
+	deletecmd "github.com/ppc64le-cloud/pvsadm/cmd/delete"
 	"github.com/ppc64le-cloud/pvsadm/cmd/get"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge"
 	"github.com/ppc64le-cloud/pvsadm/cmd/version"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 )
 
 var rootCmd = &cobra.Command{
@@ -63,6 +65,8 @@ func init() {
 	rootCmd.AddCommand(get.Cmd)
 	rootCmd.AddCommand(version.Cmd)
 	rootCmd.AddCommand(image.Cmd)
+	rootCmd.AddCommand(create.Cmd)
+	rootCmd.AddCommand(deletecmd.Cmd)
 	rootCmd.PersistentFlags().StringVarP(&pkg.Options.APIKey, "api-key", "k", "", "IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)")
 	rootCmd.PersistentFlags().StringVar(&pkg.Options.Environment, "env", client.DefaultEnv, "IBM Cloud Environments, supported are: ["+strings.Join(client.ListEnvironments(), ", ")+"]")
 	rootCmd.PersistentFlags().BoolVar(&pkg.Options.Debug, "debug", false, "Enable PowerVS debug option(ATTENTION: dev only option, may print sensitive data from APIs)")
