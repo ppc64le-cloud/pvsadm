@@ -15,14 +15,15 @@
 package _import
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/IBM/go-sdk-core/v4/core"
-	rcv2 "github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
+	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/controller"
+	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
+	"github.com/IBM-Cloud/bluemix-go/crn"
+	"github.com/IBM-Cloud/bluemix-go/models"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
@@ -85,37 +86,30 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		}
 
 		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
-
 		if err != nil {
 			return err
 		}
 
-		auth, err := core.NewIamAuthenticator(apikey, "", "", "", false, nil)
-		if err != nil {
-			return err
-		}
-
-		resourceController, err := client.NewResourceControllerV2(&rcv2.ResourceControllerV2Options{
-			Authenticator: auth,
-		})
-		if err != nil {
-			return err
-		}
-
-		serviceListOptions := resourceController.ResourceControllerV2.NewListResourceInstancesOptions().SetType("service_instance")
+		var svcs []models.ServiceInstanceV2
 		if opt.COSInstanceName != "" {
-			serviceListOptions.SetName(opt.COSInstanceName)
+			svcs, err = bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
+				Type: "service_instance",
+				Name: opt.COSInstanceName,
+			})
+		} else {
+			svcs, err = bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
+				Type: "service_instance",
+			})
 		}
-		instances, _, err := resourceController.ResourceControllerV2.ListResourceInstances(serviceListOptions)
 		if err != nil {
 			return err
 		}
 
 		// Step 1: Find where COS for the bucket
-		cosOfBucket := func(resources []rcv2.ResourceInstance) *rcv2.ResourceInstance {
+		cosOfBucket, id, crn := func(resources []models.ServiceInstanceV2) (string, string, crn.CRN) {
 			for _, resource := range resources {
-				if strings.Contains(*resource.Crn, "cloud-object-storage") {
-					s3client, err = client.NewS3Client(bxCli, *resource.Name, opt.Region)
+				if resource.Crn.ServiceName == "cloud-object-storage" {
+					s3client, err = client.NewS3Client(bxCli, resource.Name, opt.Region)
 					if err != nil {
 						continue
 					}
@@ -125,18 +119,18 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 					}
 					for _, bucket := range buckets.Buckets {
 						if *bucket.Name == opt.BucketName {
-							return &resource
+							return resource.Name, resource.Guid, resource.Crn
 						}
 					}
 				}
 			}
-			return nil
-		}(instances.Resources)
+			return "", "", crn.CRN{}
+		}(svcs)
 
-		if cosOfBucket == nil {
+		if cosOfBucket == "" {
 			return fmt.Errorf("failed to find the COS instance for the bucket mentioned: %s", opt.BucketName)
 		}
-		klog.Infof("%s bucket found in the %s[ID:%s] COS instance", opt.BucketName, *cosOfBucket.Name, *cosOfBucket.ID)
+		klog.Infof("%s bucket found in the %s[ID:%s] COS instance", opt.BucketName, cosOfBucket, id)
 
 		//Step 2: Check if s3 object exists
 		objectExists := s3client.CheckIfObjectExists(opt.BucketName, opt.ImageFilename)
@@ -150,51 +144,42 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 
 			// frame the unique name for the service credential
 			if opt.ServiceCredName == "" {
-				opt.ServiceCredName = serviceCredPrefix + "-" + *cosOfBucket.Name
+				opt.ServiceCredName = serviceCredPrefix + "-" + cosOfBucket
 			}
 
-			keys, err := resourceController.ListResourceKeysBySourceCrn(opt.ServiceCredName, *cosOfBucket.Crn)
+			keys, err := bxCli.GetResourceKeys(id)
 			if err != nil {
 				return fmt.Errorf("failed to list the service credentials: %v", err)
 			}
 
-			cred := new(rcv2.Credentials)
+			var cred map[string]interface{}
+			var ok bool
 			if len(keys) == 0 {
 				// Create the service credential if does not exist
 				klog.Infof("Auto Generating the COS Service credential for importing the image with name: %s", opt.ServiceCredName)
-				createResourceKeyOptions := &client.CreateResourceKeyOptions{
-					CreateResourceKeyOptions: resourceController.ResourceControllerV2.NewCreateResourceKeyOptions(opt.ServiceCredName, *cosOfBucket.ID),
-					Parameters:               map[string]interface{}{"HMAC": true},
+				CreateServiceKeyRequest := controller.CreateServiceKeyRequest{
+					Name:       opt.ServiceCredName,
+					SourceCRN:  crn,
+					Parameters: map[string]interface{}{"HMAC": true},
 				}
-
-				key, _, err := resourceController.CreateResourceKey(createResourceKeyOptions)
+				newKey, err := bxCli.ResourceServiceKey.CreateKey(CreateServiceKeyRequest)
 				if err != nil {
 					return err
 				}
-				cred = key.Credentials
+				cred, ok = newKey.Credentials["cos_hmac_keys"].(map[string]interface{})
 			} else {
 				// Use the service credential already created
 				klog.Infof("Reading the existing service credential: %s", opt.ServiceCredName)
-				cred = keys[0].Credentials
+				cred, ok = keys[0].Credentials["cos_hmac_keys"].(map[string]interface{})
 			}
 
-			jsonString, err := json.Marshal(cred.GetProperty("cos_hmac_keys"))
-			if err != nil {
-				return err
-			}
-			h := struct {
-				AccessKeyID string `json:"access_key_id"`
-				SecretKeyID string `json:"secret_access_key"`
-			}{}
-			err = json.Unmarshal(jsonString, &h)
-			if err != nil {
-				klog.Errorf("failed to unmarshal the access credentials from the auto generated service credential")
-				return err
+			if !ok {
+				return fmt.Errorf("failed to get the accessKey and secretKey from service credential")
 			}
 
 			// Step 4: Assign the Access Key and Secret Key for further operation
-			opt.AccessKey = h.AccessKeyID
-			opt.SecretKey = h.SecretKeyID
+			opt.AccessKey = cred["access_key_id"].(string)
+			opt.SecretKey = cred["secret_access_key"].(string)
 
 		}
 
