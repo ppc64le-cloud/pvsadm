@@ -36,11 +36,12 @@ import (
 
 type Client struct {
 	*bxsession.Session
-	User             *User
-	ResourceClientV2 controllerv2.ResourceServiceInstanceRepository
-	ResourceClientV1 controller.ResourceServiceInstanceRepository
-	ResCatalogAPI    catalog.ResourceCatalogRepository
-	ResGroupAPI      management.ResourceGroupRepository
+	User               *User
+	ResourceClientV2   controllerv2.ResourceServiceInstanceRepository
+	ResourceClientV1   controller.ResourceServiceInstanceRepository
+	ResourceServiceKey controller.ResourceServiceKeyRepository
+	ResCatalogAPI      catalog.ResourceCatalogRepository
+	ResGroupAPI        management.ResourceGroupRepository
 }
 
 func authenticateAPIKey(sess *bxsession.Session) error {
@@ -147,6 +148,7 @@ func NewClient(apikey, ep string, debug bool) (*Client, error) {
 
 	c.ResourceClientV2 = ctrlv2.ResourceServiceInstanceV2()
 	c.ResourceClientV1 = ctrlv1.ResourceServiceInstance()
+	c.ResourceServiceKey = ctrlv1.ResourceServiceKey()
 	c.ResCatalogAPI = catalogClient.ResourceCatalog()
 	c.ResGroupAPI = managementClient.ResourceGroup()
 	return c, nil
@@ -258,4 +260,18 @@ func (c *Client) DeleteServiceInstance(instanceID string, recursive bool) error 
 		return err
 	}
 	return nil
+}
+
+func (c *Client) GetResourceKeys(instanceID string) ([]models.ServiceKey, error) {
+	keys, err := c.ResourceServiceKey.GetKeys("")
+	if err != nil {
+		return nil, err
+	}
+	var instance_keys []models.ServiceKey
+	for _, key := range keys {
+		if key.Crn.ServiceInstance == instanceID && key.State == "active" {
+			instance_keys = append(instance_keys, key)
+		}
+	}
+	return instance_keys, nil
 }
