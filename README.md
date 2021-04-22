@@ -2,6 +2,8 @@
 
 This is a tool to help with managing of resources in [IBM Power Systems Virtual Server](https://www.ibm.com/cloud/power-virtual-server).
 
+❗ There is no formal support for any problems with this repo. For issues please open a GitHub [issue](https://github.com/ppc64le-cloud/pvsadm/issues)
+
 ## Installation
 1. Go to the [releases page](https://github.com/ppc64le-cloud/pvsadm/releases/)
 2. Select the latest release and download the relevant binary under the Assets section.
@@ -27,3 +29,6 @@ The typical image workflow comprises of the following steps:
 
 ### Samples
 Please take a look at the [samples](samples/README.md)  folder for end-to-end examples.
+
+### 
+For bugs/enhancement requests etc. please open a GitHub [issue](https://github.com/ppc64le-cloud/pvsadm/issues)
