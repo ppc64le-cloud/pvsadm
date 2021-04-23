@@ -33,10 +33,6 @@ subscription-manager register --force --auto-attach --username={{ .RHNUser }} --
 {{end}}
 yum update -y && yum install -y yum-utils
 yum install -y cloud-init
-ln -s /usr/lib/systemd/system/cloud-init-local.service /etc/systemd/system/multi-user.target.wants/cloud-init-local.service
-ln -s /usr/lib/systemd/system/cloud-init.service /etc/systemd/system/multi-user.target.wants/cloud-init.service
-ln -s /usr/lib/systemd/system/cloud-config.service /etc/systemd/system/multi-user.target.wants/cloud-config.service
-ln -s /usr/lib/systemd/system/cloud-final.service /etc/systemd/system/multi-user.target.wants/cloud-final.service
 rm -rf /etc/systemd/system/multi-user.target.wants/firewalld.service
 rpm -vih --nodeps http://public.dhe.ibm.com/software/server/POWER/Linux/yum/download/ibm-power-repo-latest.noarch.rpm
 sed -i 's/^more \/opt\/ibm\/lop\/notice/#more \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
@@ -162,26 +158,6 @@ datasource:
   ConfigDrive:
     dsmode: local
 ###############################################
-
-######################################################################################################################
-### Change 4: Disable the network config in cloud-init post deployment, known issue when deployed with multipath disks
-write_files:
-- path: /usr/local/bin/disable_cloud_init_nw.sh
-  permissions: 0755
-  owner: root
-  content: |
-    #!/usr/bin/env bash
-    set -e
-    cat <<EOF > /etc/cloud/cloud.cfg.d/01_disable_cloud_nw.cfg
-    #cloud-config
-    network:
-      config: disabled
-    EOF
-
-runcmd:
-    - bash /usr/local/bin/disable_cloud_init_nw.sh
-
-######################################################################################################################
 
 # vim:syntax=yaml
 `
