@@ -59,7 +59,7 @@ NO_OF_RETRY=${NO_OF_RETRY:-"5"}
 SLEEP_TIME=10
 REBOOT_TIMEOUT=30
 
-PVSADM_VERSION="v0.1.1-alpha.3"
+PVSADM_VERSION="v0.1.1-alpha.6"
 IMAGE_SIZE="120"
 
 # Default Centos image name
