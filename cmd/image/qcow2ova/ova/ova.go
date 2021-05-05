@@ -31,14 +31,14 @@ const (
 
 type OVA struct {
 	ImageName, VolumeName string
-	VolumeSize            int64
+	SrcVolumeSize            int64
 }
 
 // Render will generate the OVA spec from the template with all the required information like image name, volume name
 // and size
-func Render(imageName, volumeName string, volumeSize int64) (string, error) {
+func Render(imageName, volumeName string, srcVolumeSize int64) (string, error) {
 	o := OVA{
-		imageName, volumeName, volumeSize,
+		imageName, volumeName, srcVolumeSize,
 	}
 	var wr bytes.Buffer
 	t := template.Must(template.New("ova").Parse(ovfTemplate))
