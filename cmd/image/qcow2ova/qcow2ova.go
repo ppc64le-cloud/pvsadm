@@ -132,6 +132,7 @@ Examples:
 				return err
 			}
 		}
+
 		// preflight checks validations
 		return validate.Validate()
 	},
@@ -223,7 +224,7 @@ Examples:
 
 		klog.Infof("Creating an OVA bundle")
 		ovafile := filepath.Join(tmpDir, opt.ImageName+".ova")
-		if err := ova.CreateTarArchive(ovaImgDir, ovafile); err != nil {
+		if err := ova.CreateTarArchive(ovaImgDir, ovafile, opt.TargetDiskSize); err != nil {
 			return fmt.Errorf("failed to create ova bundle, err: %v", err)
 		}
 		klog.Infof("OVA bundle creation completed: %s", ovafile)
@@ -246,6 +247,7 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageURL, "image-url", "", "URL or absolute local file path to the <QCOW2>.gz image")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageDist, "image-dist", "", "Image Distribution(supported: rhel, centos, coreos)")
 	Cmd.Flags().Uint64Var(&pkg.ImageCMDOptions.ImageSize, "image-size", 120, "Size (in GB) of the resultant OVA image")
+	Cmd.Flags().Int64Var(&pkg.ImageCMDOptions.TargetDiskSize, "target-disk-size", 120, "Size (in GB) of the target disk volume where OVA will be copied")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.RHNUser, "rhn-user", "", "RedHat Subscription username. Required when Image distribution is rhel")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.RHNPassword, "rhn-password", "", "RedHat Subscription password. Required when Image distribution is rhel")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OSPassword, "os-password", "", "Root user password, will auto-generate the 12 bits password(applicable only for redhat and cento distro)")

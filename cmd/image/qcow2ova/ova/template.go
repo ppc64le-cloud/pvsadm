@@ -26,7 +26,7 @@ var ovfTemplate = `<?xml version="1.0" encoding="UTF-8"?>
   </ovf:References>
   <ovf:DiskSection>
     <ovf:Info>Disk Section</ovf:Info>
-    <ovf:Disk capacity="{{.SrcVolumeSize}}" capacityAllocationUnits="byte" diskId="disk1" fileRef="file1"/>
+    <ovf:Disk capacity="{{.TargetDiskSize}}" capacityAllocationUnits="byte" diskId="disk1" fileRef="file1"/>
   </ovf:DiskSection>
   <ovf:VirtualSystemCollection>
     <ovf:VirtualSystem ovf:id="vs0">
