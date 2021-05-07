@@ -43,6 +43,7 @@ type imageCMDOptions struct {
 	ImageDist           string
 	ImageName           string
 	ImageSize           uint64
+	TargetDiskSize      int64
 	ImageURL            string
 	OSPassword          string
 	PreflightSkip       []string

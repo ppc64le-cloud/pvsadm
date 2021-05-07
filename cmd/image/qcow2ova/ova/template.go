@@ -22,11 +22,11 @@ vol1-type = boot`
 var ovfTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <ovf:Envelope xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <ovf:References>
-    <ovf:File href="{{.VolumeName}}" id="file1" size="{{.VolumeSize}}"/>
+    <ovf:File href="{{.VolumeName}}" id="file1" size="{{.SrcVolumeSize}}"/>
   </ovf:References>
   <ovf:DiskSection>
     <ovf:Info>Disk Section</ovf:Info>
-    <ovf:Disk capacity="{{.VolumeSize}}" capacityAllocationUnits="byte" diskId="disk1" fileRef="file1"/>
+    <ovf:Disk capacity="{{.TargetDiskSize}}" capacityAllocationUnits="byte" diskId="disk1" fileRef="file1"/>
   </ovf:DiskSection>
   <ovf:VirtualSystemCollection>
     <ovf:VirtualSystem ovf:id="vs0">
