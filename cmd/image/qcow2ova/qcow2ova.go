@@ -246,7 +246,7 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageName, "image-name", "", "Name of the resultant OVA image")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageURL, "image-url", "", "URL or absolute local file path to the <QCOW2>.gz image")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageDist, "image-dist", "", "Image Distribution(supported: rhel, centos, coreos)")
-	Cmd.Flags().Uint64Var(&pkg.ImageCMDOptions.ImageSize, "image-size", 3, "Size (in GB) of the resultant OVA image")
+	Cmd.Flags().Uint64Var(&pkg.ImageCMDOptions.ImageSize, "image-size", 8, "Size (in GB) of the resultant OVA image")
 	Cmd.Flags().Int64Var(&pkg.ImageCMDOptions.TargetDiskSize, "target-disk-size", 120, "Size (in GB) of the target disk volume where OVA will be copied")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.RHNUser, "rhn-user", "", "RedHat Subscription username. Required when Image distribution is rhel")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.RHNPassword, "rhn-password", "", "RedHat Subscription password. Required when Image distribution is rhel")
