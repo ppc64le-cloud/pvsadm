@@ -136,10 +136,10 @@ cloud_final_modules:
  - power-state-change
  - reset_rmc
 
- ### Explicit steps for growing partitions, since
- ### growpart is failing on DM devices by default
- ### Ref: https://bugs.launchpad.net/cloud-init/+bug/1556260
- write_files:
+### Explicit steps for growing partitions, since
+### growpart is failing on DM devices by default
+### Ref: https://bugs.launchpad.net/cloud-init/+bug/1556260
+write_files:
  - path: /tmp/update-disks.sh
    permissions: 0744
    owner: root
