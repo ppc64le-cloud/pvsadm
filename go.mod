@@ -10,6 +10,7 @@ require (
 	github.com/IBM/ibm-cos-sdk-go v1.5.0
 	github.com/IBM/platform-services-go-sdk v0.14.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-openapi/strfmt v0.19.10
 	github.com/klauspost/compress v1.11.1 // indirect
 	github.com/klauspost/pgzip v1.2.5
@@ -18,6 +19,7 @@ require (
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/ppc64le-cloud/powervs-utils v0.0.0-20210415051532-4cdd6a79c8fa
+	github.com/sayotte/iscdhcp v0.0.0-20190926162140-d6be84ba9969
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	k8s.io/apimachinery v0.20.0
