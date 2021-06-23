@@ -59,8 +59,9 @@ NO_OF_RETRY=${NO_OF_RETRY:-"5"}
 SLEEP_TIME=10
 REBOOT_TIMEOUT=30
 
-PVSADM_VERSION="v0.1.1-alpha.3"
-IMAGE_SIZE="120"
+PVSADM_VERSION="v0.1.2-alpha.3"
+IMAGE_SIZE="11"
+TARGET_DISK_SIZE="120"
 
 # Default Centos image name
 CENTOS_VM_IMAGE_NAME='Linux-CentOS-8-3'
@@ -349,7 +350,7 @@ function convert_image_remote {
   for i in $(seq 1 "$NO_OF_RETRY"); do
     echo "Attempt: $i/$NO_OF_RETRY"
       LOG_FILE="logs/convert_image_remote_${i}_${LOGFILE}.log"
-      ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "cd \"$REMOTE_TEMP_DIR\"; pvsadm image qcow2ova --os-password \"$RHEL_ROOT_PASSWORD\" --rhn-user \"$RHEL_SUBSCRIPTION_USERNAME\" --rhn-password \"$RHEL_SUBSCRIPTION_PASSWORD\" --image-dist \"$image_dist\" --image-name \"$image_name\" --image-url \"$image_url\" --image-size \"$IMAGE_SIZE\" 2>&1" > $LOG_FILE || true
+      ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "cd \"$REMOTE_TEMP_DIR\"; pvsadm image qcow2ova --os-password \"$RHEL_ROOT_PASSWORD\" --rhn-user \"$RHEL_SUBSCRIPTION_USERNAME\" --rhn-password \"$RHEL_SUBSCRIPTION_PASSWORD\" --image-dist \"$image_dist\" --image-name \"$image_name\" --image-url \"$image_url\" --image-size \"$IMAGE_SIZE\"  --target-disk-size \"$TARGET_DISK_SIZE\"  2>&1" > $LOG_FILE || true
       if grep -c "Successfully converted" "$LOG_FILE" >/dev/null;then
         if [[ -z "${RHEL_ROOT_PASSWORD}"  ]] ; then
           ROOT_PASSWORD=$(grep "OS root password:" "$LOG_FILE"| awk '{print $4}')
@@ -700,25 +701,30 @@ function main {
   if !  setup_pvsadm_remote; then  destroy_vm && exit 1 ; fi
   
   if ! [ -z "${RHEL_URL}" ];then
-    if ! copy_image_to_remote; then  destroy_vm && exit 1 ; fi
-    if ! convert_image_remote "rhel" "${RHEL_IMAGE_NAME}" "${RHEL_URL}"; then  destroy_vm && exit 1 ; fi
-    RHEL_IMAGE_PATH_REMOTE=${IMAGE_PATH}
-    if ! upload_image_remote "${COS_BUCKET_NAME}" "${RHEL_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}"; then  destroy_vm && exit 1 ; fi
-    for SERV_NAME in `echo ${SERVICE_NAMES}`; do 
-      if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHEL_OBJECT_NAME}" "${RHEL_IMAGE_NAME}" "${COS_BUCKET_REGION}"; then
-        warn "Unable to import "${RHEL_OBJECT_NAME}" to "${SERV_NAME}"" 
+    if copy_image_to_remote; then
+      if convert_image_remote "rhel" "${RHEL_IMAGE_NAME}" "${RHEL_URL}"; then
+        RHEL_IMAGE_PATH_REMOTE=${IMAGE_PATH}
+        if upload_image_remote "${COS_BUCKET_NAME}" "${RHEL_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}"; then
+          for SERV_NAME in `echo ${SERVICE_NAMES}`; do
+            if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHEL_OBJECT_NAME}" "${RHEL_IMAGE_NAME}" "${COS_BUCKET_REGION}"; then
+              warn "Unable to import "${RHEL_OBJECT_NAME}" to "${SERV_NAME}""
+            fi
+          done
+        fi
       fi
-    done
+    fi
   fi
   if ! [ -z "${RHCOS_URL}" ];then
-    if ! convert_image_remote "coreos" "${RHCOS_IMAGE_NAME}" "${RHCOS_URL}" ; then  destroy_vm && exit 1 ; fi
-    RHCOS_IMAGE_PATH_REMOTE=${IMAGE_PATH}
-    if !  upload_image_remote "${COS_BUCKET_NAME}" "${RHCOS_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}" ; then  destroy_vm && exit 1 ; fi
-    for SERV_NAME in `echo ${SERVICE_NAMES}`; do 
-      if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHCOS_OBJECT_NAME}" "${RHCOS_IMAGE_NAME}" "${COS_BUCKET_REGION}" ; then 
-        warn "Unable to import "${RHCOS_OBJECT_NAME}" to "${SERV_NAME}"" 
+    if convert_image_remote "coreos" "${RHCOS_IMAGE_NAME}" "${RHCOS_URL}" ; then
+      RHCOS_IMAGE_PATH_REMOTE=${IMAGE_PATH}
+      if upload_image_remote "${COS_BUCKET_NAME}" "${RHCOS_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}" ; then
+        for SERV_NAME in `echo ${SERVICE_NAMES}`; do
+          if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHCOS_OBJECT_NAME}" "${RHCOS_IMAGE_NAME}" "${COS_BUCKET_REGION}" ; then
+            warn "Unable to import "${RHCOS_OBJECT_NAME}" to "${SERV_NAME}""
+          fi
+        done
       fi
-    done
+    fi
   fi
 
   destroy_vm # Destroying the VM
