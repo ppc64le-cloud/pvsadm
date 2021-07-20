@@ -7,6 +7,8 @@ github.com/IBM-Cloud/bluemix-go v0.0.0-20200921095234-26d1d0148c62 h1:8I8Z3mRorZ
 github.com/IBM-Cloud/bluemix-go v0.0.0-20200921095234-26d1d0148c62/go.mod h1:gPJbH1etcDj7qS/hBRiLuYW9CY0bRcostSKusa51xR0=
 github.com/IBM-Cloud/power-go-client v1.0.51 h1:J78CzMbZk3628pCboT6j+Uqrb4THN/gC5Iy7Ke50AyM=
 github.com/IBM-Cloud/power-go-client v1.0.51/go.mod h1:+mOxjyLeLIloR4EMHTpiDbN+FilZpiVHTwu5eqi+cbI=
+github.com/IBM-Cloud/power-go-client v1.0.73 h1:bJXpZi0XV7RFaMu6mgameGo697t82ytx9TaF9Cu9omM=
+github.com/IBM-Cloud/power-go-client v1.0.73/go.mod h1:I4r5tCrA8mV5GFqGAJG4/Tn+/JpR+XLnDCLLNVKJxuI=
 github.com/IBM/go-sdk-core/v4 v4.8.2 h1:QY5DL2MKctmnFdeWCSjKUEt41nOd6JrNJkrnjePt8tI=
 github.com/IBM/go-sdk-core/v4 v4.8.2/go.mod h1:DbQ+3pFoIjxGGTEiA9zQ2V0cemMNmFMkLBBnR729HKg=
 github.com/IBM/ibm-cos-sdk-go v1.5.0 h1:YCmAgsdtp/irQep5g+62OvjLNj35tMXLqTC5jQ+YjWo=
@@ -27,6 +29,7 @@ github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4Rq
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
+github.com/apparentlymart/go-cidr v1.1.0/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
 github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a h1:idn718Q4B6AGu/h5Sxe66HYVdqdGu2l9Iebqhi/AEoA=
