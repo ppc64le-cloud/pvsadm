@@ -209,7 +209,7 @@ Examples:
 		klog.Infof("Conversion completed")
 
 		klog.Infof("Resizing the image %s to %dG", rawImg, opt.ImageSize)
-		err = qemuImgResize(rawImg, fmt.Sprintf("%dG", opt.ImageSize))
+		err = qemuImgResize("-f", "raw", rawImg, fmt.Sprintf("%dG", opt.ImageSize))
 		if err != nil {
 			return err
 		}

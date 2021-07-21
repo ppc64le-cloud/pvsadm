@@ -33,11 +33,11 @@ func qemuImgConvertQcow2Raw(source, target string) error {
 }
 
 // qemuImgResize resizes the image
-func qemuImgResize(image string, size string) error {
-	args := []string{"resize", image, size}
+func qemuImgResize(args ...string) error {
+	args = append([]string{"resize"}, args...)
 	exit, out, err := utils.RunCMD(QemuCMD, args...)
 	if exit != 0 {
-		return fmt.Errorf("failed to resize image(%s), exited with: %d, out: %s, err: %s", image, exit, out, err)
+		return fmt.Errorf("failed to resize image(%s), exited with: %d, out: %s, err: %s", args, exit, out, err)
 	}
 	return nil
 }
