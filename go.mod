@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20200921095234-26d1d0148c62
-	github.com/IBM-Cloud/power-go-client v1.0.51
+	github.com/IBM-Cloud/power-go-client v1.0.73
 	github.com/IBM/go-sdk-core/v4 v4.8.2
 	github.com/IBM/ibm-cos-sdk-go v1.5.0
 	github.com/IBM/platform-services-go-sdk v0.14.4
