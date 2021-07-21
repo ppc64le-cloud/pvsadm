@@ -549,8 +549,10 @@ function standardize_object_name {
   local object_temp_name=""
   object_extension="ova.gz"
   object_temp_name=${object_original_name%.*}
-  IMAGE_NAME=`echo $object_temp_name | sed 's/\.//g'| sed 's/ppc64le//g'|sed 's/ova//g'|sed 's/qcow2//g' | sed 's/openstack//g' | sed 's/kvm//g' | sed -e 's/---*//g' | sed -e 's/_/-/g'| sed -e 's/[0-9]-GenericCloud-//g' | tr '[:upper:]' '[:lower:]' | grep -o -E '^[a-z]*-[0-9]{2}'`-$(date +%m%d%Y)
-  OBJECT_NAME=$IMAGE_NAME.${object_extension}
+  os_name=`echo $object_temp_name |sed 's/\.//g'|tr '[:upper:]' '[:lower:]' |grep -o -E '^rhcos-|^rhel-|^centos-' | sed 's/-//'`
+  os_version_date=`echo $object_temp_name | sed 's/\.//g'| sed 's/ppc64le|qcow2|ova|openstack|kvm|GenericCloud//g' | sed -e 's/---*//g' | sed -e 's/_/-/g'| sed -e 's/[0-9]-GenericCloud-//g' | tr '[:upper:]' '[:lower:]' | grep -o -E '^[a-z]*-[0-9]{2}'|sed -E 's/rhel|rhcos|centos//g'`-$(date +%m%d%Y)
+  IMAGE_NAME=$os_name$os_version_date
+  OBJECT_NAME=$os_name$os_version_date.${object_extension}
 }
 
 
