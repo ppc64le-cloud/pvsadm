@@ -49,10 +49,15 @@ export RHEL_SUBSCRIPTION_USERNAME="<redhat subscription username>" (only if you 
 export RHEL_SUBSCRIPTION_PASSWORD="<redhat subscription password>" (only if you are creating RHEL image)
 export RHEL_ROOT_PASSWORD="<RHEL root password>" (if the user doesnt set this variable, the script will generate a password. Only if you are creating RHEL image)
 ```
-4. Running the script
+4a. Running the script directly
 ```shell
 Example:
 ./convert-upload-images-powervs  --service-name  my-powervs-service  --region us-south --cos-bucket my-cos-bucket --cos-resource-group my-resource-group --cos-instance-name my-cos-instance --rhel-url  https://access.cdn.redhat.com/content/origin/files/sha256/4e/xxxxxx/rhel-8.3-ppc64le-kvm.qcow2\?user\=xxxxxxxxxxx\&_auth_\=xxxxxxx  --rhcos-url  https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/4.7/4.7.0/rhcos-4.7.0-ppc64le-openstack.ppc64le.qcow2.gz
+```
+4b. Running the script from a container
+```shell
+Example:
+docker run -it -e IBMCLOUD_API_KEY=$IBMCLOUD_API_KEY -e  RHEL_SUBSCRIPTION_USERNAME=$RHEL_SUBSCRIPTION_USERNAME -e RHEL_SUBSCRIPTION_PASSWORD=$RHEL_SUBSCRIPTION_PASSWORD -e RHEL_ROOT_PASSWORD=$RHEL_ROOT_PASSWORD quay.io/powercloud/image-upload:0.1 --service-name  my-powervs-service  --region us-south --cos-bucket my-cos-bucket --cos-resource-group my-resource-group --cos-instance-name my-cos-instance --rhel-url  https://access.cdn.redhat.com/content/origin/files/sha256/4e/xxxxxx/rhel-8.3-ppc64le-kvm.qcow2\?user\=xxxxxxxxxxx\&_auth_\=xxxxxxx  --rhcos-url  https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/4.7/4.7.0/rhcos-4.7.0-ppc64le-openstack.ppc64le.qcow2.gz
 ```
 
 !!! Note
