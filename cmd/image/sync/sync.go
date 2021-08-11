@@ -56,11 +56,48 @@ export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
 Examples:
 
 # using spec yaml file
-pvsadm image sync spec.yaml
+pvsadm image sync --spec-file spec.yaml
+
+Sample spec.yaml file:
+---
+- source:
+    bucket: rhcos-bucket-us-south
+    cos: cos-service-name-1
+    object: regex
+    plan: smart
+    region: us-south
+  target:
+    - bucket: rhcos-bucket-us-east
+      plan: smart
+      region: us-east
+    - bucket: rhcos-bucket-london
+      plan: standard
+      region: london
+    - bucket: rhcos-bucket-london-lite
+      plan: lite
+      region: london
+- source:
+    bucket: rhcos-bucket-us-south
+    cos: cos-service-name-2
+    object: regex
+    plan: smart
+    region: us-south
+  target:
+    - bucket: rhcos-bucket-us-east
+      plan: smart
+      region: us-east
+    - bucket: rhcos-bucket-london
+      plan: standard
+      region: london
+    - bucket: rhcos-bucket-london-lite
+      plan: lite
+      region: london
+
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var s3Cli *client.S3Client
 		var apikey string = pkg.Options.APIKey
+		opt := pkg.ImageCMDOptions
 
 		//Create bluemix client
 		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
@@ -71,7 +108,7 @@ pvsadm image sync spec.yaml
 
 		// Unmashalling yaml file
 		var spec Spec
-		yamlFile, err := ioutil.ReadFile(args[0])
+		yamlFile, err := ioutil.ReadFile(opt.SpecYAML)
 		if err != nil {
 			klog.Errorf("yamlFile.Get err   #%v ", err)
 			return err
@@ -134,4 +171,7 @@ pvsadm image sync spec.yaml
 }
 
 func init() {
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.SpecYAML, "spec-file", "s", "", "The PATH to the spec file to be used")
+	_ = Cmd.MarkFlagRequired("spec-file")
+	Cmd.Flags().SortFlags = false
 }
