@@ -36,7 +36,7 @@ var ovfTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <ovf:Info/>
         <ovf:Product/>
       </ovf:ProductSection>
-      <ovf:OperatingSystemSection ovf:id="79">
+      <ovf:OperatingSystemSection ovf:id="80">
         <ovf:Info/>
         <ovf:Description>RHEL</ovf:Description>
         <ns0:architecture xmlns:ns0="ibmpvc">ppc64le</ns0:architecture>
