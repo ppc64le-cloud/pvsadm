@@ -18,7 +18,6 @@ Flags:
   -i, --instance-id string               Instance ID of the PowerVS instance
   -n, --instance-name string             Instance name of the PowerVS
   -o, --object-name string               Cloud Storage image filename
-      --ostype string                    Image OS Type, accepted values are[aix, ibmi, redhat, sles] (default "redhat")
   -r, --region string                    COS bucket location
       --secretkey string                 Cloud Storage secret key
       --service-credential-name string   Service Credential name to be auto generated (default "pvsadm-service-cred")
@@ -53,5 +52,5 @@ $pvsadm image import -n <POWERVS_INSTANCE_NAME> -b <BUCKETNAME> --object rhel-83
 ### case 4:
 If user wants to specify type of OS 
 ```shell
-$pvsadm image import -n <POWERVS_INSTANCE_NAME> -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION> --ostype <OSTYPE>
+$pvsadm image import -n <POWERVS_INSTANCE_NAME> -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION>
 ```
