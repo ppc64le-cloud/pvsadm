@@ -58,7 +58,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --accesskey <ACCESSKE
 pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --pvs-storagetype <STORAGETYPE> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION>
 
 # If user wants to specify the type of OS
-pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image --ostype <OSTYPE> -r <REGION>
+pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION>
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.ImageCMDOptions.InstanceID == "" && pkg.ImageCMDOptions.InstanceName == "" {
@@ -72,13 +72,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		opt := pkg.ImageCMDOptions
 		apikey := pkg.Options.APIKey
 		//validate inputs
-		validOsType := []string{"aix", "ibmi", "redhat", "sles"}
 		validStorageType := []string{"tier3", "tier1"}
-
-		if opt.OsType != "" && !utils.Contains(validOsType, strings.ToLower(opt.OsType)) {
-			klog.Errorf("Provide valid OsType.. allowable values are [aix, ibmi, redhat, sles]")
-			os.Exit(1)
-		}
 
 		if !utils.Contains(validStorageType, strings.ToLower(opt.StorageType)) {
 			klog.Errorf("Provide valid StorageType.. allowable values are [tier1, tier3]")
@@ -189,7 +183,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		}
 
 		image, err := pvmclient.ImgClient.ImportImage(pvmclient.InstanceID, opt.ImageName, opt.ImageFilename, opt.Region,
-			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.OsType), strings.ToLower(opt.StorageType))
+			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.StorageType))
 		if err != nil {
 			return err
 		}
@@ -235,7 +229,6 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.AccessKey, "accesskey", "", "Cloud Object Storage HMAC access key.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.SecretKey, "secretkey", "", "Cloud Object Storage HMAC secret key.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageName, "pvs-image-name", "", "Name to PowerVS imported image.")
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OsType, "ostype", "redhat", "Image OS Type, accepted values are[aix, ibmi, redhat, sles].")
 	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Watch, "watch", "w", false, "After image import watch for image to be published and ready to use")
 	Cmd.Flags().DurationVar(&pkg.ImageCMDOptions.WatchTimeout, "watch-timeout", 1*time.Hour, "watch timeout")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", "PowerVS Storage type, accepted values are [tier1, tier3].")

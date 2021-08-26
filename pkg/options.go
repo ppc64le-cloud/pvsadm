@@ -64,7 +64,6 @@ type imageCMDOptions struct {
 	ImageFilename   string
 	AccessKey       string
 	SecretKey       string
-	OsType          string
 	StorageType     string
 	InstanceID      string
 	ServiceCredName string

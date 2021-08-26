@@ -56,7 +56,7 @@ func (c *Client) Delete(id string) error {
 }
 
 //func ImportImage imports image from S3 Instance
-func (c *Client) ImportImage(instanceID, imageName, s3Filename, region, accessKey, secretKey, bucketName, osType, storageType string) (*models.Image, error) {
+func (c *Client) ImportImage(instanceID, imageName, s3Filename, region, accessKey, secretKey, bucketName, storageType string) (*models.Image, error) {
 	var source = "url"
 	var body = models.CreateImage{
 		ImageName:     imageName,
@@ -65,7 +65,6 @@ func (c *Client) ImportImage(instanceID, imageName, s3Filename, region, accessKe
 		AccessKey:     accessKey,
 		SecretKey:     secretKey,
 		BucketName:    bucketName,
-		OsType:        osType,
 		DiskType:      storageType,
 		Source:        &source,
 	}
