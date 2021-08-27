@@ -15,8 +15,10 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
@@ -110,6 +112,47 @@ func (c *S3Client) CheckBucketExists(bucketName string) (bool, error) {
 	return false, nil
 }
 
+// To select objects matching regex from src bucket
+func (c *S3Client) SelectObjects(bucketName string, regex string) ([]string, error) {
+	var matched bool
+	var matchedObjects []string
+	err := c.S3Session.ListObjectsPages(&s3.ListObjectsInput{
+		Bucket: &bucketName,
+	}, func(p *s3.ListObjectsOutput, last bool) (shouldContinue bool) {
+		for _, obj := range p.Contents {
+			matched, _ = regexp.MatchString(regex, *obj.Key)
+			if matched {
+				matchedObjects = append(matchedObjects, *obj.Key)
+			}
+		}
+		return true
+	})
+	if err != nil {
+		klog.Infof("failed to list objects", err)
+		return nil, err
+	}
+	return matchedObjects, err
+}
+
+//Func CheckBucketLocationConstraint will verify the existence of the bucket in the particular locationConstraint
+func (c *S3Client) CheckBucketLocationConstraint(bucketName string, bucketLocationConstraint string) (bool, error) {
+
+	getParams := &s3.GetBucketLocationInput{
+		Bucket: aws.String(bucketName),
+	}
+
+	result, err := c.S3Session.GetBucketLocation(getParams)
+	if err != nil {
+		klog.Infof("Unable to get bucket location %v\n", err)
+		return false, err
+	}
+
+	if *result.LocationConstraint == bucketLocationConstraint {
+		return true, nil
+	}
+	return false, errors.New("bucket location constraint doesn't match")
+}
+
 func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) bool {
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
@@ -118,6 +161,7 @@ func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) bool {
 
 	_, err := c.S3Session.GetObject(input)
 	if err != nil {
+		klog.Errorf("ERROR: %v", err)
 		return false
 	}
 	return true
@@ -129,7 +173,8 @@ func (c *S3Client) CreateBucket(bucketName string) error {
 		Bucket: aws.String(bucketName), // New Bucket Name
 	})
 	if err != nil {
-		return fmt.Errorf("Unable to create bucket %q, %v", bucketName, err)
+		klog.Errorf("Unable to create bucket %q, %v", bucketName, err)
+		return err
 	}
 	// Wait until bucket is created before finishing
 	klog.Infof("Waiting for bucket %q to be created...\n", bucketName)
@@ -137,6 +182,23 @@ func (c *S3Client) CreateBucket(bucketName string) error {
 	err = c.S3Session.WaitUntilBucketExists(&s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
 	})
+	return err
+}
+
+//To copy the object from src bucket to target bucket
+func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName string, objectName string) error {
+	copyParams := s3.CopyObjectInput{
+		Bucket:     aws.String(destBucketName),
+		CopySource: aws.String(srcBucketName + "/" + objectName),
+		Key:        aws.String(objectName),
+	}
+	_, err := c.S3Session.CopyObject(&copyParams)
+	if err != nil {
+		klog.Errorf("Unable to copy object %s from bucket %s, to bucket %s Error: %v", objectName, srcBucketName, destBucketName, err)
+		return err
+	}
+
+	klog.Infof("Copy successful for object: %s from bucket: %s to bucket: %s", objectName, srcBucketName, destBucketName)
 	return err
 }
 

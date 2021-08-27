@@ -69,4 +69,6 @@ type imageCMDOptions struct {
 	ServiceCredName string
 	Watch           bool
 	WatchTimeout    time.Duration
+	//sync options
+	SpecYAML string
 }
