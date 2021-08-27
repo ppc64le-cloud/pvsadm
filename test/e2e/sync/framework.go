@@ -12,25 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package image
+package sync
 
 import (
-	_import "github.com/ppc64le-cloud/pvsadm/cmd/image/import"
-	"github.com/ppc64le-cloud/pvsadm/cmd/image/qcow2ova"
-	"github.com/ppc64le-cloud/pvsadm/cmd/image/sync"
-	"github.com/ppc64le-cloud/pvsadm/cmd/image/upload"
-	"github.com/spf13/cobra"
+	"github.com/ppc64le-cloud/pvsadm/test/e2e/framework"
 )
 
-var Cmd = &cobra.Command{
-	Use:   "image",
-	Short: "PowerVS Image management",
-	Long:  `PowerVS Image management`,
-}
+const (
+	command = "sync"
+)
 
-func init() {
-	Cmd.AddCommand(_import.Cmd)
-	Cmd.AddCommand(qcow2ova.Cmd)
-	Cmd.AddCommand(upload.Cmd)
-	Cmd.AddCommand(sync.Cmd)
+// CMDDescribe annotates the test with the subcommand label.
+func CMDDescribe(text string, body func()) bool {
+	return framework.Describe(command, text, body)
 }

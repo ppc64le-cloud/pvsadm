@@ -12,25 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package image
+package pkg
 
-import (
-	_import "github.com/ppc64le-cloud/pvsadm/cmd/image/import"
-	"github.com/ppc64le-cloud/pvsadm/cmd/image/qcow2ova"
-	"github.com/ppc64le-cloud/pvsadm/cmd/image/sync"
-	"github.com/ppc64le-cloud/pvsadm/cmd/image/upload"
-	"github.com/spf13/cobra"
-)
-
-var Cmd = &cobra.Command{
-	Use:   "image",
-	Short: "PowerVS Image management",
-	Long:  `PowerVS Image management`,
+// Specifications
+type Spec struct {
+	Source `yaml:"source"`
+	Target []TargetItem `yaml:"target"`
 }
 
-func init() {
-	Cmd.AddCommand(_import.Cmd)
-	Cmd.AddCommand(qcow2ova.Cmd)
-	Cmd.AddCommand(upload.Cmd)
-	Cmd.AddCommand(sync.Cmd)
+// Source Specifications
+type Source struct {
+	Bucket       string `yaml:"bucket"`
+	Cos          string `yaml:"cos"`
+	Object       string `yaml:"object"`
+	StorageClass string `yaml:"storageClass"`
+	Region       string `yaml:"region"`
+}
+
+// TargetItem Specifications
+type TargetItem struct {
+	Bucket       string `yaml:"bucket"`
+	StorageClass string `yaml:"storageClass"`
+	Region       string `yaml:"region"`
 }
