@@ -12,6 +12,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-openapi/strfmt v0.19.10
+	github.com/golang/mock v1.4.4
 	github.com/klauspost/compress v1.11.1 // indirect
 	github.com/klauspost/pgzip v1.2.5
 	github.com/manifoldco/promptui v0.7.0
@@ -22,7 +23,10 @@ require (
 	github.com/sayotte/iscdhcp v0.0.0-20190926162140-d6be84ba9969
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	github.com/stretchr/objx v0.3.0 // indirect
+	github.com/stretchr/testify v1.7.0
+	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/apimachinery v0.20.0
 	k8s.io/klog/v2 v2.4.0
 )

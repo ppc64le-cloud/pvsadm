@@ -18,10 +18,8 @@ import (
 	"errors"
 	"io/fs"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/management"
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
@@ -42,8 +40,6 @@ import (
 var (
 	APIKey            = os.Getenv("IBMCLOUD_API_KEY")
 	ObjectsFolderName = "tempFolder"
-	PlanSlice         = []string{"smart", "standard", "vault", "cold"}
-	RegionSlice       = []string{"us-east", "jp-tok", "us-south", "au-syd", "eu-de", "ca-tor"}
 	SpecFileName      = "spec/spec.yaml"
 )
 
@@ -65,45 +61,6 @@ const (
 func runSyncCMD(args ...string) (int, string, string) {
 	args = append([]string{"image", "sync"}, args...)
 	return utils.RunCMD("pvsadm", args...)
-}
-
-// Generate random int between min and max
-func randomInt(min, max int) int {
-	return min + rand.Intn(max-min)
-}
-
-// Generate random string of given length
-func generateRandomString(length int) string {
-	rand.Seed(time.Now().UnixNano())
-	bytes := make([]byte, length)
-	for i := 0; i < length; i++ {
-		bytes[i] = byte(randomInt(97, 122))
-	}
-	return string(bytes)
-}
-
-// Generate Specifications
-func generateSpec() pkg.Spec {
-	klog.Infoln("STEP: Generating Spec")
-	var spec pkg.Spec
-	spec.Source = pkg.Source{
-		Bucket:       "image-sync-" + generateRandomString(6),
-		Cos:          "cos-image-sync-test-" + generateRandomString(6),
-		Object:       "",
-		StorageClass: PlanSlice[randomInt(0, len(PlanSlice))],
-		Region:       RegionSlice[randomInt(0, len(RegionSlice))],
-	}
-
-	spec.Target = make([]pkg.TargetItem, 0)
-	for tgt := 0; tgt < NoOfTargetsPerSource; tgt++ {
-		spec.Target = append(spec.Target, pkg.TargetItem{
-			Bucket:       "image-sync-" + generateRandomString(6),
-			StorageClass: PlanSlice[randomInt(0, len(PlanSlice))],
-			Region:       RegionSlice[randomInt(0, len(RegionSlice))],
-		})
-	}
-
-	return spec
 }
 
 // Create Specifications yaml file
@@ -261,7 +218,7 @@ func createObjects() error {
 		}
 		defer file.Close()
 
-		content = generateRandomString(200)
+		content = utils.GenerateRandomString(200)
 		_, err = file.WriteString(content)
 		if err != nil {
 			klog.Errorf("ERROR: %v", err)
@@ -495,7 +452,7 @@ var _ = CMDDescribe("pvsadm image sync tests", func() {
 	It("Copy Object Between Buckets", func() {
 		specSlice := make([]pkg.Spec, 0)
 		for i := 0; i < NoOfSources; i++ {
-			specSlice = append(specSlice, generateSpec())
+			specSlice = append(specSlice, utils.GenerateSpec(NoOfTargetsPerSource))
 		}
 
 		err := createResources(specSlice)
