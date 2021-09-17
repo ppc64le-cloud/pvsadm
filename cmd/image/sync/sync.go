@@ -29,17 +29,182 @@ import (
 
 // copy workload type for copy worker method
 type copyWorkload struct {
-	s3Cli     client.S3Client
+	s3Cli     SyncClient
 	srcBucket string
 	tgtBucket string
 	srcObject string
 }
 
+// instance item for source and target instances
+type InstanceItem struct {
+	Source SyncClient
+	Target []SyncClient
+}
+
 // sync constants
 const (
-	ServiceType     = "cloud-object-storage"
-	NoOfCopyWorkers = 20
+	serviceType     = "cloud-object-storage"
+	noOfcopyWorkers = 20
 )
+
+// Worker method to copy object from source bucket to target bucket
+func copyWorker(copyJobs <-chan copyWorkload, results chan<- bool, workerId int) {
+	for copyJob := range copyJobs {
+		start := time.Now()
+		klog.Infof("Copying object: %s src bucket: %s dest bucket: %s", copyJob.srcObject, copyJob.srcBucket, copyJob.tgtBucket)
+		err := copyJob.s3Cli.CopyObjectToBucket(copyJob.srcBucket, copyJob.tgtBucket, copyJob.srcObject)
+		if err != nil {
+			klog.Errorf("ERROR: %v, Copy object %s failed", err, copyJob.srcObject)
+			results <- false
+		}
+		duration := time.Since(start)
+		klog.Infof("Copying object: %s from bucket: %s to bucket: %s took %v", copyJob.srcObject, copyJob.srcBucket, copyJob.tgtBucket, duration)
+		results <- true
+	}
+}
+
+// Method to create the list of required instances
+func createInstanceList(spec []pkg.Spec, bxCli *client.Client) ([]InstanceItem, error) {
+	var instanceList []InstanceItem
+	for _, item := range spec {
+		instance := InstanceItem{}
+		s3Cli, err := NewS3Client(bxCli, item.Source.Cos, item.Source.Region)
+		if err != nil {
+			return nil, err
+		}
+
+		instance.Source = s3Cli
+		for _, targetItem := range item.Target {
+			s3Cli, err := NewS3Client(bxCli, item.Source.Cos, targetItem.Region)
+			if err != nil {
+				return nil, err
+			}
+			instance.Target = append(instance.Target, s3Cli)
+		}
+		instanceList = append(instanceList, instance)
+	}
+	return instanceList, nil
+}
+
+// Method to calculate channels
+func calculateChannels(spec []pkg.Spec, instanceList []InstanceItem) (int, error) {
+	totalChannels := 0
+	for item_no, item := range spec {
+		_, err := instanceList[item_no].Source.CheckBucketLocationConstraint(item.Source.Bucket, item.Source.Region+"-"+item.Source.StorageClass)
+		if err != nil {
+			klog.Errorf("Location constraint verification failed for src bucket: %s", item.Source.Bucket)
+			return 0, err
+		}
+
+		selectedObjects, err := instanceList[item_no].Source.SelectObjects(item.Source.Bucket, item.Source.Object)
+		if err != nil {
+			klog.Errorf("Select Objects failed: %v", err)
+			return 0, err
+		}
+
+		noOfTargets := len(item.Target)
+		totalChannelsForSrc := noOfTargets * len(selectedObjects)
+		totalChannels = totalChannels + totalChannelsForSrc
+	}
+	return totalChannels, nil
+}
+
+// Method to select and copy objects
+func copyObjects(spec []pkg.Spec, instanceList []InstanceItem, copyJobs chan<- copyWorkload) error {
+	for item_no, item := range spec {
+		selectedObjects, err := instanceList[item_no].Source.SelectObjects(item.Source.Bucket, item.Source.Object)
+		if err != nil {
+			klog.Errorf("Select Objects failed: %v", err)
+			return err
+		}
+
+		klog.Infof("Selected Objects from bucket %s: %s", item.Source.Bucket, strings.Join(selectedObjects, ", "))
+		for targetItemNo, targetItem := range item.Target {
+			_, err = instanceList[item_no].Target[targetItemNo].CheckBucketLocationConstraint(targetItem.Bucket, targetItem.Region+"-"+targetItem.StorageClass)
+			if err != nil {
+				klog.Errorf("Location constraint verification failed for dest bucket: %s", targetItem.Bucket)
+				return errors.New("bucket location constraint verification failed")
+			}
+
+			for _, srcObject := range selectedObjects {
+				copyJob := copyWorkload{
+					s3Cli:     instanceList[item_no].Target[targetItemNo],
+					srcBucket: item.Source.Bucket,
+					tgtBucket: targetItem.Bucket,
+					srcObject: srcObject,
+				}
+				copyJobs <- copyJob
+			}
+		}
+	}
+
+	return nil
+}
+
+// Method to get the results from channels
+func getResults(results <-chan bool, totalChannels int) bool {
+	passedCopies := 0
+	failedCopies := 0
+	for i := 1; i <= totalChannels; i++ {
+		if !<-results {
+			failedCopies = failedCopies + 1
+			continue
+		}
+		passedCopies = passedCopies + 1
+	}
+	klog.Infof("No of copies passed: %d No of copies failed: %d", passedCopies, failedCopies)
+	return failedCopies == 0
+}
+
+// Method to get specifications
+func getSpec(specfileName string) ([]pkg.Spec, error) {
+	var spec []pkg.Spec
+	// Unmashalling yaml file
+	yamlFile, err := ioutil.ReadFile(specfileName)
+	if err != nil {
+		klog.Errorf("ERROR: Read yaml failed : %v", err)
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(yamlFile, &spec)
+	if err != nil {
+		klog.Errorf("Unmarshal: %v", err)
+		return nil, err
+	}
+
+	return spec, nil
+}
+
+// Method sync objects
+func syncObjects(spec []pkg.Spec, instanceList []InstanceItem) error {
+	// Calculating total channels
+	totalChannels, err := calculateChannels(spec, instanceList)
+	if err != nil {
+		return err
+	}
+
+	// Creating workers and channels
+	copyJobs := make(chan copyWorkload, totalChannels)
+	results := make(chan bool, totalChannels)
+	for w := 1; w <= noOfcopyWorkers; w++ {
+		go copyWorker(copyJobs, results, w)
+	}
+
+	// Copy objects
+	err = copyObjects(spec, instanceList, copyJobs)
+	if err != nil {
+		return err
+	}
+	close(copyJobs)
+
+	// Wait and get results from channels
+	res := getResults(results, totalChannels)
+	if !res {
+		return errors.New("copy objects failed")
+	}
+
+	return nil
+}
 
 var Cmd = &cobra.Command{
 	Use:   "sync",
@@ -86,8 +251,6 @@ Sample spec.yaml file:
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var s3Cli *client.S3Client
-		var selectedObjects []string
 
 		var apikey string = pkg.Options.APIKey
 		opt := pkg.ImageCMDOptions
@@ -99,126 +262,32 @@ Sample spec.yaml file:
 			return err
 		}
 
-		// Unmashalling yaml file
-		var spec []pkg.Spec
-		yamlFile, err := ioutil.ReadFile(opt.SpecYAML)
+		// Generate Specifications
+		spec, err := getSpec(opt.SpecYAML)
 		if err != nil {
-			klog.Errorf("ERROR: Read yaml failed : %v", err)
 			return err
 		}
 
-		err = yaml.Unmarshal(yamlFile, &spec)
+		// Create necessary objects
+		instanceList, err := createInstanceList(spec, bxCli)
 		if err != nil {
-			klog.Errorf("Unmarshal: %v", err)
 			return err
 		}
 
-		copyWorker := func(copyJobs <-chan copyWorkload, results chan<- bool, workerId int) {
-			for copyJob := range copyJobs {
-				start := time.Now()
-				klog.Infof("Copying object: %s src bucket: %s dest bucket: %s", copyJob.srcObject, copyJob.srcBucket, copyJob.tgtBucket)
-				err = copyJob.s3Cli.CopyObjectToBucket(copyJob.srcBucket, copyJob.tgtBucket, copyJob.srcObject)
-				if err != nil {
-					klog.Errorf("ERROR: %v, Copy object %s failed", err, copyJob.srcObject)
-					results <- false
-				}
-				duration := time.Since(start)
-				klog.Infof("Copying object: %s from bucket: %s to bucket: %s took %v", copyJob.srcObject, copyJob.srcBucket, copyJob.tgtBucket, duration)
-				results <- true
-			}
+		// Sync Objects
+		err = syncObjects(spec, instanceList)
+		if err != nil {
+			return err
 		}
 
-		// Calculating total channels required
-		totalChannels := 0
-		for _, item := range spec {
-			s3Cli, err = client.NewS3Client(bxCli, item.Source.Cos, item.Source.Region)
-			if err != nil {
-				return err
-			}
-
-			_, err = s3Cli.CheckBucketLocationConstraint(item.Source.Bucket, item.Source.Region+"-"+item.Source.StorageClass)
-			if err != nil {
-				klog.Errorf("Location constraint verification failed for src bucket: %s", item.Source.Bucket)
-				return err
-			}
-
-			selectedObjects, err = s3Cli.SelectObjects(item.Source.Bucket, item.Source.Object)
-			if err != nil {
-				klog.Errorf("Select Objects failed: %v", err)
-				return err
-			}
-
-			noOfTargets := len(item.Target)
-			totalChannelsForSrc := noOfTargets * len(selectedObjects)
-			totalChannels = totalChannels + totalChannelsForSrc
-		}
-
-		// Creating workers and channels
-		copyJobs := make(chan copyWorkload, totalChannels)
-		results := make(chan bool, totalChannels)
-		for w := 1; w <= NoOfCopyWorkers; w++ {
-			go copyWorker(copyJobs, results, w)
-		}
-
-		for _, item := range spec {
-			// Creating S3 client
-			s3Cli, err = client.NewS3Client(bxCli, item.Source.Cos, item.Source.Region)
-			if err != nil {
-				return err
-			}
-
-			selectedObjects, err = s3Cli.SelectObjects(item.Source.Bucket, item.Source.Object)
-			if err != nil {
-				klog.Errorf("Select Objects failed: %v", err)
-				return err
-			}
-
-			klog.Infof("Selected Objects from bucket %s: %s", item.Source.Bucket, strings.Join(selectedObjects, ", "))
-			for _, targetItem := range item.Target {
-				s3Cli, err = client.NewS3Client(bxCli, item.Source.Cos, targetItem.Region)
-				if err != nil {
-					return err
-				}
-
-				_, err = s3Cli.CheckBucketLocationConstraint(targetItem.Bucket, targetItem.Region+"-"+targetItem.StorageClass)
-				if err != nil {
-					klog.Errorf("Location constraint verification failed for dest bucket: %s", targetItem.Bucket)
-					return errors.New("bucket location constraint verification failed")
-				}
-
-				for _, srcObject := range selectedObjects {
-					copyJob := copyWorkload{
-						s3Cli:     *s3Cli,
-						srcBucket: item.Source.Bucket,
-						tgtBucket: targetItem.Bucket,
-						srcObject: srcObject,
-					}
-					copyJobs <- copyJob
-				}
-
-			}
-		}
-
-		passedCopies := 0
-		failedCopies := 0
-		for i := 1; i <= totalChannels; i++ {
-			if !<-results {
-				failedCopies = failedCopies + 1
-				continue
-			}
-			passedCopies = passedCopies + 1
-		}
-		close(copyJobs)
-
+		// Calculate total elapsed time
 		duration := time.Since(start)
-		klog.Infof("No of copies passed: %d No of copies failed: %d Total elapsed time: %v", passedCopies, failedCopies, duration)
-		if failedCopies > 0 {
-			return errors.New("copy objects failed")
-		}
+		klog.Infof("Total elapsed time: %v", duration)
 		return nil
 	},
 }
 
+// Init method
 func init() {
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.SpecYAML, "spec-file", "s", "", "The PATH to the spec file to be used")
 	_ = Cmd.MarkFlagRequired("spec-file")
