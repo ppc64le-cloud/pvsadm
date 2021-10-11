@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/IBM/go-sdk-core/v4/core"
+	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/IBM/platform-services-go-sdk/common"
 	rcv2 "github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 )
@@ -46,7 +46,7 @@ func (resourceController *ResourceControllerV2) ListResourceKeysBySourceCrn(name
 	}
 
 	for _, k := range ks.Resources {
-		if *k.SourceCrn == sourceCrn {
+		if *k.SourceCRN == sourceCrn {
 			keys = append(keys, k)
 		}
 	}

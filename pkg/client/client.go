@@ -31,7 +31,7 @@ import (
 	bxsession "github.com/IBM-Cloud/bluemix-go/session"
 	"k8s.io/klog/v2"
 	//"golang.org/x/oauth2/jwt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 )
 
 type Client struct {
