@@ -17,7 +17,7 @@ package events
 import (
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/IBM-Cloud/power-go-client/power/client/p_cloud_events"
-	"github.com/IBM/go-sdk-core/v4/core"
+	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"time"
 )
