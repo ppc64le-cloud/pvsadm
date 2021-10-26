@@ -11,7 +11,6 @@ require (
 	github.com/IBM/platform-services-go-sdk v0.22.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/fsnotify/fsnotify v1.5.1
-	github.com/go-logr/logr v1.1.0 // indirect
 	github.com/go-openapi/errors v0.20.1 // indirect
 	github.com/go-openapi/loads v0.20.3 // indirect
 	github.com/go-openapi/runtime v0.20.0 // indirect
@@ -46,5 +45,5 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.22.2
-	k8s.io/klog/v2 v2.20.0
+	k8s.io/klog/v2 v2.30.0
 )
