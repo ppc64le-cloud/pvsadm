@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20211006063826-ee9901463fa3
-	github.com/IBM-Cloud/power-go-client v1.0.75
+	github.com/IBM-Cloud/power-go-client v1.0.76
 	github.com/IBM/go-sdk-core/v5 v5.7.1
 	github.com/IBM/ibm-cos-sdk-go v1.7.0
 	github.com/IBM/platform-services-go-sdk v0.22.0
@@ -16,7 +16,6 @@ require (
 	github.com/go-openapi/runtime v0.20.0 // indirect
 	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-openapi/strfmt v0.20.3
-	github.com/go-openapi/validate v0.20.3 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
