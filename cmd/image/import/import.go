@@ -37,6 +37,28 @@ const (
 	serviceCredPrefix = "pvsadm-service-cred"
 )
 
+//Find COSINSTANCE details of the Provided bucket
+func findCOSInstanceDetails(resources []models.ServiceInstanceV2, bxCli *client.Client) (string, string, crn.CRN) {
+	for _, resource := range resources {
+		if resource.Crn.ServiceName == "cloud-object-storage" {
+			s3client, err := client.NewS3Client(bxCli, resource.Name, pkg.ImageCMDOptions.Region)
+			if err != nil {
+				continue
+			}
+			buckets, err := s3client.S3Session.ListBuckets(nil)
+			if err != nil {
+				continue
+			}
+			for _, bucket := range buckets.Buckets {
+				if *bucket.Name == pkg.ImageCMDOptions.BucketName {
+					return resource.Name, resource.Guid, resource.Crn
+				}
+			}
+		}
+	}
+	return "", "", crn.CRN{}
+}
+
 var Cmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import the image into PowerVS instances",
@@ -45,6 +67,8 @@ pvsadm image import --help for information
 
 # Set the API key or feed the --api-key commandline argument
 export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
+
+# To Import the imge across the two different IBM account use accesskey and secretkey options
 
 Examples:
 
@@ -64,11 +88,17 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		if pkg.ImageCMDOptions.InstanceID == "" && pkg.ImageCMDOptions.InstanceName == "" {
 			return fmt.Errorf("--pvs-instance-name or --pvs-instance-id required")
 		}
+
+		case1 := pkg.ImageCMDOptions.AccessKey == "" && pkg.ImageCMDOptions.SecretKey != ""
+		case2 := pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey == ""
+
+		if case1 || case2 {
+			return fmt.Errorf("Required both --accesskey and --secretkey values.")
+		}
 		return nil
 	},
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var s3client *client.S3Client
 		opt := pkg.ImageCMDOptions
 		apikey := pkg.Options.APIKey
 		//validate inputs
@@ -84,64 +114,22 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return err
 		}
 
-		var svcs []models.ServiceInstanceV2
-		if opt.COSInstanceName != "" {
-			svcs, err = bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-				Type: "service_instance",
-				Name: opt.COSInstanceName,
-			})
-		} else {
-			svcs, err = bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-				Type: "service_instance",
-			})
-		}
-		if err != nil {
-			return err
-		}
-
-		// Step 1: Find where COS for the bucket
-		cosOfBucket, id, crn := func(resources []models.ServiceInstanceV2) (string, string, crn.CRN) {
-			for _, resource := range resources {
-				if resource.Crn.ServiceName == "cloud-object-storage" {
-					s3client, err = client.NewS3Client(bxCli, resource.Name, opt.Region)
-					if err != nil {
-						continue
-					}
-					buckets, err := s3client.S3Session.ListBuckets(nil)
-					if err != nil {
-						continue
-					}
-					for _, bucket := range buckets.Buckets {
-						if *bucket.Name == opt.BucketName {
-							return resource.Name, resource.Guid, resource.Crn
-						}
-					}
-				}
-			}
-			return "", "", crn.CRN{}
-		}(svcs)
-
-		if cosOfBucket == "" {
-			return fmt.Errorf("failed to find the COS instance for the bucket mentioned: %s", opt.BucketName)
-		}
-		klog.Infof("%s bucket found in the %s[ID:%s] COS instance", opt.BucketName, cosOfBucket, id)
-
-		//Step 2: Check if s3 object exists
-		objectExists := s3client.CheckIfObjectExists(opt.BucketName, opt.ImageFilename)
-		if !objectExists {
-			return fmt.Errorf("failed to found the object %s in %s bucket", opt.ImageFilename, opt.BucketName)
-		}
-		klog.Infof("%s object found in the %s bucket\n", opt.ImageFilename, opt.BucketName)
-
+		//Create AccessKey and SecretKey for the bucket provided
 		if opt.AccessKey == "" || opt.SecretKey == "" {
-			// Step 3: Check if Service Credential exists for the found COS instance
-
-			// frame the unique name for the service credential
-			if opt.ServiceCredName == "" {
-				opt.ServiceCredName = serviceCredPrefix + "-" + cosOfBucket
+			//Find CosInstance of the bucket
+			var svcs []models.ServiceInstanceV2
+			svcs, err = bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
+				Type: "service_instance",
+			})
+			if err != nil {
+				return err
+			}
+			cosInstanceName, cosID, crn := findCOSInstanceDetails(svcs, bxCli)
+			if cosInstanceName == "" {
+				return fmt.Errorf("failed to find the COS instance for the bucket mentioned: %s", opt.BucketName)
 			}
 
-			keys, err := bxCli.GetResourceKeys(id)
+			keys, err := bxCli.GetResourceKeys(cosID)
 			if err != nil {
 				return fmt.Errorf("failed to list the service credentials: %v", err)
 			}
@@ -149,6 +137,10 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			var cred map[string]interface{}
 			var ok bool
 			if len(keys) == 0 {
+				if opt.ServiceCredName == "" {
+					opt.ServiceCredName = serviceCredPrefix + "-" + cosInstanceName
+				}
+
 				// Create the service credential if does not exist
 				klog.Infof("Auto Generating the COS Service credential for importing the image with name: %s", opt.ServiceCredName)
 				CreateServiceKeyRequest := controller.CreateServiceKeyRequest{
@@ -163,18 +155,15 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 				cred, ok = newKey.Credentials["cos_hmac_keys"].(map[string]interface{})
 			} else {
 				// Use the service credential already created
-				klog.Infof("Reading the existing service credential: %s", opt.ServiceCredName)
+				klog.Infof("Reading the existing service credential")
 				cred, ok = keys[0].Credentials["cos_hmac_keys"].(map[string]interface{})
 			}
-
 			if !ok {
 				return fmt.Errorf("failed to get the accessKey and secretKey from service credential")
 			}
-
-			// Step 4: Assign the Access Key and Secret Key for further operation
+			//Assign the Access Key and Secret Key for further operation
 			opt.AccessKey = cred["access_key_id"].(string)
 			opt.SecretKey = cred["secret_access_key"].(string)
-
 		}
 
 		pvmclient, err := client.NewPVMClientWithEnv(bxCli, opt.InstanceID, opt.InstanceName, pkg.Options.Environment)
@@ -224,6 +213,8 @@ func init() {
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceID, "pvs-instance-id", "i", "", "PowerVS Instance ID.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Object Storage bucket name.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.COSInstanceName, "cos-instance-name", "s", "", "Cloud Object Storage instance name.")
+	// TODO It's deprecated and will be removed in a future release
+	Cmd.Flags().MarkDeprecated("cos-instance-name", "will be removed in a future version.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "bucket-region", "r", "", "Cloud Object Storage bucket location.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageFilename, "object", "o", "", "Cloud Object Storage object name.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.AccessKey, "accesskey", "", "Cloud Object Storage HMAC access key.")
