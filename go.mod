@@ -43,6 +43,6 @@ require (
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/apimachinery v0.22.2
+	k8s.io/apimachinery v0.22.3
 	k8s.io/klog/v2 v2.30.0
 )
