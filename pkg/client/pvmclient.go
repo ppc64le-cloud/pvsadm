@@ -27,6 +27,7 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/events"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/image"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/instance"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client/key"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/network"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/volume"
 )
@@ -43,6 +44,7 @@ type PVMClient struct {
 	VolumeClient   *volume.Client
 	NetworkClient  *network.Client
 	EventsClient   *events.Client
+	KeyClient      *key.Client
 }
 
 func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, error) {
@@ -94,5 +96,6 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 	pvmclient.InstanceClient = instance.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.EventsClient = events.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }

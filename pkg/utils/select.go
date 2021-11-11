@@ -29,3 +29,14 @@ func ReadUserInput(message string) string {
 	survey.AskOne(prompt, &name, survey.WithValidator(survey.Required))
 	return name
 }
+
+func MultiSelect(msg string, input []string) []string {
+	selected := []string{}
+	prompt := &survey.MultiSelect{
+		Message: msg,
+		Options: input,
+	}
+
+	survey.AskOne(prompt, &selected)
+	return selected
+}

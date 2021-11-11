@@ -17,6 +17,7 @@ package purge
 import (
 	"fmt"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/images"
+	"github.com/ppc64le-cloud/pvsadm/cmd/purge/keys"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/networks"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/vms"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/volumes"
@@ -57,6 +58,12 @@ Examples:
 
   # List the purgeable candidate virtual machines and exit without deleting
   pvsadm purge vms --instance-name upstream-core --dry-run
+
+  # Delete all the ssh keys which are created before 12hrs
+  pvsadm purge keys --instance-name upstream-core --before 12h --regexp "^rdr-.*"
+
+  # Delete all the ssh keys starts with rdr-
+  pvsadm purge keys --instance-name upstream-core --regexp "^rdr-.*"
 `,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Code block to execute the strict check mentioned in the rootcmd for the environment.
@@ -84,6 +91,7 @@ func init() {
 	Cmd.AddCommand(vms.Cmd)
 	Cmd.AddCommand(networks.Cmd)
 	Cmd.AddCommand(volumes.Cmd)
+	Cmd.AddCommand(keys.Cmd)
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceName, "instance-name", "n", "", "Instance name of the PowerVS")
 	Cmd.PersistentFlags().BoolVar(&pkg.Options.DryRun, "dry-run", false, "dry run the action and don't delete the actual resources")
