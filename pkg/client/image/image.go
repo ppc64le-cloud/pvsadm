@@ -15,6 +15,7 @@
 package image
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -39,20 +40,20 @@ func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client 
 		session:    sess,
 		instanceID: powerinstanceid,
 	}
-	c.client = instance.NewIBMPIImageClient(sess, powerinstanceid)
+	c.client = instance.NewIBMPIImageClient(context.Background(), sess, powerinstanceid)
 	return c
 }
 
 func (c *Client) Get(id string) (*models.Image, error) {
-	return c.client.Get(id, c.instanceID)
+	return c.client.Get(id)
 }
 
 func (c *Client) GetAll() (*models.Images, error) {
-	return c.client.GetAll(c.instanceID)
+	return c.client.GetAll()
 }
 
 func (c *Client) Delete(id string) error {
-	return c.client.Delete(id, c.instanceID)
+	return c.client.Delete(id)
 }
 
 //func ImportImage imports image from S3 Instance

@@ -96,7 +96,7 @@ func syncDHCPD() {
 		Netmask:      net.ParseIP(ipv4MaskString(ipv4Net.Mask)),
 	}
 
-	ports, err := pvmclient.NetworkClient.GetAllPort(networkID)
+	ports, err := pvmclient.NetworkClient.GetAllPorts(networkID)
 	if err != nil {
 		klog.Fatalf("failed to get the ports: %v", err)
 	}

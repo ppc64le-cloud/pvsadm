@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/IBM-Cloud/power-go-client/power/client/p_cloud_networks"
 	"github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
@@ -75,11 +74,9 @@ var Cmd = &cobra.Command{
 			return fmt.Errorf("not able to find network: \"%s\" by ID or name in the list: ids:[%s], names: [%s]", network, strings.Join(networkIDs, ","), strings.Join(networkNames, ","))
 		}
 
-		params := &p_cloud_networks.PcloudNetworksPortsPostParams{
-			Body: &models.NetworkPortCreate{
-				Description: description,
-				IPAddress:   ipaddress,
-			},
+		params := &models.NetworkPortCreate{
+			Description: description,
+			IPAddress:   ipaddress,
 		}
 
 		port, err := pvmclient.NetworkClient.CreatePort(netID, params)

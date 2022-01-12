@@ -15,6 +15,7 @@
 package network
 
 import (
+	"context"
 	"fmt"
 	"github.com/IBM-Cloud/power-go-client/clients/instance"
 	"github.com/IBM-Cloud/power-go-client/errors"
@@ -38,16 +39,16 @@ func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client 
 		session:    sess,
 		instanceID: powerinstanceid,
 	}
-	c.client = instance.NewIBMPINetworkClient(sess, powerinstanceid)
+	c.client = instance.NewIBMPINetworkClient(context.Background(), sess, powerinstanceid)
 	return c
 }
 
 func (c *Client) Get(id string) (*models.Network, error) {
-	return c.client.Get(id, c.instanceID, pkg.TIMEOUT)
+	return c.client.Get(id)
 }
 
-func (c *Client) GetPublic() (*models.Networks, error) {
-	return c.client.GetPublic(c.instanceID, pkg.TIMEOUT)
+func (c *Client) GetAllPublic() (*models.Networks, error) {
+	return c.client.GetAllPublic()
 }
 
 func (c *Client) GetAll() (*models.Networks, error) {
@@ -63,7 +64,7 @@ func (c *Client) GetAll() (*models.Networks, error) {
 }
 
 func (c *Client) Delete(id string) error {
-	return c.client.Delete(id, c.instanceID, pkg.TIMEOUT)
+	return c.client.Delete(id)
 }
 
 func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*models.NetworkReference, error) {
@@ -84,18 +85,18 @@ func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*m
 	return candidates, nil
 }
 
-func (c *Client) CreatePort(id string, params *p_cloud_networks.PcloudNetworksPortsPostParams) (*models.NetworkPort, error) {
-	return c.client.CreatePort(id, c.instanceID, params, pkg.TIMEOUT)
+func (c *Client) CreatePort(id string, params *models.NetworkPortCreate) (*models.NetworkPort, error) {
+	return c.client.CreatePort(id, params)
 }
 
-func (c *Client) DeletePort(id, portID string) (*models.Object, error) {
-	return c.client.DeletePort(id, c.instanceID, portID, pkg.TIMEOUT)
+func (c *Client) DeletePort(id, portID string) error {
+	return c.client.DeletePort(id, portID)
 }
 
 func (c *Client) GetPort(id, portID string) (*models.NetworkPort, error) {
-	return c.client.GetPort(id, c.instanceID, portID, pkg.TIMEOUT)
+	return c.client.GetPort(id, portID)
 }
 
-func (c *Client) GetAllPort(id string) (*models.NetworkPorts, error) {
-	return c.client.GetAllPort(id, c.instanceID, pkg.TIMEOUT)
+func (c *Client) GetAllPorts(id string) (*models.NetworkPorts, error) {
+	return c.client.GetAllPorts(id)
 }
