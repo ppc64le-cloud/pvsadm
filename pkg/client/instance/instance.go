@@ -15,6 +15,7 @@
 package instance
 
 import (
+	"context"
 	"fmt"
 	"github.com/IBM-Cloud/power-go-client/clients/instance"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
@@ -33,20 +34,20 @@ func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client 
 	c := &Client{
 		instanceID: powerinstanceid,
 	}
-	c.client = instance.NewIBMPIInstanceClient(sess, powerinstanceid)
+	c.client = instance.NewIBMPIInstanceClient(context.Background(), sess, powerinstanceid)
 	return c
 }
 
 func (c *Client) Get(id string) (*models.PVMInstance, error) {
-	return c.client.Get(id, c.instanceID, pkg.TIMEOUT)
+	return c.client.Get(id)
 }
 
 func (c *Client) GetAll() (*models.PVMInstances, error) {
-	return c.client.GetAll(c.instanceID, pkg.TIMEOUT)
+	return c.client.GetAll()
 }
 
 func (c *Client) Delete(id string) error {
-	return c.client.Delete(id, c.instanceID, pkg.TIMEOUT)
+	return c.client.Delete(id)
 }
 
 func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*models.PVMInstanceReference, error) {

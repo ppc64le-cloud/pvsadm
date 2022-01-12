@@ -73,7 +73,7 @@ var Cmd = &cobra.Command{
 			return fmt.Errorf("not able to find network: \"%s\" by ID or name in the list: ids:[%s], names: [%s]", network, strings.Join(networkIDs, ","), strings.Join(networkNames, ","))
 		}
 
-		_, err = pvmclient.NetworkClient.DeletePort(netID, portID)
+		err = pvmclient.NetworkClient.DeletePort(netID, portID)
 		if err != nil {
 			return fmt.Errorf("failed to delete a port, err: %v", err)
 		}

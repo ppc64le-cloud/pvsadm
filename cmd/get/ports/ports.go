@@ -79,7 +79,7 @@ var Cmd = &cobra.Command{
 			return fmt.Errorf("not able to find network: \"%s\" by ID or name in the list: ids:[%s], names: [%s]", network, strings.Join(networkIDs, ","), strings.Join(networkNames, ","))
 		}
 
-		ports, err := pvmclient.NetworkClient.GetAllPort(netID)
+		ports, err := pvmclient.NetworkClient.GetAllPorts(netID)
 		if err != nil {
 			return fmt.Errorf("failed to get the ports, err: %v", err)
 		}
