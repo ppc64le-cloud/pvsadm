@@ -53,9 +53,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/IBM-Cloud/bluemix-go v0.0.0-20211223094327-0da2539481f7 h1:XH//z3YFvgWzfZVScUkiT0KQHBWgcKozm3CAb8ujXPo=
 github.com/IBM-Cloud/bluemix-go v0.0.0-20211223094327-0da2539481f7/go.mod h1:q0fXFSbum/16D8Mgn1ROSfSyX4BmvBCm/hHdcXz0wCU=
-github.com/IBM-Cloud/power-go-client v1.0.88 h1:JTIyPK5fjXDZoRGvTtegk6D9qtMwgumbzeMz8vV1TGs=
-github.com/IBM-Cloud/power-go-client v1.0.88/go.mod h1:60o7AE2oDi/0CtoXlQhnCbC3o1fSRgaFCJO6DscmokA=
-github.com/IBM/go-sdk-core/v5 v5.8.0/go.mod h1:+YbdhrjCHC84ls4MeBp+Hj4NZCni+tDAc0XQUqRO9Jc=
+github.com/IBM-Cloud/power-go-client v1.1.0 h1:wHkQsiiHDG1/g4MnLiiZjFwu+fSqGxoLCrTEm4LFppY=
+github.com/IBM-Cloud/power-go-client v1.1.0/go.mod h1:Ky1qQYJ7WPS4OO3J80sTf+sMcBb92bulVwsDg1cPCuI=
 github.com/IBM/go-sdk-core/v5 v5.8.2/go.mod h1:axE2JrRq79gIJTjKPBwV6gWHswvVptBjbcvvCPIxARM=
 github.com/IBM/go-sdk-core/v5 v5.9.1 h1:06pXbD9Rgmqqe2HA5YAeQbB4eYRRFgIoOT+Kh3cp1zo=
 github.com/IBM/go-sdk-core/v5 v5.9.1/go.mod h1:axE2JrRq79gIJTjKPBwV6gWHswvVptBjbcvvCPIxARM=
@@ -900,6 +899,7 @@ golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420/go.mod h1:9nx3DQGgdP8bBQD5qx
 golang.org/x/net v0.0.0-20210614182718-04defd469f4e/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20211209124913-491a49abca63/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
+golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20220111093109-d55c255bac03 h1:0FB83qp0AzVJm+0wcIlauAjJ+tNdh7jLuacRYCIVv7s=
 golang.org/x/net v0.0.0-20220111093109-d55c255bac03/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
