@@ -16,12 +16,14 @@ package client
 
 import (
 	"fmt"
-	"k8s.io/klog/v2"
 	"os"
+
+	"k8s.io/klog/v2"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
-	"github.com/ppc64le-cloud/powervs-utils"
+	"github.com/IBM/go-sdk-core/v5/core"
+	utils "github.com/ppc64le-cloud/powervs-utils"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/events"
@@ -82,9 +84,12 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 		return nil, err
 	}
 
+	authenticator := &core.IamAuthenticator{ApiKey: c.Config.BluemixAPIKey}
+
 	os.Setenv("IBMCLOUD_POWER_API_ENDPOINT", fmt.Sprintf("%s.%s", pvmclient.Region, ep))
 
-	pvmclient.PISession, err = ibmpisession.New(c.Config.IAMAccessToken, pvmclient.Region, pkg.Options.Debug, c.User.Account, pvmclient.Zone)
+	pvmclientOptions := ibmpisession.IBMPIOptions{Authenticator: authenticator, Debug: pkg.Options.Debug, Region: pvmclient.Region, UserAccount: c.User.Account, Zone: pvmclient.Zone}
+	pvmclient.PISession, err = ibmpisession.NewIBMPISession(&pvmclientOptions)
 	if err != nil {
 		return nil, err
 	}

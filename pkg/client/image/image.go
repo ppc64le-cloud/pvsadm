@@ -71,7 +71,7 @@ func (c *Client) ImportImage(instanceID, imageName, s3Filename, region, accessKe
 	}
 
 	params := p_cloud_images.NewPcloudCloudinstancesImagesPostParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(instanceID).WithBody(&body)
-	resp1, resp2, err := c.session.Power.PCloudImages.PcloudCloudinstancesImagesPost(params, ibmpisession.NewAuth(c.session, instanceID))
+	resp1, resp2, err := c.session.Power.PCloudImages.PcloudCloudinstancesImagesPost(params, c.session.AuthInfo(c.instanceID))
 
 	if err != nil {
 		return nil, err
