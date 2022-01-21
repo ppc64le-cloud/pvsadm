@@ -15,7 +15,7 @@ limitations under the License.
 set -e
 #set -x
 
-source <(curl -L https://raw.githubusercontent.com/ocp-power-automation/openshift-install-power/fb8dd54019982f2b645084ae3886d73f1ed4ccce/openshift-install-powervs 2> /dev/null | sed  's/main "$@"//g')
+source <(curl -L https://raw.githubusercontent.com/ocp-power-automation/openshift-install-power/f3ca66402921c00a5637be678f547192b83ac3e2/openshift-install-powervs 2> /dev/null | sed  's/main "$@"//g')
 
 function help {
   cat <<-EOF
@@ -41,10 +41,6 @@ EOF
 
 ARTIFACTS_VERSION="master"
 
-
-
-TF='./terraform'
-CLI_PATH='./ibmcloud'
 TMP_DIR=$(mktemp -d tmp.XXXXXXXXXXX)
 
 ARTIFACTS_DIR="automation"
@@ -59,7 +55,7 @@ NO_OF_RETRY=${NO_OF_RETRY:-"5"}
 SLEEP_TIME=10
 REBOOT_TIMEOUT=30
 
-PVSADM_VERSION="v0.1.2-alpha.3"
+PVSADM_VERSION="v0.1.3"
 IMAGE_SIZE="11"
 TARGET_DISK_SIZE="120"
 
@@ -242,7 +238,6 @@ function apply {
 # Destroy VM
 #-------------------------------------------------------------------------
 function destroy_vm {
-    TF='./terraform'
     SECONDS=0
     message="VM Destroy completed in"
     destroy # Destroying the VM
@@ -506,7 +501,6 @@ function import_image_remote {
 #-------------------------------------------------------------------------
 function create_cos_bucket {
   # Create os bucket
-  CLI_PATH='./ibmcloud'
   log "Creating a new cos instance and bucket $1(if not present)"
   local cos_bucket_name=$1
   local cos_region_name=$2
