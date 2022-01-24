@@ -17,6 +17,9 @@ package network
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/IBM-Cloud/power-go-client/clients/instance"
 	"github.com/IBM-Cloud/power-go-client/errors"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
@@ -24,8 +27,6 @@ import (
 	"github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
-	"regexp"
-	"time"
 )
 
 type Client struct {
@@ -53,7 +54,7 @@ func (c *Client) GetAllPublic() (*models.Networks, error) {
 
 func (c *Client) GetAll() (*models.Networks, error) {
 	params := p_cloud_networks.NewPcloudNetworksGetallParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(c.instanceID)
-	resp, err := c.session.Power.PCloudNetworks.PcloudNetworksGetall(params, ibmpisession.NewAuth(c.session, c.instanceID))
+	resp, err := c.session.Power.PCloudNetworks.PcloudNetworksGetall(params, c.session.AuthInfo(c.instanceID))
 
 	if err != nil || resp.Payload == nil {
 		klog.Infof("Failed to perform the operation... %v", err)

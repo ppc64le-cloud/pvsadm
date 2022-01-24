@@ -16,8 +16,10 @@ package vms
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/IBM-Cloud/power-go-client/errors"
-	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/IBM-Cloud/power-go-client/power/client/p_cloud_instances"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
@@ -25,8 +27,6 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
-	"strconv"
-	"strings"
 )
 
 const deletePromptMessage = "Deleting all the above instances, instances can't be claimed back once deleted. Do you really want to continue?"
@@ -51,7 +51,7 @@ pvsadm purge --help for information
 		}
 
 		param := p_cloud_instances.NewPcloudCloudinstancesGetParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(pvmclient.InstanceID)
-		resp, err := pvmclient.PISession.Power.PCloudInstances.PcloudCloudinstancesGet(param, ibmpisession.NewAuth(pvmclient.PISession, pvmclient.InstanceID))
+		resp, err := pvmclient.PISession.Power.PCloudInstances.PcloudCloudinstancesGet(param, pvmclient.PISession.AuthInfo(pvmclient.InstanceID))
 
 		if err != nil || resp.Payload == nil {
 			klog.Infof("Failed to perform the operation... %v", err)
