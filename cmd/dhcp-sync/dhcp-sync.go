@@ -34,8 +34,8 @@ import (
 )
 
 var (
-	gateway, networkID, file, nameservers string
-	mutex                                 = &sync.Mutex{}
+	gateway, networkID, file, nameservers, mtu string
+	mutex                                      = &sync.Mutex{}
 )
 
 func ipv4MaskString(m []byte) string {
@@ -72,6 +72,13 @@ func (ro RoutersOption) IndentedString(prefix string) string {
 		s += ro[i].String() + ", "
 	}
 	return s + ro[len(ro)-1].String() + ";\n"
+}
+
+type InterfaceMTUOption string
+
+// IndentedString implements the method of the same name in the Statement interface
+func (io InterfaceMTUOption) IndentedString(prefix string) string {
+	return prefix + fmt.Sprintf("option interface-mtu %s;\n", io)
 }
 
 func syncDHCPD() {
@@ -120,6 +127,11 @@ func syncDHCPD() {
 		nameserver = append(nameserver, net.ParseIP(ns))
 	}
 	subnetStmt.Statements = append(subnetStmt.Statements, nameserver)
+
+	if mtu != "" {
+		var mtu = InterfaceMTUOption(mtu)
+		subnetStmt.Statements = append(subnetStmt.Statements, mtu)
+	}
 
 	for _, port := range ports.Ports {
 		hs := HostStatement{
@@ -199,5 +211,6 @@ func init() {
 	Cmd.Flags().StringVar(&file, "file", "/etc/dhcp/dhcpd.conf", "DHCP conf file")
 	Cmd.Flags().StringVar(&gateway, "gateway", "", "Override the gateway value with")
 	Cmd.Flags().StringVar(&nameservers, "nameservers", "", "Override the DNS nameservers")
+	Cmd.Flags().StringVar(&mtu, "mtu", "", "Interface MTU value, e.g: 1450")
 	_ = Cmd.MarkFlagRequired("network-id")
 }
