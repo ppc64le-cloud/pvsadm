@@ -6,7 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20211223094327-0da2539481f7
 	github.com/IBM-Cloud/power-go-client v1.1.0
-	github.com/IBM/go-sdk-core/v5 v5.9.1
+	github.com/IBM/go-sdk-core/v5 v5.9.2
 	github.com/IBM/ibm-cos-sdk-go v1.8.0
 	github.com/IBM/platform-services-go-sdk v0.22.7
 	github.com/fsnotify/fsnotify v1.5.1
