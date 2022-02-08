@@ -11,7 +11,7 @@ require (
 	github.com/IBM/platform-services-go-sdk v0.22.7
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-logr/logr v1.2.2 // indirect
-	github.com/go-openapi/strfmt v0.21.1
+	github.com/go-openapi/strfmt v0.21.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/klauspost/compress v1.14.1 // indirect
