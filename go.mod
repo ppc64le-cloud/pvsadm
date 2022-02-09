@@ -8,7 +8,7 @@ require (
 	github.com/IBM-Cloud/power-go-client v1.1.2
 	github.com/IBM/go-sdk-core/v5 v5.9.2
 	github.com/IBM/ibm-cos-sdk-go v1.8.0
-	github.com/IBM/platform-services-go-sdk v0.22.7
+	github.com/IBM/platform-services-go-sdk v0.22.8
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-openapi/strfmt v0.21.2
