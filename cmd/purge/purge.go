@@ -16,6 +16,8 @@ package purge
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/images"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/keys"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/networks"
@@ -23,7 +25,6 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/volumes"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 var Cmd = &cobra.Command{
@@ -46,6 +47,9 @@ Examples:
 
   # Delete all the networks and ignore if any errors during the delete operation
   pvsadm purge networks --instance-name upstream-core --ignore-errors
+
+  # Delete all the networks along with the instances and their assigned ports
+  pvsadm purge networks --instance-name upstream-core --instances true --ports true
 
   # Delete all the images without asking any confirmation
   pvsadm purge images --instance-name upstream-core --no-prompt
