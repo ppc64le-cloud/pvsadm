@@ -16,6 +16,7 @@ package networks
 
 import (
 	"fmt"
+
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
@@ -25,6 +26,10 @@ import (
 )
 
 const deletePromptMessage = "Deleting all the above networks, networks can't be claimed back once deleted. Do you really want to continue?"
+
+var (
+	deletePorts, deleteInstances bool
+)
 
 var Cmd = &cobra.Command{
 	Use:   "networks",
@@ -56,6 +61,32 @@ pvsadm purge --help for information
 		if !opt.DryRun && len(networks) != 0 {
 			if opt.NoPrompt || utils.AskYesOrNo(deletePromptMessage) {
 				for _, network := range networks {
+					if deleteInstances || deletePorts {
+						ports, err := pvmclient.NetworkClient.GetAllPorts(*network.NetworkID)
+						if err != nil {
+							return fmt.Errorf("failed to get the list of ports: %v", err)
+						}
+
+						// Clean up instances and ports associated with the network instance
+						for _, port := range ports.Ports {
+							pvminstance := port.PvmInstance
+							portID := port.PortID
+							if deleteInstances && pvminstance != nil {
+								err = pvmclient.InstanceClient.Delete(pvminstance.PvmInstanceID)
+								if err != nil {
+									return fmt.Errorf("failed to delete the instance: %v", err)
+								}
+								klog.Infof("Successfully deleted a instance %s using network '%s'", pvminstance.PvmInstanceID, *network.Name)
+							}
+							if deletePorts {
+								err = pvmclient.NetworkClient.DeletePort(*network.NetworkID, *portID)
+								if err != nil {
+									return fmt.Errorf("failed to delete a port, err: %v", err)
+								}
+								klog.Infof("Successfully deleted a port %s using network '%s'", *portID, *network.Name)
+							}
+						}
+					}
 					klog.Infof("Deleting the %s, and ID: %s", *network.Name, *network.NetworkID)
 					err = pvmclient.NetworkClient.Delete(*network.NetworkID)
 					if err != nil {
@@ -71,4 +102,9 @@ pvsadm purge --help for information
 		}
 		return nil
 	},
+}
+
+func init() {
+	Cmd.PersistentFlags().BoolVar(&deletePorts, "ports", false, "Delete ports")
+	Cmd.PersistentFlags().BoolVar(&deleteInstances, "instances", false, "Delete instances")
 }
