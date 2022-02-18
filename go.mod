@@ -33,7 +33,7 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/apimachinery v0.23.3
+	k8s.io/apimachinery v0.23.4
 	k8s.io/klog/v2 v2.40.1
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
 )
