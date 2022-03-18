@@ -79,7 +79,7 @@ func (c *Client) ImportImage(instanceID, imageName, s3Filename, region, accessKe
 
 	if resp1 != nil {
 		klog.Errorf("Failed to intiate the import job")
-		return nil, errors.New("Failed to initiate the import job")
+		return nil, errors.New("failed to initiate the import job")
 	}
 
 	if resp2.Payload.State == "queued" {
