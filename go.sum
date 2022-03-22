@@ -4,8 +4,8 @@ github.com/AlecAivazis/survey/v2 v2.3.3/go.mod h1:hrV6Y/kQCLhIZXGcriDCUBtB3wnN71
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175 h1:FuzMrve2T3v3O2lcI1WA71XJekrW2sX+IC35/X1gYuE=
 github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175/go.mod h1:r4ZaLtgP9ghpBmnZd77tSjM2LwfOiCLOG6XmCoutnOQ=
-github.com/IBM-Cloud/power-go-client v1.1.4 h1:E1sve+j7k3xHD9VKsQCrJ5Eth6Ndt7BC0tkeFhRFjOQ=
-github.com/IBM-Cloud/power-go-client v1.1.4/go.mod h1:YcAHrWuTvckGQYPLLReJ9ijcO/tQuRxAp2kCZ7fnnVk=
+github.com/IBM-Cloud/power-go-client v1.1.5 h1:fQL1y/E93MAueIdR0aX6gy362JIQBznLv27srIyvuaY=
+github.com/IBM-Cloud/power-go-client v1.1.5/go.mod h1:YcAHrWuTvckGQYPLLReJ9ijcO/tQuRxAp2kCZ7fnnVk=
 github.com/IBM/go-sdk-core/v5 v5.9.1/go.mod h1:axE2JrRq79gIJTjKPBwV6gWHswvVptBjbcvvCPIxARM=
 github.com/IBM/go-sdk-core/v5 v5.9.3 h1:s/oxlSLOJbmLUh1Kg7+A1IPE2kck+3bytGdpozp58lg=
 github.com/IBM/go-sdk-core/v5 v5.9.3/go.mod h1:YlOwV9LeuclmT/qi/LAK2AsobbAP42veV0j68/rlZsE=

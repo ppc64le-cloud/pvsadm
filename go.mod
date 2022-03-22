@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.3
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175
-	github.com/IBM-Cloud/power-go-client v1.1.4
+	github.com/IBM-Cloud/power-go-client v1.1.5
 	github.com/IBM/go-sdk-core/v5 v5.9.3
 	github.com/IBM/ibm-cos-sdk-go v1.8.0
 	github.com/IBM/platform-services-go-sdk v0.22.10
