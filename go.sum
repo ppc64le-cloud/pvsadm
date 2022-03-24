@@ -7,13 +7,12 @@ github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175/go.mod h1:r4Z
 github.com/IBM-Cloud/power-go-client v1.1.5 h1:fQL1y/E93MAueIdR0aX6gy362JIQBznLv27srIyvuaY=
 github.com/IBM-Cloud/power-go-client v1.1.5/go.mod h1:YcAHrWuTvckGQYPLLReJ9ijcO/tQuRxAp2kCZ7fnnVk=
 github.com/IBM/go-sdk-core/v5 v5.9.1/go.mod h1:axE2JrRq79gIJTjKPBwV6gWHswvVptBjbcvvCPIxARM=
-github.com/IBM/go-sdk-core/v5 v5.9.3/go.mod h1:YlOwV9LeuclmT/qi/LAK2AsobbAP42veV0j68/rlZsE=
-github.com/IBM/go-sdk-core/v5 v5.9.4 h1:kaNE11yUwpLPFwPosxKLI12arlhQqPWhV2KDsq7uiFM=
-github.com/IBM/go-sdk-core/v5 v5.9.4/go.mod h1:YlOwV9LeuclmT/qi/LAK2AsobbAP42veV0j68/rlZsE=
+github.com/IBM/go-sdk-core/v5 v5.9.5 h1:+uMyHpOyBlFFd/I0PB+7JqqXOPY2DzRR0tbBjTc4d/g=
+github.com/IBM/go-sdk-core/v5 v5.9.5/go.mod h1:YlOwV9LeuclmT/qi/LAK2AsobbAP42veV0j68/rlZsE=
 github.com/IBM/ibm-cos-sdk-go v1.8.0 h1:6d3BY+jo71JvQoyUwdtv4pemEfbnK/XSKQCKOEuWmks=
 github.com/IBM/ibm-cos-sdk-go v1.8.0/go.mod h1:Oi8AC5WNDhmUJgbo1GL2FtBdo0nRgbzE/1HmCL1SERU=
-github.com/IBM/platform-services-go-sdk v0.22.10 h1:jWim5cH/9j7DBRk/BGCEhLtMg67Gpy5/eP4ygh4rxHQ=
-github.com/IBM/platform-services-go-sdk v0.22.10/go.mod h1:oA2sXxvxurkPGH9zsGfPeuUv9UwLKrFBK8bodz8SL7U=
+github.com/IBM/platform-services-go-sdk v0.22.11 h1:dNKBCPQhonFcQrroa88fdCS5BV1yaqoK5XL5WvxaLyo=
+github.com/IBM/platform-services-go-sdk v0.22.11/go.mod h1:NVY4CWOhOE9L9+V0yfeVzS3IB6lSd5s5KeJh/sUdsws=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63nhn5WAunQHLTznkw5W8b1Xc0dNjp83s=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
