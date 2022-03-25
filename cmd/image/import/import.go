@@ -24,6 +24,7 @@ import (
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM-Cloud/bluemix-go/crn"
 	"github.com/IBM-Cloud/bluemix-go/models"
+	pmodels "github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
@@ -93,7 +94,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		case2 := pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey == ""
 
 		if case1 || case2 {
-			return fmt.Errorf("Required both --accesskey and --secretkey values.")
+			return fmt.Errorf("required both --accesskey and --secretkey values")
 		}
 		return nil
 	},
@@ -171,10 +172,42 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return err
 		}
 
-		image, err := pvmclient.ImgClient.ImportImage(pvmclient.InstanceID, opt.ImageName, opt.ImageFilename, opt.Region,
+		jobRef, err := pvmclient.ImgClient.ImportImage(opt.ImageName, opt.ImageFilename, opt.Region,
 			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.StorageType))
 		if err != nil {
 			return err
+		}
+
+		start := time.Now()
+		pollErr := wait.PollImmediate(2*time.Minute, opt.WatchTimeout, func() (bool, error) {
+			job, err := pvmclient.JobClient.Get(*jobRef.ID)
+			if err != nil {
+				return false, err
+			}
+			if *job.Status.State == "completed" {
+				return true, nil
+			}
+			if *job.Status.State == "failed" {
+				return false, fmt.Errorf("image import job failed to complete, err: %v", job.Status.Message)
+			}
+			klog.Infof("Image Import Job in-progress, current state: %s", *job.Status.State)
+			return false, nil
+		})
+		if pollErr == wait.ErrWaitTimeout {
+			pollErr = fmt.Errorf("timed out while waiting for image import job to complete")
+		}
+
+		if pollErr != nil {
+			return fmt.Errorf("image import job failed to complete, err: %v", pollErr)
+		}
+
+		var image *pmodels.ImageReference = &pmodels.ImageReference{}
+		for image.ImageID == nil {
+			image, err = pvmclient.ImgClient.GetImageByName(opt.ImageName)
+			if err != nil {
+				return err
+			}
+			klog.Infof("Retriving image details")
 		}
 
 		if !opt.Watch {
@@ -182,8 +215,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return nil
 		}
 
-		start := time.Now()
-		pollErr := wait.PollImmediate(2*time.Minute, opt.WatchTimeout, func() (bool, error) {
+		pollErr = wait.PollImmediate(2*time.Minute, opt.WatchTimeout, func() (bool, error) {
 			img, err := pvmclient.ImgClient.Get(*image.ImageID)
 			if err != nil {
 				return false, err
