@@ -4,8 +4,8 @@ github.com/AlecAivazis/survey/v2 v2.3.4/go.mod h1:hrV6Y/kQCLhIZXGcriDCUBtB3wnN71
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175 h1:FuzMrve2T3v3O2lcI1WA71XJekrW2sX+IC35/X1gYuE=
 github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175/go.mod h1:r4ZaLtgP9ghpBmnZd77tSjM2LwfOiCLOG6XmCoutnOQ=
-github.com/IBM-Cloud/power-go-client v1.1.5 h1:fQL1y/E93MAueIdR0aX6gy362JIQBznLv27srIyvuaY=
-github.com/IBM-Cloud/power-go-client v1.1.5/go.mod h1:YcAHrWuTvckGQYPLLReJ9ijcO/tQuRxAp2kCZ7fnnVk=
+github.com/IBM-Cloud/power-go-client v1.1.6 h1:efJa34e5PGg3IuyonRc/rBxa4tJFz3+zt7SISgy21jA=
+github.com/IBM-Cloud/power-go-client v1.1.6/go.mod h1:muMNbHirl0Oz9aUj2F54m1PUDGHB3GbSKcdW0hnvP9U=
 github.com/IBM/go-sdk-core/v5 v5.9.1/go.mod h1:axE2JrRq79gIJTjKPBwV6gWHswvVptBjbcvvCPIxARM=
 github.com/IBM/go-sdk-core/v5 v5.9.5 h1:+uMyHpOyBlFFd/I0PB+7JqqXOPY2DzRR0tbBjTc4d/g=
 github.com/IBM/go-sdk-core/v5 v5.9.5/go.mod h1:YlOwV9LeuclmT/qi/LAK2AsobbAP42veV0j68/rlZsE=
@@ -28,6 +28,7 @@ github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4Rq
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
+github.com/apparentlymart/go-cidr v1.1.0 h1:2mAhrMoF+nhXqxTzSZMUzDHkLjmIHC+Zzn4tdgBZjnU=
 github.com/apparentlymart/go-cidr v1.1.0/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
