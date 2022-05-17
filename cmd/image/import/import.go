@@ -109,14 +109,13 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			klog.Errorf("Provide valid StorageType.. allowable values are [tier1, tier3]")
 			os.Exit(1)
 		}
-
 		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
 			return err
 		}
 
-		//Create AccessKey and SecretKey for the bucket provided
-		if opt.AccessKey == "" || opt.SecretKey == "" {
+		//Create AccessKey and SecretKey for the bucket provided if bucket access is private
+		if (opt.AccessKey == "" || opt.SecretKey == "") && (opt.BucketAccess != "public") {
 			//Find CosInstance of the bucket
 			var svcs []models.ServiceInstanceV2
 			svcs, err = bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
@@ -173,7 +172,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		}
 
 		jobRef, err := pvmclient.ImgClient.ImportImage(opt.ImageName, opt.ImageFilename, opt.Region,
-			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.StorageType))
+			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.StorageType), opt.BucketAccess)
 		if err != nil {
 			return err
 		}
@@ -211,7 +210,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		}
 
 		if !opt.Watch {
-			klog.Infof("Importing Image %s is currently in %s state, Please check the Progress in the IBM Cloud UI\n", *image.Name, image.State)
+			klog.Infof("Importing Image %s is currently in %s state, Please check the Progress in the IBM Cloud UI\n", *image.Name, *image.State)
 			return nil
 		}
 
@@ -252,6 +251,7 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.AccessKey, "accesskey", "", "Cloud Object Storage HMAC access key.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.SecretKey, "secretkey", "", "Cloud Object Storage HMAC secret key.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageName, "pvs-image-name", "", "Name to PowerVS imported image.")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.BucketAccess, "bucket-access", "", "Cloud Object Storage bucket access either public or private")
 	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Watch, "watch", "w", false, "After image import watch for image to be published and ready to use")
 	Cmd.Flags().DurationVar(&pkg.ImageCMDOptions.WatchTimeout, "watch-timeout", 1*time.Hour, "watch timeout")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", "PowerVS Storage type, accepted values are [tier1, tier3].")
