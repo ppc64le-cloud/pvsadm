@@ -87,7 +87,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --pvs-storagetype <ST
 # If user wants to specify the type of OS
 pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION>
 
-# import image using default storage type with specifiying public bucket (for public bucket accesskey and secret are not needed)
+# import image from a public IBM Cloud Storage bucket
 pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION> --public-bucket
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -114,6 +114,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 			klog.Errorf("Provide valid StorageType.. allowable values are [tier1, tier3]")
 			os.Exit(1)
 		}
+
 		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
 			return err
@@ -176,13 +177,13 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 			return err
 		}
 		//By default Bucket Access is private
-		BucketAccess := "private"
+		bucketAccess := "private"
 
 		if opt.Public {
-			BucketAccess = "public"
+			bucketAccess = "public"
 		}
 		jobRef, err := pvmclient.ImgClient.ImportImage(opt.ImageName, opt.ImageFilename, opt.Region,
-			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.StorageType), BucketAccess)
+			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.StorageType), bucketAccess)
 		if err != nil {
 			return err
 		}
