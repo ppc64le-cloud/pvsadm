@@ -60,7 +60,6 @@ type imageCMDOptions struct {
 	ServicePlan  string
 	ObjectName   string
 	//import options
-	BucketAccess    string
 	COSInstanceName string
 	ImageFilename   string
 	AccessKey       string
@@ -68,6 +67,7 @@ type imageCMDOptions struct {
 	StorageType     string
 	InstanceID      string
 	ServiceCredName string
+	Public          bool
 	Watch           bool
 	WatchTimeout    time.Duration
 	//sync options
