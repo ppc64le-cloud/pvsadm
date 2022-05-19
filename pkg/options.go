@@ -67,6 +67,7 @@ type imageCMDOptions struct {
 	StorageType     string
 	InstanceID      string
 	ServiceCredName string
+	Public          bool
 	Watch           bool
 	WatchTimeout    time.Duration
 	//sync options

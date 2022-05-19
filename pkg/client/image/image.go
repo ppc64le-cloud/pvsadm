@@ -60,7 +60,7 @@ func (c *Client) CreateCosImage(body models.CreateCosImageImportJob) (*models.Jo
 }
 
 //func ImportImage imports image from S3 Instance
-func (c *Client) ImportImage(imageName, s3Filename, region, accessKey, secretKey, bucketName, storageType string) (*models.JobReference, error) {
+func (c *Client) ImportImage(imageName, s3Filename, region, accessKey, secretKey, bucketName, storageType, bucketAccess string) (*models.JobReference, error) {
 
 	var body = models.CreateCosImageImportJob{
 		ImageName:     &imageName,
@@ -70,6 +70,7 @@ func (c *Client) ImportImage(imageName, s3Filename, region, accessKey, secretKey
 		SecretKey:     secretKey,
 		BucketName:    &bucketName,
 		StorageType:   storageType,
+		BucketAccess:  &bucketAccess,
 	}
 
 	jobRef, err := c.CreateCosImage(body)

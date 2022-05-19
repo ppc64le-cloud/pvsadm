@@ -19,9 +19,11 @@ Flags:
   -n, --instance-name string             Instance name of the PowerVS
   -o, --object-name string               Cloud Storage image filename
   -r, --region string                    COS bucket location
+  -p, --public-bucket                    Cloud Storage public bucket
       --secretkey string                 Cloud Storage secret key
       --service-credential-name string   Service Credential name to be auto generated (default "pvsadm-service-cred")
       --storagetype string               Storage type, accepted values are [tier1, tier3] (default "tier3")
+  
 ```
 
 # Importing Image to PowerVS instance from S3 Bucket using pvsadm
@@ -53,4 +55,10 @@ $pvsadm image import -n <POWERVS_INSTANCE_NAME> -b <BUCKETNAME> --object rhel-83
 If user wants to specify type of OS 
 ```shell
 $pvsadm image import -n <POWERVS_INSTANCE_NAME> -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION>
+```
+
+### case 5:
+Importing the image from public bucket 
+```shell
+$pvsadm image import -n <POWERVS_INSTANCE_NAME> -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION> --public-bucket
 ```
