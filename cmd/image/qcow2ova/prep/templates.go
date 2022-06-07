@@ -79,7 +79,7 @@ mv /etc/resolv.conf.orig /etc/resolv.conf || true
 touch /.autorelabel
 `
 
-var cloudConfig = `# latest file from cloud-init-19.4-11.el8_3.2.noarch
+var cloudConfig = `# latest file from cloud-init-22.1-1.el8.noarch
 users:
  - default
 
@@ -90,7 +90,7 @@ ssh_pwauth:   0
 mount_default_fields: [~, ~, 'auto', 'defaults,nofail,x-systemd.requires=cloud-init.service', '0', '2']
 resize_rootfs_tmp: /dev
 ssh_deletekeys:   1
-ssh_genkeytypes:  ~
+ssh_genkeytypes:  ['rsa', 'ecdsa', 'ed25519']
 syslog_fix_perms: ~
 disable_vmware_customization: false
 
