@@ -22,7 +22,7 @@ require (
 	github.com/sayotte/iscdhcp v0.0.0-20190926162140-d6be84ba9969
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.24.1
 	k8s.io/klog/v2 v2.60.1
@@ -74,6 +74,6 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 )
