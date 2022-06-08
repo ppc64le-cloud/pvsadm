@@ -18,7 +18,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
-	github.com/ppc64le-cloud/powervs-utils v0.0.0-20210415051532-4cdd6a79c8fa
+	github.com/ppc64le-cloud/powervs-utils v0.0.0-20220607051746-a593c549605b
 	github.com/sayotte/iscdhcp v0.0.0-20190926162140-d6be84ba9969
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
