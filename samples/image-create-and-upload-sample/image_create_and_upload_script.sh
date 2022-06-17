@@ -64,7 +64,7 @@ function create_and_upload_image() {
 
 dnf install -y  qemu-img cloud-utils-growpart
 echo 'Initializing pvsadm tool !'
-curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | FORCE=1 bash
+curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/main/get.sh | FORCE=1 bash
 export IBMCLOUD_API_KEY=$API_KEY
 
 if [ -n "$CENTOS_URL" ]; then

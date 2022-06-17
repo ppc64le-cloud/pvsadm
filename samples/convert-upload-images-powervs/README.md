@@ -36,7 +36,7 @@ Args:
 #### How to download and use script
 1. Download the script
 ```shell
-curl -O -fsSL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/samples/convert-upload-images-powervs/convert-upload-images-powervs
+curl -O -fsSL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/main/samples/convert-upload-images-powervs/convert-upload-images-powervs
 ```
 2. Give execute permission
 ```shell
