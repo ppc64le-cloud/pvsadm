@@ -19,10 +19,10 @@
    VERSION=0.1 ./get.sh
 
    # Run script via curl + bash
-   curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | bash
+   curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/main/get.sh | bash
 
    # Run script via curl + bash, replace if any existing version exist in the /usr/local/bin path
-   curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | FORCE=1 bash
+   curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/main/get.sh | FORCE=1 bash
 '
 
 # Trap ctrl-c and call ctrl_c()

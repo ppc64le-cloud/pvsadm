@@ -6,8 +6,8 @@ The `image_create_and_upload_script` helps to create ova image from qcow2 image,
 #### How to download and use script
 1. Download the script and config file
 ```
-curl -O -fsSL https://raw.github.com/ppc64le-cloud/pvsadm/master/samples/image-create-and-upload-sample/image_create_and_upload_script.sh
-curl -O -fsSL https://raw.github.com/ppc64le-cloud/pvsadm/master/samples/image-create-and-upload-sample/config.sh
+curl -O -fsSL https://raw.github.com/ppc64le-cloud/pvsadm/main/samples/image-create-and-upload-sample/image_create_and_upload_script.sh
+curl -O -fsSL https://raw.github.com/ppc64le-cloud/pvsadm/main/samples/image-create-and-upload-sample/config.sh
 ```
 2. Change values in the config.sh file as per description given in file
 3. Run the script
