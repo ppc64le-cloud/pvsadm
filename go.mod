@@ -22,7 +22,7 @@ require (
 	github.com/sayotte/iscdhcp v0.0.0-20190926162140-d6be84ba9969
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.3
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.24.2
 	k8s.io/klog/v2 v2.60.1
