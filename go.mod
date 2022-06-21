@@ -20,7 +20,7 @@ require (
 	github.com/onsi/gomega v1.19.0
 	github.com/ppc64le-cloud/powervs-utils v0.0.0-20220607051746-a593c549605b
 	github.com/sayotte/iscdhcp v0.0.0-20190926162140-d6be84ba9969
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.2
 	gopkg.in/yaml.v2 v2.4.0
