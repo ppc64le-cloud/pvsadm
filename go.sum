@@ -9,8 +9,8 @@ github.com/IBM-Cloud/power-go-client v1.1.9/go.mod h1:Qfx0fNi+9hms+xu9Z6Euhu9088
 github.com/IBM/go-sdk-core/v5 v5.9.1/go.mod h1:axE2JrRq79gIJTjKPBwV6gWHswvVptBjbcvvCPIxARM=
 github.com/IBM/go-sdk-core/v5 v5.10.1 h1:IEpjDJyB7okrC6bJ7fPZqBiOv+16VichT6kZXAz9bbQ=
 github.com/IBM/go-sdk-core/v5 v5.10.1/go.mod h1:u/33BzPy8sthgEhSeBnf6/kPCqwvC9VKw5byfqQfbe0=
-github.com/IBM/ibm-cos-sdk-go v1.8.0 h1:6d3BY+jo71JvQoyUwdtv4pemEfbnK/XSKQCKOEuWmks=
-github.com/IBM/ibm-cos-sdk-go v1.8.0/go.mod h1:Oi8AC5WNDhmUJgbo1GL2FtBdo0nRgbzE/1HmCL1SERU=
+github.com/IBM/ibm-cos-sdk-go v1.9.0 h1:kXTLB9GBwks3+YZopYz/eRbdyeVl2BXFALeqtQ8Duoc=
+github.com/IBM/ibm-cos-sdk-go v1.9.0/go.mod h1:Oi8AC5WNDhmUJgbo1GL2FtBdo0nRgbzE/1HmCL1SERU=
 github.com/IBM/platform-services-go-sdk v0.25.2 h1:DkFwNKT1kMq0UkF/4BSFqx/pRAaR4/kusOqYP+GcxEE=
 github.com/IBM/platform-services-go-sdk v0.25.2/go.mod h1:ZFuISyKu+qekMfvFebzqJ8AIpNlRqI7a6WuieGfjGuA=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
