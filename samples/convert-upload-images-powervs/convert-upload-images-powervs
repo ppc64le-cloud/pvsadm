@@ -31,8 +31,10 @@ Args:
       --cos-bucket string           Object store bucket name(Mandatory)
       --cos-resource-group string   COS resource group(Mandatory)
       --cos-instance-name string    COS instance name(Mandatory)
-      --rhel-url url                url pointing to the RHEL qcow2 image(optional)
-      --rhcos-url url               url pointing to the RHCOS qcow2 image(optional)
+      --rhel-url url                Url pointing to the RHEL qcow2 image(optional)
+      --rhcos-url url               Url pointing to the RHCOS qcow2 image(optional)
+      --cos-access-key string       Cloud Storage access key(optional)
+      --cos-secret-key string       Cloud Storage secret key(optional)
       --help                        help for upload
 
 EOF
@@ -55,12 +57,12 @@ NO_OF_RETRY=${NO_OF_RETRY:-"5"}
 SLEEP_TIME=10
 REBOOT_TIMEOUT=30
 
-PVSADM_VERSION="v0.1.3"
+PVSADM_VERSION="v0.1.7"
 IMAGE_SIZE="11"
 TARGET_DISK_SIZE="120"
 
 # Default Centos image name
-CENTOS_VM_IMAGE_NAME='Linux-CentOS-8-3'
+CENTOS_VM_IMAGE_NAME='CentOS-Stream-8'
 
 #-------------------------------------------------------------------------
 # Check and run setup
@@ -339,6 +341,9 @@ function convert_image_remote {
   if [[ "$image_dist" == "coreos" ]];then
     RHEL_SUBSCRIPTION_USERNAME="dummy"
     RHEL_SUBSCRIPTION_PASSWORD="dummy"
+    IMAGE_SIZE="16"
+  else
+    IMAGE_SIZE="11"
   fi
   SECONDS=0
   local message="Converting $2 image to OVA completed in"
@@ -462,12 +467,18 @@ function import_image_remote {
   local object_name=$3
   local image_name=$4
   local cos_bucket_region=$5
+  local access_key=$6
+  local secret_key=$7
   SECONDS=0
   local message="Importing $3 image to $1 completed in"
   for i in $(seq 1 "$NO_OF_RETRY"); do
     echo "Attempt: $i/$NO_OF_RETRY"
     LOG_FILE="logs/import_image_remote_${service_name}_${i}_${LOGFILE}.log"
-    ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP}  "cd \"$REMOTE_TEMP_DIR\"; pvsadm image import --pvs-instance-name \"$service_name\" --bucket \"$cos_bucket_name\" --bucket-region \"$cos_bucket_region\" --object \"$object_name\" --pvs-image-name \"$image_name\" --api-key \"$IBMCLOUD_API_KEY\" -w  --watch-timeout 2h 2>&1" > $LOG_FILE || true
+    import_cmd="cd \"$REMOTE_TEMP_DIR\"; pvsadm image import --pvs-instance-name \"$service_name\" --bucket \"$cos_bucket_name\" --bucket-region \"$cos_bucket_region\" --object \"$object_name\" --pvs-image-name \"$image_name\" --api-key \"$IBMCLOUD_API_KEY\" -w  --watch-timeout 2h "
+    if [ -n "${access_key}" ] && [ -n "${secret_key}" ] ; then
+      import_cmd+="--accesskey \"$access_key\" --secretkey \"$secret_key\" "
+    fi
+    ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP}  "$import_cmd 2>&1" > $LOG_FILE || true
     if grep -c  "${image_name} already exists" $LOG_FILE >/dev/null; then
       warn "Image ${image_name} already exists in ${service_name}. Skipping"
       time_taken "$message"
@@ -661,6 +672,14 @@ function main {
       shift
       COS_INSTANCE_NAME="$1"
       ;;
+    "--cos-access-key")
+      shift
+      COS_ACCESS_KEY="$1"
+      ;;
+    "--cos-secret-key")
+      shift
+      COS_SECRET_KEY="$1"
+      ;;
     "--help")
       help
       ;;
@@ -702,7 +721,7 @@ function main {
         RHEL_IMAGE_PATH_REMOTE=${IMAGE_PATH}
         if upload_image_remote "${COS_BUCKET_NAME}" "${RHEL_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}"; then
           for SERV_NAME in `echo ${SERVICE_NAMES}`; do
-            if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHEL_OBJECT_NAME}" "${RHEL_IMAGE_NAME}" "${COS_BUCKET_REGION}"; then
+            if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHEL_OBJECT_NAME}" "${RHEL_IMAGE_NAME}" "${COS_BUCKET_REGION}" "${COS_ACCESS_KEY}" "${COS_SECRET_KEY}"; then
               warn "Unable to import "${RHEL_OBJECT_NAME}" to "${SERV_NAME}""
             fi
           done
@@ -715,7 +734,7 @@ function main {
       RHCOS_IMAGE_PATH_REMOTE=${IMAGE_PATH}
       if upload_image_remote "${COS_BUCKET_NAME}" "${RHCOS_IMAGE_PATH_REMOTE}" "${COS_BUCKET_REGION}" ; then
         for SERV_NAME in `echo ${SERVICE_NAMES}`; do
-          if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHCOS_OBJECT_NAME}" "${RHCOS_IMAGE_NAME}" "${COS_BUCKET_REGION}" ; then
+          if ! import_image_remote "${SERV_NAME}" "${COS_BUCKET_NAME}" "${RHCOS_OBJECT_NAME}" "${RHCOS_IMAGE_NAME}" "${COS_BUCKET_REGION}" "${COS_ACCESS_KEY}" "${COS_SECRET_KEY}" ; then
             warn "Unable to import "${RHCOS_OBJECT_NAME}" to "${SERV_NAME}""
           fi
         done
