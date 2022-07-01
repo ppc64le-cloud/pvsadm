@@ -16,11 +16,8 @@ package vms
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
-	"github.com/IBM-Cloud/power-go-client/errors"
-	"github.com/IBM-Cloud/power-go-client/power/client/p_cloud_instances"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
@@ -49,28 +46,6 @@ pvsadm purge --help for information
 		if err != nil {
 			return err
 		}
-
-		param := p_cloud_instances.NewPcloudCloudinstancesGetParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(pvmclient.InstanceID)
-		resp, err := pvmclient.PISession.Power.PCloudInstances.PcloudCloudinstancesGet(param, pvmclient.PISession.AuthInfo(pvmclient.InstanceID))
-
-		if err != nil || resp.Payload == nil {
-			klog.Infof("Failed to perform the operation... %v", err)
-			return errors.ToError(err)
-		}
-		usage := resp.Payload.Usage
-
-		fmt.Println("Usage:")
-		tu := utils.NewTable()
-		tu.SetHeader([]string{"Instances", "Memory", "Proc Units", "processors", "storage", "storageSSD", "storageStandard"})
-		tu.Append([]string{strconv.FormatFloat(*usage.Instances, 'f', -1, 64),
-			strconv.FormatFloat(*usage.Memory, 'f', -1, 64),
-			strconv.FormatFloat(*usage.ProcUnits, 'f', 1, 64),
-			strconv.FormatFloat(*usage.Processors, 'f', -1, 64),
-			strconv.FormatFloat(*usage.Storage, 'f', 2, 64),
-			strconv.FormatFloat(*usage.StorageSSD, 'f', 2, 64),
-			strconv.FormatFloat(*usage.StorageStandard, 'f', 2, 64),
-		})
-		tu.Table.Render()
 
 		instances, err := pvmclient.InstanceClient.GetAllPurgeable(pkg.Options.Before, pkg.Options.Since, pkg.Options.Expr)
 		if err != nil {
