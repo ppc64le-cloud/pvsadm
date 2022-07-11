@@ -49,6 +49,16 @@ func partprobe(device string) error {
 	return nil
 }
 
+// get partition number of the image
+func getPartition(device string) (string, error) {
+	args := fmt.Sprintf("fdisk -l %s | grep ^/dev | wc -l", device)
+	exitcode, out, err := utils.RunCMD("bash", "-c", args)
+	if exitcode != 0 {
+		return "", fmt.Errorf("failed to get partition for device: %s, exitcode: %d, stdout: %s, err: %s", device, exitcode, out, err)
+	}
+	return strings.TrimSpace(out), nil
+}
+
 // growpart resizes the partition
 func growpart(device, partition string) error {
 	exitcode, out, err := utils.RunCMD("growpart", device, partition)
