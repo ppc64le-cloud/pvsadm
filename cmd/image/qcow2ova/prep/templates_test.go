@@ -44,6 +44,12 @@ func TestRender(t *testing.T) {
 			"some-password",
 			false,
 		},
+		{
+			"rhel image without root password",
+			args{dist: "rhel", rhnuser: "rhn", rhnpasswd: "rhnpassword"},
+			"subscription-manager",
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

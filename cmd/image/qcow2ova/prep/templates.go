@@ -66,7 +66,9 @@ do
 done
 grub2-mkconfig -o /boot/grub2/grub.cfg
 rm -rf /etc/sysconfig/network-scripts/ifcfg-eth0
+{{if .RootPasswd }}
 echo {{ .RootPasswd }} | passwd root --stdin
+{{end}}
 {{if eq .Dist "rhel"}}
 subscription-manager unregister
 subscription-manager clean
