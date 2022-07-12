@@ -45,8 +45,11 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 		return err
 	}
 
-	// TODO: Get this partition number from the image
-	partition := "2"
+	partition, err := getPartition(lo)
+	if err != nil {
+		return err
+	}
+
 	partDev := lo + "p" + partition
 
 	err = mount("nouuid", partDev, mnt)
