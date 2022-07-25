@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
@@ -153,18 +154,22 @@ func (c *S3Client) CheckBucketLocationConstraint(bucketName string, bucketLocati
 	return false, errors.New("bucket location constraint doesn't match")
 }
 
-func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) bool {
+func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) (bool, error) {
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectName),
 	}
 
 	_, err := c.S3Session.GetObject(input)
+
 	if err != nil {
-		klog.Errorf("ERROR: %v", err)
-		return false
+		if strings.Contains(err.Error(), "NoSuchKey") {
+			klog.Infof("Object %s not found in %s bucket", objectName, bucketName)
+			return false, nil
+		}
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 //To create a new bucket in the provided instance

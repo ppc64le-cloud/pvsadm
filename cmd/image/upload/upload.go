@@ -168,8 +168,11 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 		if opt.ObjectName == "" {
 			opt.ObjectName = filepath.Base(opt.ImageName)
 		}
-
-		if s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName) {
+		objectExists, err := s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName)
+		if err != nil {
+			return err
+		}
+		if objectExists {
 			return fmt.Errorf("%s object already exists in the %s bucket", opt.ObjectName, opt.BucketName)
 		}
 
