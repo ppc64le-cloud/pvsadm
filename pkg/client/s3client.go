@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM/ibm-cos-sdk-go/aws"
+	"github.com/IBM/ibm-cos-sdk-go/aws/awserr"
 	"github.com/IBM/ibm-cos-sdk-go/aws/credentials/ibmiam"
 	"github.com/IBM/ibm-cos-sdk-go/aws/session"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
@@ -163,7 +163,7 @@ func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) (bool, err
 	_, err := c.S3Session.GetObject(input)
 
 	if err != nil {
-		if strings.Contains(err.Error(), "NoSuchKey") {
+		if err.(awserr.Error).Code() == s3.ErrCodeNoSuchKey {
 			klog.Infof("Object %s not found in %s bucket", objectName, bucketName)
 			return false, nil
 		}
