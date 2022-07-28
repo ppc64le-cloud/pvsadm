@@ -8,7 +8,7 @@ require (
 	github.com/IBM-Cloud/power-go-client v1.1.11
 	github.com/IBM/go-sdk-core/v5 v5.10.1
 	github.com/IBM/ibm-cos-sdk-go v1.9.0
-	github.com/IBM/platform-services-go-sdk v0.26.1
+	github.com/IBM/platform-services-go-sdk v0.27.0
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
