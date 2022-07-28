@@ -41,8 +41,6 @@ type S3Client struct {
 	StorageClass string
 	SvcEndpoint  string
 	S3Session    *s3.S3
-	AccessKey    string
-	SecretKey    string
 }
 
 const (
@@ -51,7 +49,7 @@ const (
 
 //Func NewS3Client accepts apikey, accesskey, secretkey of the bucket and return the s3 client
 //to perform different s3 operations like upload, delete etc.,
-func NewS3Clientwithkeys(c *Client, region string) (s3client *S3Client, err error) {
+func NewS3Clientwithkeys(c *Client, accesskey, secretkey, region string) (s3client *S3Client, err error) {
 
 	s3client = &S3Client{}
 	if pkg.Options.APIKey == "" {
@@ -60,22 +58,12 @@ func NewS3Clientwithkeys(c *Client, region string) (s3client *S3Client, err erro
 		s3client.ApiKey = pkg.Options.APIKey
 	}
 
-	if pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey != "" {
-		s3client.AccessKey = pkg.ImageCMDOptions.AccessKey
-		s3client.SecretKey = pkg.ImageCMDOptions.SecretKey
-
-	}
 	s3client.SvcEndpoint = fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region)
 	s3client.StorageClass = fmt.Sprintf("%s-standard", region)
-	var creds *credentials.Credentials
-	if s3client.AccessKey != "" && s3client.SecretKey != "" {
-
-		creds = credentials.NewStaticCredentials(s3client.AccessKey, s3client.SecretKey, "")
-	}
 	conf := aws.NewConfig().
 		WithRegion(s3client.StorageClass).
 		WithEndpoint(s3client.SvcEndpoint).
-		WithCredentials(creds).
+		WithCredentials(credentials.NewStaticCredentials(accesskey, secretkey, "")).
 		WithS3ForcePathStyle(true)
 
 	// Create client connection

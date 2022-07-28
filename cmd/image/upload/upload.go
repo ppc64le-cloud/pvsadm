@@ -58,6 +58,9 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --region <Regi
 
 #If user likes to give different name to s3 Object
 pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8latest.ova.gz
+
+#upload using accesskey and secret key
+pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --region <Region> --accesskey <ACCESSKEY> --secretkey <SECRETKEY>
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 
@@ -82,28 +85,26 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 			return err
 		}
 
+		if opt.ObjectName == "" {
+			opt.ObjectName = filepath.Base(opt.ImageName)
+		}
+
 		if pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey != "" {
-			s3Cli, err = client.NewS3Clientwithkeys(bxCli, opt.Region)
+			s3Cli, err = client.NewS3Clientwithkeys(bxCli, pkg.ImageCMDOptions.AccessKey, pkg.ImageCMDOptions.SecretKey, opt.Region)
 			if err != nil {
-				fmt.Printf("err1: %+v\n", err)
 				return err
 			}
-
 			//Check if object exists or not
-			if opt.ObjectName == "" {
-				opt.ObjectName = filepath.Base(opt.ImageName)
+			objectExists, err := s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName)
+			if err != nil {
+				return err
 			}
-
-			if s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName) {
+			if objectExists {
 				return fmt.Errorf("%s object already exists in the %s bucket", opt.ObjectName, opt.BucketName)
 			}
 
 			// upload the Image to S3 bucket
-			err = s3Cli.UploadObject(opt.ImageName, opt.ObjectName, opt.BucketName)
-			if err != nil {
-				return err
-			}
-			return nil
+			return s3Cli.UploadObject(opt.ImageName, opt.ObjectName, opt.BucketName)
 
 		}
 
@@ -199,10 +200,6 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 			return err
 		}
 
-		//Check if object exists or not
-		if opt.ObjectName == "" {
-			opt.ObjectName = filepath.Base(opt.ImageName)
-		}
 		objectExists, err := s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName)
 		if err != nil {
 			return err
