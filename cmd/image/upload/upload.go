@@ -59,6 +59,16 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --region <Regi
 #If user likes to give different name to s3 Object
 pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8latest.ova.gz
 `,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+
+		case1 := pkg.ImageCMDOptions.AccessKey == "" && pkg.ImageCMDOptions.SecretKey != ""
+		case2 := pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey == ""
+
+		if case1 || case2 {
+			return fmt.Errorf("required both --accesskey and --secretkey values")
+		}
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var s3Cli *client.S3Client
 		var bucketExists bool = false
@@ -70,6 +80,31 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8late
 
 		if err != nil {
 			return err
+		}
+
+		if pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey != "" {
+			s3Cli, err = client.NewS3Clientwithkeys(bxCli, opt.Region)
+			if err != nil {
+				fmt.Printf("err1: %+v\n", err)
+				return err
+			}
+
+			//Check if object exists or not
+			if opt.ObjectName == "" {
+				opt.ObjectName = filepath.Base(opt.ImageName)
+			}
+
+			if s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName) {
+				return fmt.Errorf("%s object already exists in the %s bucket", opt.ObjectName, opt.BucketName)
+			}
+
+			// upload the Image to S3 bucket
+			err = s3Cli.UploadObject(opt.ImageName, opt.ObjectName, opt.BucketName)
+			if err != nil {
+				return err
+			}
+			return nil
+
 		}
 
 		instances, err := bxCli.ListServiceInstances(ServiceType)
@@ -207,6 +242,8 @@ func init() {
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageName, "file", "f", "", "The PATH to the file to upload.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ObjectName, "cos-object-name", "o", "", "Cloud Object Storage Object Name(Default: filename from --file|-f option)")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "bucket-region", "r", "us-south", "Cloud Object Storage bucket region.")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.AccessKey, "accesskey", "", "Cloud Object Storage HMAC access key.")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.SecretKey, "secretkey", "", "Cloud Object Storage HMAC secret key.")
 	_ = Cmd.MarkFlagRequired("bucket")
 	_ = Cmd.MarkFlagRequired("file")
 	Cmd.Flags().SortFlags = false
