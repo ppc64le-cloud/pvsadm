@@ -163,11 +163,13 @@ func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) (bool, err
 	_, err := c.S3Session.GetObject(input)
 
 	if err != nil {
-		if err.(awserr.Error).Code() == s3.ErrCodeNoSuchKey {
-			klog.Infof("Object %s not found in %s bucket", objectName, bucketName)
-			return false, nil
+		if aerr, ok := err.(awserr.Error); ok {
+			if aerr.Code() == s3.ErrCodeNoSuchKey {
+				klog.Infof("Object %s not found in %s bucket", objectName, bucketName)
+				return false, nil
+			}
 		}
-		return false, err
+		return false, fmt.Errorf("unknown error occurred, %v", err)
 	}
 	return true, nil
 }
