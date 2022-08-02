@@ -49,15 +49,9 @@ const (
 
 //Func NewS3Client accepts apikey, accesskey, secretkey of the bucket and return the s3 client
 //to perform different s3 operations like upload, delete etc.,
-func NewS3Clientwithkeys(c *Client, accesskey, secretkey, region string) (s3client *S3Client, err error) {
+func NewS3Clientwithkeys(accesskey, secretkey, region string) (s3client *S3Client, err error) {
 
 	s3client = &S3Client{}
-	if pkg.Options.APIKey == "" {
-		s3client.ApiKey = os.Getenv("IBMCLOUD_API_KEY")
-	} else {
-		s3client.ApiKey = pkg.Options.APIKey
-	}
-
 	s3client.SvcEndpoint = fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region)
 	s3client.StorageClass = fmt.Sprintf("%s-standard", region)
 	conf := aws.NewConfig().

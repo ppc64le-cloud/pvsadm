@@ -51,7 +51,7 @@ $pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --resource-gr
 ```
 
 ### case 5:
-If user wants to upload the object to the bucket in the default region(us-south) using access and secret key
+If user wants to upload the object to the bucket using access and secret key
 ```shell
 $pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz  --bucket-region <REGION> --accesskey <ACCESSKEY> --secretkey <SECRETKEY>
 ```

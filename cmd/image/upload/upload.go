@@ -54,13 +54,13 @@ pvsadm image upload  --bucket bucket0911 -f rhcos-461.ova.gz
 pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --resource-group <ResourceGroup_Name>
 
 #if user is planning to create a bucket in particular region
-pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --region <Region>
+pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-region <Region>
 
 #If user likes to give different name to s3 Object
 pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz -o centos8latest.ova.gz
 
 #upload using accesskey and secret key
-pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --region <Region> --accesskey <ACCESSKEY> --secretkey <SECRETKEY>
+pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-region <Region> --accesskey <ACCESSKEY> --secretkey <SECRETKEY>
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 
@@ -78,19 +78,12 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --region <Regi
 		var apikey string = pkg.Options.APIKey
 		opt := pkg.ImageCMDOptions
 
-		//Create bluemix client
-		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
-
-		if err != nil {
-			return err
-		}
-
 		if opt.ObjectName == "" {
 			opt.ObjectName = filepath.Base(opt.ImageName)
 		}
 
 		if pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey != "" {
-			s3Cli, err = client.NewS3Clientwithkeys(bxCli, pkg.ImageCMDOptions.AccessKey, pkg.ImageCMDOptions.SecretKey, opt.Region)
+			s3Cli, err := client.NewS3Clientwithkeys(pkg.ImageCMDOptions.AccessKey, pkg.ImageCMDOptions.SecretKey, opt.Region)
 			if err != nil {
 				return err
 			}
@@ -106,6 +99,13 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --region <Regi
 			// upload the Image to S3 bucket
 			return s3Cli.UploadObject(opt.ImageName, opt.ObjectName, opt.BucketName)
 
+		}
+
+		//Create bluemix client
+		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+
+		if err != nil {
+			return err
 		}
 
 		instances, err := bxCli.ListServiceInstances(ServiceType)
