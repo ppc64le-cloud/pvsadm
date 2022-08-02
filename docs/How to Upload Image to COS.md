@@ -49,3 +49,9 @@ If user is planning to create a new Cloud Object Storage Instance(S3 service)
 ```shell
 $pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --resource-group <ResourceGroup_Name> --bucket-region <REGION>
 ```
+
+### case 5:
+If user wants to upload the object to the bucket using access and secret key
+```shell
+$pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz  --bucket-region <REGION> --accesskey <ACCESSKEY> --secretkey <SECRETKEY>
+```
