@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
@@ -230,6 +231,39 @@ func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName strin
 	return err
 }
 
+type CustomReader struct {
+	fp      *os.File
+	size    int64
+	read    int64
+	signMap map[int64]struct{}
+	mux     sync.Mutex
+}
+
+func (r *CustomReader) Read(p []byte) (int, error) {
+	return r.fp.Read(p)
+}
+
+func (r *CustomReader) ReadAt(p []byte, off int64) (int, error) {
+	n, err := r.fp.ReadAt(p, off)
+	if err != nil {
+		return n, err
+	}
+	r.mux.Lock()
+	if _, ok := r.signMap[off]; ok {
+		r.read += int64(n)
+		progress := int(float32(r.read*100) / float32(r.size))
+		fmt.Printf("\rUploading: Total read:%d    progress:%d%%", r.read, progress)
+	} else {
+		r.signMap[off] = struct{}{}
+	}
+	r.mux.Unlock()
+	return n, err
+}
+
+func (r *CustomReader) Seek(offset int64, whence int) (int64, error) {
+	return r.fp.Seek(offset, whence)
+}
+
 //To upload a object to S3 bucket
 func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	klog.Infof("uploading the file %s\n", fileName)
@@ -240,6 +274,16 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	}
 	defer file.Close()
 
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat file %v, %v", fileName, err)
+
+	}
+	reader := &CustomReader{
+		fp:      file,
+		size:    fileInfo.Size(),
+		signMap: map[int64]struct{}{},
+	}
 	// Create an uploader with S3 client
 	uploader := s3manager.NewUploaderWithClient(c.S3Session, func(u *s3manager.Uploader) {
 		u.PartSize = 64 * 1024 * 1024
@@ -249,7 +293,7 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	upParams := &s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectName),
-		Body:   file,
+		Body:   reader,
 	}
 
 	// Perform an upload.
@@ -258,6 +302,7 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	if err != nil {
 		return err
 	}
-	klog.Infof("Upload completed successfully in %f seconds to location %s\n", time.Since(startTime).Seconds(), result.Location)
+	msg := fmt.Sprintf("Upload completed successfully in %f seconds to location %s\n", time.Since(startTime).Seconds(), result.Location)
+	klog.Infoln(msg)
 	return err
 }
