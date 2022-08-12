@@ -7,7 +7,7 @@ require (
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175
 	github.com/IBM-Cloud/power-go-client v1.1.12
 	github.com/IBM/go-sdk-core/v5 v5.10.2
-	github.com/IBM/ibm-cos-sdk-go v1.9.0
+	github.com/IBM/ibm-cos-sdk-go v1.9.1
 	github.com/IBM/platform-services-go-sdk v0.28.2
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/go-openapi/strfmt v0.21.3
@@ -67,8 +67,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	go.mongodb.org/mongo-driver v1.10.0 // indirect
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
-	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
+	golang.org/x/net v0.0.0-20220728211354-c7608f3a8462 // indirect
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
