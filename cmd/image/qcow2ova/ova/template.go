@@ -56,4 +56,8 @@ var ovfTemplate = `<?xml version="1.0" encoding="UTF-8"?>
     <ovf:Info/>
     <ovf:Name>{{.ImageName}}</ovf:Name>
   </ovf:VirtualSystemCollection>
+  <ovf:pvsadmversionsection ovf:required="false">
+    <ovf:Info>Specifies pvsadm version </ovf:Info>
+    <ovf:BuildNumber>{{.PvsadmVersion}}</ovf:BuildNumber>
+  </ovf:pvsadmversionsection>
 </ovf:Envelope>`
