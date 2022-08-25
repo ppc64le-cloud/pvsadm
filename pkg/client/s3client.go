@@ -252,7 +252,7 @@ func (r *CustomReader) ReadAt(p []byte, off int64) (int, error) {
 	if _, ok := r.signMap[off]; ok {
 		r.read += int64(n)
 		progress := int(float32(r.read*100) / float32(r.size))
-		fmt.Printf("\rUploading: Total read:%d    progress:%d%%", r.read, progress)
+		fmt.Printf("\rUploading: Total read(bytes):%d    progress:%d%%", r.read, progress)
 	} else {
 		r.signMap[off] = struct{}{}
 	}
@@ -302,7 +302,7 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	if err != nil {
 		return err
 	}
-	msg := fmt.Sprintf("Upload completed successfully in %f seconds to location %s\n", time.Since(startTime).Seconds(), result.Location)
-	klog.Infoln(msg)
+	fmt.Println()
+	klog.Infof("Upload completed successfully in %f seconds to location %s\n", time.Since(startTime).Seconds(), result.Location)
 	return err
 }
