@@ -26,6 +26,7 @@ import (
 	utils "github.com/ppc64le-cloud/powervs-utils"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client/dhcp"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/events"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/image"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/instance"
@@ -49,6 +50,7 @@ type PVMClient struct {
 	NetworkClient  *network.Client
 	EventsClient   *events.Client
 	KeyClient      *key.Client
+	DHCPClient     *dhcp.Client
 }
 
 func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, error) {
@@ -107,5 +109,6 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.EventsClient = events.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.DHCPClient = dhcp.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }
