@@ -126,7 +126,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			}
 		} else if len(instances) != 0 {
 			//check for bucket across the instances
-			for instanceName, _ := range instances {
+			for instanceName := range instances {
 				s3Cli, err = client.NewS3Client(bxCli, instanceName, opt.Region)
 				if err != nil {
 					return err
@@ -152,7 +152,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			klog.Infof("Bucket %s not found in the account provided\n", opt.BucketName)
 			if utils.AskConfirmation(UseExistingPromptMessage) {
 				availableInstances := []string{}
-				for name, _ := range instances {
+				for name := range instances {
 					availableInstances = append(availableInstances, name)
 				}
 				selectedInstance := utils.SelectItem("Select Cloud Object Storage Instance:", availableInstances)
