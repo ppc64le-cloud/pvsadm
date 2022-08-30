@@ -55,4 +55,5 @@ var deleteCmd = &cobra.Command{
 
 func init() {
 	deleteCmd.Flags().StringVar(&dhcp, "id", "", "Instance ID of the DHCP server to be deleted")
+	_ = deleteCmd.MarkPersistentFlagRequired("id")
 }

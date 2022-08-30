@@ -16,8 +16,8 @@ package dhcpserver
 
 import (
 	"fmt"
-
 	"github.com/IBM/go-sdk-core/v5/core"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 
@@ -27,7 +27,8 @@ import (
 )
 
 var (
-	network, ipaddress, description, cloudConnectionID string
+	cidr, dns, name, cloudConnectionID string
+	snat                               bool
 )
 
 var createCmd = &cobra.Command{
@@ -48,9 +49,20 @@ var createCmd = &cobra.Command{
 			return err
 		}
 
-		body := &models.DHCPServerCreate{}
+		body := &models.DHCPServerCreate{
+			SnatEnabled: core.BoolPtr(snat),
+		}
+		if cidr != "" {
+			body.Cidr = core.StringPtr(cidr)
+		}
 		if cloudConnectionID != "" {
 			body.CloudConnectionID = core.StringPtr(cloudConnectionID)
+		}
+		if dns != "" {
+			body.DNSServer = core.StringPtr(dns)
+		}
+		if name != "" {
+			body.Name = core.StringPtr(name)
 		}
 		_, err = pvmclient.DHCPClient.Create(body)
 		if err != nil {
@@ -63,5 +75,9 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
+	createCmd.Flags().StringVar(&cidr, "cidr", "", "CIDR")
 	createCmd.Flags().StringVar(&cloudConnectionID, "cloud-connection-id", "", "Instance ID of the Cloud connection")
+	createCmd.Flags().StringVar(&dns, "dns-server", "", "DNS Server")
+	createCmd.Flags().StringVar(&name, "name", "", "Name")
+	createCmd.Flags().BoolVar(&snat, "snat", true, "SNAT Enabled")
 }
