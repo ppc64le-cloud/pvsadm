@@ -29,12 +29,6 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Get PowerVS DHCP servers",
 	Long:  `Get PowerVS DHCP servers`,
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.Options.InstanceID == "" && pkg.Options.InstanceName == "" {
-			return fmt.Errorf("--instance-id or --instance-name required")
-		}
-		return nil
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 
