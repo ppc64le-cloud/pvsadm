@@ -73,4 +73,7 @@ type imageCMDOptions struct {
 	WatchTimeout    time.Duration
 	//sync options
 	SpecYAML string
+	//info options
+	Filename string
+	TemDir   string
 }

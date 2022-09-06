@@ -16,6 +16,7 @@ package image
 
 import (
 	_import "github.com/ppc64le-cloud/pvsadm/cmd/image/import"
+	"github.com/ppc64le-cloud/pvsadm/cmd/image/info"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image/qcow2ova"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image/sync"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image/upload"
@@ -33,4 +34,5 @@ func init() {
 	Cmd.AddCommand(qcow2ova.Cmd)
 	Cmd.AddCommand(upload.Cmd)
 	Cmd.AddCommand(sync.Cmd)
+	Cmd.AddCommand(info.Cmd)
 }
