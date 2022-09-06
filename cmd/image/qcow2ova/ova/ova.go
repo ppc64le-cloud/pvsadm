@@ -44,7 +44,7 @@ func Render(imageName, volumeName string, srcVolumeSize int64, targetDiskSize in
 	//Disk Size should be in bytes
 	PvsadmVersion := version.Get()
 	o := OVA{
-		imageName, volumeName, srcVolumeSize, targetDiskSize * 1073741824, PvsadmVersion,
+		imageName, volumeName, srcVolumeSize, targetDiskSize * 1073741824, version.Get(),
 	}
 
 	var wr bytes.Buffer
