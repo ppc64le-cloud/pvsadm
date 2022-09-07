@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/spf13/cobra"
@@ -75,6 +76,14 @@ func isGzip(source string) (bool, error) {
 	}
 }
 
+func SanitizeExtractPath(filePath string, destination string) error {
+	destpath := filepath.Join(destination, filePath)
+	if !strings.HasPrefix(destpath, filepath.Clean(destination)+string(os.PathSeparator)) {
+		return fmt.Errorf("%s: illegal file path", filePath)
+	}
+	return nil
+}
+
 // Extract specific file from the tar file
 func Untar(tarball, target, filename string) error {
 	reader, err := os.Open(tarball)
@@ -94,6 +103,10 @@ func Untar(tarball, target, filename string) error {
 
 		if header.Name != filename {
 			continue
+		}
+		err = SanitizeExtractPath(header.Name, target)
+		if err != nil {
+			return err
 		}
 		path := filepath.Join(target, header.Name)
 		info := header.FileInfo()
