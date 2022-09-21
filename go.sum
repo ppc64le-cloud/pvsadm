@@ -9,8 +9,8 @@ github.com/IBM-Cloud/power-go-client v1.2.1/go.mod h1:Qfx0fNi+9hms+xu9Z6Euhu9088
 github.com/IBM/go-sdk-core/v5 v5.9.1/go.mod h1:axE2JrRq79gIJTjKPBwV6gWHswvVptBjbcvvCPIxARM=
 github.com/IBM/go-sdk-core/v5 v5.10.2 h1:bfqhYNwwpJ3zJQSYpF3umhmRIKaa762itvJkTAWCCLU=
 github.com/IBM/go-sdk-core/v5 v5.10.2/go.mod h1:WZPFasUzsKab/2mzt29xPcfruSk5js2ywAPwW4VJjdI=
-github.com/IBM/ibm-cos-sdk-go v1.9.1 h1:iVkxEJbvOEIRypRK6LmmXMHCYto84daH+1CiNh707DQ=
-github.com/IBM/ibm-cos-sdk-go v1.9.1/go.mod h1:NS9Em7N66aha7Bx74DuWtbJhJ7+bo2nGmgYPABNkjYk=
+github.com/IBM/ibm-cos-sdk-go v1.9.2 h1:hmzxJ/i4jmbWyqX7DCNuuMr1AJXPEYR4CpONGKqaNlE=
+github.com/IBM/ibm-cos-sdk-go v1.9.2/go.mod h1:Fxw2ssAuGS3fjyo08f9IiB5wnmu4jq0TGH77JMZ37q8=
 github.com/IBM/platform-services-go-sdk v0.28.3 h1:Os6MLVVsheUFnl+7k/mYm8KhiPZxuIG3vaPxDPWjTgo=
 github.com/IBM/platform-services-go-sdk v0.28.3/go.mod h1:jy0Ahvj5Gkkua3Gd7t22bo0GfmHRQaPZcaqwfVgEY7k=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
@@ -635,8 +635,8 @@ golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd/go.mod h1:CfG3xpIq0wQ8r1q4Su
 golang.org/x/net v0.0.0-20220225172249-27dd8689420f/go.mod h1:CfG3xpIq0wQ8r1q4Su4UZFWDARRcnwPjda9FqA0JpMk=
 golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4/go.mod h1:CfG3xpIq0wQ8r1q4Su4UZFWDARRcnwPjda9FqA0JpMk=
 golang.org/x/net v0.0.0-20220722155237-a158d28d115b/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
-golang.org/x/net v0.0.0-20220728211354-c7608f3a8462 h1:UreQrH7DbFXSi9ZFox6FNT3WBooWmdANpU+IfkT1T4I=
-golang.org/x/net v0.0.0-20220728211354-c7608f3a8462/go.mod h1:YDH+HFinaLZZlnHAfSS6ZXJJ9M9t4Dl22yv3iI2vPwk=
+golang.org/x/net v0.0.0-20220909164309-bea034e7d591 h1:D0B/7al0LLrVC8aWF4+oxpv/m8bc7ViFfVS8/gXGdqI=
+golang.org/x/net v0.0.0-20220909164309-bea034e7d591/go.mod h1:YDH+HFinaLZZlnHAfSS6ZXJJ9M9t4Dl22yv3iI2vPwk=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
