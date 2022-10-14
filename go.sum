@@ -11,8 +11,8 @@ github.com/IBM/go-sdk-core/v5 v5.10.2 h1:bfqhYNwwpJ3zJQSYpF3umhmRIKaa762itvJkTAW
 github.com/IBM/go-sdk-core/v5 v5.10.2/go.mod h1:WZPFasUzsKab/2mzt29xPcfruSk5js2ywAPwW4VJjdI=
 github.com/IBM/ibm-cos-sdk-go v1.9.2 h1:hmzxJ/i4jmbWyqX7DCNuuMr1AJXPEYR4CpONGKqaNlE=
 github.com/IBM/ibm-cos-sdk-go v1.9.2/go.mod h1:Fxw2ssAuGS3fjyo08f9IiB5wnmu4jq0TGH77JMZ37q8=
-github.com/IBM/platform-services-go-sdk v0.28.5 h1:wVwapdVU3+J/JtS0P6WYi21gqsm1pX/MH4UX69c3+5E=
-github.com/IBM/platform-services-go-sdk v0.28.5/go.mod h1:jy0Ahvj5Gkkua3Gd7t22bo0GfmHRQaPZcaqwfVgEY7k=
+github.com/IBM/platform-services-go-sdk v0.28.6 h1:EQQuCoJt8XGCo1QZ1vt09ARHmae72G5J2LkLFi/5yp0=
+github.com/IBM/platform-services-go-sdk v0.28.6/go.mod h1:jy0Ahvj5Gkkua3Gd7t22bo0GfmHRQaPZcaqwfVgEY7k=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63nhn5WAunQHLTznkw5W8b1Xc0dNjp83s=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
