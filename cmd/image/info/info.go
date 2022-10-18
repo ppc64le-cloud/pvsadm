@@ -36,7 +36,7 @@ pvsadm image info --help for information
 Examples:
 
 # To get the pvsadm tool version by specifying the image
-pvsadm image info --file rhcos-46-12152021.ova.gz
+pvsadm image info rhcos-46-12152021.ova.gz
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,7 +72,12 @@ pvsadm image info --file rhcos-46-12152021.ova.gz
 		if err != nil {
 			return err
 		}
-		filename := filepath.Join(ovaImgDir, "coreos.ovf")
+		ovfFilePath := ovaImgDir + "/*.ovf"
+		matches, err := filepath.Glob(ovfFilePath)
+		if err != nil {
+			return err
+		}
+		filename := matches[0]
 
 		type Ovf struct {
 			Pvsadmversionsection struct {

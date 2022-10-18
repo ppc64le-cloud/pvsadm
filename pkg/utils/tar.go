@@ -54,8 +54,6 @@ func Untar(tarball, target, filename string) error {
 		if !matched {
 			continue
 		}
-
-		fmt.Printf("Filename: %+v\n", header)
 		filename = header.Name
 		err = SanitizeExtractPath(header.Name, target)
 		if err != nil {
