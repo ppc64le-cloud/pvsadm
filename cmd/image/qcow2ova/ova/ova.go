@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/version"
 )
 
@@ -36,14 +37,21 @@ type OVA struct {
 	SrcVolumeSize         int64
 	TargetDiskSize        int64
 	PvsadmVersion         string
+	OsId                  string
 }
 
 // Render will generate the OVA spec from the template with all the required information like image name, volume name
 // and size
 func Render(imageName, volumeName string, srcVolumeSize int64, targetDiskSize int64) (string, error) {
 	//Disk Size should be in bytes
+
+	opt := pkg.ImageCMDOptions
+	osId := "79"
+	if opt.ImageDist == "coreos" {
+		osId = "80"
+	}
 	o := OVA{
-		imageName, volumeName, srcVolumeSize, targetDiskSize * 1073741824, version.Get(),
+		imageName, volumeName, srcVolumeSize, targetDiskSize * 1073741824, version.Get(), osId,
 	}
 
 	var wr bytes.Buffer
