@@ -32,14 +32,16 @@ var Cmd = &cobra.Command{
 	Long: `Provide info about the image
 pvsadm image info --help for information
 
-
 Examples:
-
 # To get the pvsadm tool version by specifying the image
 pvsadm image info rhcos-46-12152021.ova.gz
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+
+		if len(args) == 0 {
+			return fmt.Errorf("Image filepath is required")
+		}
 
 		fileName := args[0]
 		var ova string
@@ -76,6 +78,9 @@ pvsadm image info rhcos-46-12152021.ova.gz
 		matches, err := filepath.Glob(ovfFilePath)
 		if err != nil {
 			return err
+		}
+		if len(matches) == 0 {
+			return fmt.Errorf("Unable to extract the ovf file")
 		}
 		filename := matches[0]
 
