@@ -1,4 +1,4 @@
-// Copyright 2021 IBM Corp
+// Copyright 2022 IBM Corp
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package qcow2ova
+package utils
 
 import (
 	"io"
@@ -23,8 +23,8 @@ import (
 	gzip "github.com/klauspost/pgzip"
 )
 
-// gzipIt compresses the source file to dest
-func gzipIt(src, dest string) error {
+// GzipIt compresses the source file to dest
+func GzipIt(src, dest string) error {
 	reader, err := os.Open(src)
 	if err != nil {
 		return err
@@ -45,8 +45,8 @@ func gzipIt(src, dest string) error {
 	return err
 }
 
-// gunzipIt the source file to target
-func gunzipIt(src, dest string) error {
+// GunzipIt the source file to target
+func GunzipIt(src, dest string) error {
 	reader, err := os.Open(src)
 	if err != nil {
 		return err
@@ -69,8 +69,8 @@ func gunzipIt(src, dest string) error {
 	return err
 }
 
-// isGzip returns if file is in gzip format
-func isGzip(source string) (bool, error) {
+// IsGzip returns if file is in gzip format
+func IsGzip(source string) (bool, error) {
 	file, err := os.Open(source)
 	if err != nil {
 		return false, err

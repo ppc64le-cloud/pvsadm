@@ -180,14 +180,14 @@ Examples:
 
 		var qcow2Img string
 
-		checkGzip, err := isGzip(image)
+		checkGzip, err := utils.IsGzip(image)
 		if err != nil {
 			return fmt.Errorf("failed to detect the image filetype: %v", err)
 		}
 		if checkGzip {
 			klog.Infof("Image %s is in gzip format, extracting it", image)
 			qcow2Img = filepath.Join(tmpDir, ova.VolName+".qcow2")
-			err = gunzipIt(image, qcow2Img)
+			err = utils.GunzipIt(image, qcow2Img)
 			if err != nil {
 				return err
 			}
@@ -234,7 +234,7 @@ Examples:
 
 		klog.Infof("Compressing an OVA file")
 		ovaGZfile := filepath.Join(cwd, opt.ImageName+".ova.gz")
-		err = gzipIt(ovafile, ovaGZfile)
+		err = utils.GzipIt(ovafile, ovaGZfile)
 		if err != nil {
 			return err
 		}
