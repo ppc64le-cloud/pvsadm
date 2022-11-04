@@ -80,7 +80,7 @@ pvsadm image info rhcos-46-12152021.ova.gz
 			return err
 		}
 		if len(matches) == 0 {
-			return fmt.Errorf("Unable to extract the ovf file")
+			return fmt.Errorf(".ovf file is not found in %s image", fileName)
 		}
 		filename := matches[0]
 
