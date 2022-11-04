@@ -227,7 +227,7 @@ Examples:
 
 		klog.Infof("Creating an OVA bundle")
 		ovafile := filepath.Join(tmpDir, opt.ImageName+".ova")
-		if err := ova.CreateTarArchive(ovaImgDir, ovafile, opt.TargetDiskSize); err != nil {
+		if err := ova.CreateTarArchive(ovaImgDir, ovafile, opt.TargetDiskSize, opt.ImageDist); err != nil {
 			return fmt.Errorf("failed to create ova bundle, err: %v", err)
 		}
 		klog.Infof("OVA bundle creation completed: %s", ovafile)

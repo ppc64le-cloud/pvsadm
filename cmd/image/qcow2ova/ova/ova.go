@@ -36,14 +36,19 @@ type OVA struct {
 	SrcVolumeSize         int64
 	TargetDiskSize        int64
 	PvsadmVersion         string
+	OsId                  string
 }
 
 // Render will generate the OVA spec from the template with all the required information like image name, volume name
 // and size
-func Render(imageName, volumeName string, srcVolumeSize int64, targetDiskSize int64) (string, error) {
+func Render(imageName, volumeName string, srcVolumeSize int64, targetDiskSize int64, ImageDist string) (string, error) {
 	//Disk Size should be in bytes
+	osId := "79"
+	if ImageDist == "coreos" {
+		osId = "80"
+	}
 	o := OVA{
-		imageName, volumeName, srcVolumeSize, targetDiskSize * 1073741824, version.Get(),
+		imageName, volumeName, srcVolumeSize, targetDiskSize * 1073741824, version.Get(), osId,
 	}
 
 	var wr bytes.Buffer
@@ -70,7 +75,7 @@ func RenderMeta(imageName string) (string, error) {
 }
 
 // bundles the dir into a OVA image
-func CreateTarArchive(dir string, target string, targetDiskSize int64) error {
+func CreateTarArchive(dir string, target string, targetDiskSize int64, imageDist string) error {
 	ovf := filepath.Join(dir, VolNameRaw)
 	info, err := os.Stat(ovf)
 	if os.IsNotExist(err) {
@@ -81,7 +86,7 @@ func CreateTarArchive(dir string, target string, targetDiskSize int64) error {
 	if err != nil {
 		return fmt.Errorf("failed to render the meta specfile, got error '%s'", err.Error())
 	}
-	ovfSpec, err := Render(filepath.Base(target), VolNameRaw, volSize, targetDiskSize)
+	ovfSpec, err := Render(filepath.Base(target), VolNameRaw, volSize, targetDiskSize, imageDist)
 	if err != nil {
 		return fmt.Errorf("failed to render the ovf specfile, got error '%s'", err.Error())
 	}
