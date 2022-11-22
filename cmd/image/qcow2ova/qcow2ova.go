@@ -165,9 +165,10 @@ Examples:
 		go func() {
 			<-c
 			klog.Infof("Received an interrupt, exiting...")
-			_ = os.RemoveAll(tmpDir)
+			prep.ExitChroot()
 			prep.UmountHostPartitions(mnt)
 			_ = prep.Umount(mnt)
+			_ = os.RemoveAll(tmpDir)
 			os.Exit(1)
 		}()
 

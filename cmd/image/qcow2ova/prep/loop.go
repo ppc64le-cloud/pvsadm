@@ -16,8 +16,10 @@ package prep
 
 import (
 	"fmt"
-	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"strings"
+
+	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
+	"k8s.io/klog/v2"
 )
 
 const losetupCMD = "losetup"
@@ -104,6 +106,20 @@ func mount(opts, src, target string) error {
 func Umount(dir string) error {
 	exitcode, out, err := utils.RunCMD("umount", dir)
 	if exitcode != 0 {
+		if strings.Contains(err, "not mounted") {
+			klog.Infof("Ignoring 'not mounted' error for %s", dir)
+			return nil
+		}
+		if strings.Contains(err, "no mount point specified") {
+			klog.Infof("Ignoring 'no mount point specified' error for %s", dir)
+			return nil
+		}
+		if strings.Contains(err, "target is busy") {
+			exitcode, out, err = utils.RunCMD("umount", "-lf", dir)
+			if exitcode == 0 {
+				return nil
+			}
+		}
 		return fmt.Errorf("failed to unmount, dir: %s, exitcode: %d, stdout: %s, err: %s", dir, exitcode, out, err)
 	}
 	return nil
