@@ -23,7 +23,6 @@ import (
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/IBM/go-sdk-core/v5/core"
-	utils "github.com/ppc64le-cloud/powervs-utils"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/dhcp"
@@ -85,15 +84,11 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 
 	pvmclient.InstanceName = svc.Name
 	pvmclient.Zone = svc.RegionID
-	pvmclient.Region, err = utils.GetRegion(pvmclient.Zone)
-	if err != nil {
-		return nil, err
-	}
 
 	authenticator := &core.IamAuthenticator{ApiKey: c.Config.BluemixAPIKey, URL: *c.Config.TokenProviderEndpoint}
 
 	if power_api_endpoint := os.Getenv("IBMCLOUD_POWER_API_ENDPOINT"); power_api_endpoint == "" {
-		os.Setenv("IBMCLOUD_POWER_API_ENDPOINT", fmt.Sprintf("%s.%s", pvmclient.Region, ep))
+		os.Setenv("IBMCLOUD_POWER_API_ENDPOINT", ep)
 	}
 
 	pvmclientOptions := ibmpisession.IBMPIOptions{Authenticator: authenticator, Debug: pkg.Options.Debug, Region: pvmclient.Region, UserAccount: c.User.Account, Zone: pvmclient.Zone}
