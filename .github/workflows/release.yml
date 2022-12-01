@@ -30,7 +30,7 @@ jobs:
         mkdir -p bin
         VERSION=${{ steps.get_version.outputs.VERSION }}
         STATIC_FLAG='-w -extldflags "-static"'
-        for platform in darwin/amd64 linux/amd64 linux/ppc64le windows/amd64
+        for platform in darwin/amd64 darwin/arm64 linux/amd64 linux/ppc64le windows/amd64
         do
           os_name=$(echo "$platform" | cut -d "/" -f 1)
           arch=$(echo "$platform" | cut -d "/" -f 2)
@@ -90,7 +90,7 @@ jobs:
         asset_name: pvsadm-linux-ppc64le.tar.gz
         asset_content_type: application/tar+gzip
 
-    - name: Upload macos
+    - name: Upload darwin/amd64
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -100,7 +100,7 @@ jobs:
         asset_name: pvsadm-darwin-amd64
         asset_content_type: application/octet-stream
 
-    - name: Upload macos - tar.gz
+    - name: Upload darwin/amd64 - tar.gz
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,6 +108,26 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: pvsadm-darwin-amd64.tar.gz
         asset_name: pvsadm-darwin-amd64.tar.gz
+        asset_content_type: application/tar+gzip
+
+    - name: Upload darwin/arm64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/darwin-arm64/pvsadm
+        asset_name: pvsadm-darwin-arm64
+        asset_content_type: application/octet-stream
+
+    - name: Upload darwin/arm64 - tar.gz
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: pvsadm-darwin-arm64.tar.gz
+        asset_name: pvsadm-darwin-arm64.tar.gz
         asset_content_type: application/tar+gzip
 
     - name: Upload Windows - amd64
