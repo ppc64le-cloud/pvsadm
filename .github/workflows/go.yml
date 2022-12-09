@@ -8,6 +8,9 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  GO_VERSION: "1.18"
+
 jobs:
 
   build:
@@ -15,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Set up Go 1.18
+    - name: Set up Go ${{ env.GO_VERSION }}
       uses: actions/setup-go@v3
       with:
-        go-version: '1.18'
+        go-version: ${{ env.GO_VERSION }}
         check-latest: true
     - run: go version
 
@@ -35,17 +38,17 @@ jobs:
             dep ensure
         fi
 
-    - name: Go Formatting	
-      run: |	
-        unformatted=$(gofmt -l -e -d .)	
-        if [[ ! -z "${unformatted}" ]]; then	
-          echo "fix the formatting...."	
-          echo "${unformatted}"	
-          exit 1	
+    - name: Go Formatting
+      run: |
+        unformatted=$(gofmt -l -e -d .)
+        if [[ ! -z "${unformatted}" ]]; then
+          echo "fix the formatting...."
+          echo "${unformatted}"
+          exit 1
         fi
-    
-    - name: Go Vet	
-      run: |	
+
+    - name: Go Vet
+      run: |
         go vet ./...
 
     - name: Build
@@ -55,7 +58,7 @@ jobs:
         git fetch --tags --force --prune
         VERSION=$(git describe --tags --dirty)
         STATIC_FLAG='-w -extldflags "-static"'
-        for platform in darwin/amd64 linux/amd64 linux/ppc64le windows/amd64
+        for platform in darwin/amd64 darwin/arm64 linux/amd64 linux/ppc64le windows/amd64
         do
           os_name=$(echo "$platform" | cut -d "/" -f 1)
           arch=$(echo "$platform" | cut -d "/" -f 2)
@@ -70,3 +73,4 @@ jobs:
       with:
         name: pvsadm-binaries
         path: pvsadm-binaries.tar.gz
+        if-no-files-found: error
