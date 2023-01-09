@@ -115,6 +115,12 @@ func Umount(dir string) error {
 			return nil
 		}
 		if strings.Contains(err, "target is busy") {
+			for retry := 0; retry < 5; retry++ {
+				exitcode, _, err = utils.RunCMD("umount", dir)
+				if exitcode == 0 || strings.Contains(err, "no mount point specified") || strings.Contains(err, "not mounted") {
+					return nil
+				}
+			}
 			exitcode, out, err = utils.RunCMD("umount", "-lf", dir)
 			if exitcode == 0 {
 				return nil
