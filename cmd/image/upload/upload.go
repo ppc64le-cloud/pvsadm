@@ -64,12 +64,17 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 
+		if pkg.Options.Environment == "test" {
+			return fmt.Errorf("image upload in test/staging env storage bucket is not supported")
+		}
+
 		case1 := pkg.ImageCMDOptions.AccessKey == "" && pkg.ImageCMDOptions.SecretKey != ""
 		case2 := pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey == ""
 
 		if case1 || case2 {
 			return fmt.Errorf("required both --accesskey and --secretkey values")
 		}
+
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
