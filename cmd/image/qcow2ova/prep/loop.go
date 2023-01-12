@@ -17,6 +17,7 @@ package prep
 import (
 	"fmt"
 	"strings"
+
 	"k8s.io/klog/v2"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
@@ -121,6 +122,7 @@ func Umount(dir string) error {
 					return nil
 				}
 			}
+			klog.Infof(" As '%s' is busy, unmounting it using lazy unmount", dir)
 			exitcode, out, err = utils.RunCMD("umount", "-lf", dir)
 			if exitcode == 0 {
 				return nil
