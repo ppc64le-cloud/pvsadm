@@ -17,9 +17,9 @@ package prep
 import (
 	"fmt"
 	"strings"
+	"k8s.io/klog/v2"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
-	"k8s.io/klog/v2"
 )
 
 const losetupCMD = "losetup"
