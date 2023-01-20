@@ -38,7 +38,7 @@ const (
 	serviceCredPrefix = "pvsadm-service-cred"
 )
 
-//Find COSINSTANCE details of the Provided bucket
+// Find COSINSTANCE details of the Provided bucket
 func findCOSInstanceDetails(resources []models.ServiceInstanceV2, bxCli *client.Client) (string, string, crn.CRN) {
 	for _, resource := range resources {
 		if resource.Crn.ServiceName == "cloud-object-storage" {

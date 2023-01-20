@@ -29,7 +29,7 @@ var (
 	hostPartitions = []string{"/proc", "/dev", "/sys", "/var/run/", "/etc/machine-id"}
 )
 
-//prepare is a function prepares the CentOS or RHEL image for capturing, this includes
+// prepare is a function prepares the CentOS or RHEL image for capturing, this includes
 // - Installs the cloud-init
 // - Install and configure multipath for rootfs
 // - Install all the required modules for PowerVM

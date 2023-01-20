@@ -154,7 +154,7 @@ func NewClient(apikey, ep string, debug bool) (*Client, error) {
 	return c, nil
 }
 
-//Func ListServiceInstances, list all available instances of particular servicetype
+// Func ListServiceInstances, list all available instances of particular servicetype
 func (c *Client) ListServiceInstances(serviceType string) (map[string]string, error) {
 	svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
 		Type: "service_instance",
@@ -252,7 +252,7 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, r
 	return serviceInstance.Crn.ServiceInstance, nil
 }
 
-//DeleteSericeInstance deletes service instances on the IBM Cloud, takes instanceID as input
+// DeleteSericeInstance deletes service instances on the IBM Cloud, takes instanceID as input
 func (c *Client) DeleteServiceInstance(instanceID string, recursive bool) error {
 	err := c.ResourceClientV1.DeleteInstance(instanceID, recursive)
 	if err != nil {

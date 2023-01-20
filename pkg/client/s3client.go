@@ -48,8 +48,8 @@ const (
 	AuthEndpoint = "https://iam.cloud.ibm.com/identity/token"
 )
 
-//Func NewS3Client accepts apikey, accesskey, secretkey of the bucket and return the s3 client
-//to perform different s3 operations like upload, delete etc.,
+// Func NewS3Client accepts apikey, accesskey, secretkey of the bucket and return the s3 client
+// to perform different s3 operations like upload, delete etc.,
 func NewS3Clientwithkeys(accesskey, secretkey, region string) (s3client *S3Client, err error) {
 
 	s3client = &S3Client{}
@@ -68,8 +68,8 @@ func NewS3Clientwithkeys(accesskey, secretkey, region string) (s3client *S3Clien
 
 }
 
-//Func NewS3Client accepts apikey, instanceid of the IBM COS instance and return the s3 client
-//to perform different s3 operations like upload, delete etc.,
+// Func NewS3Client accepts apikey, instanceid of the IBM COS instance and return the s3 client
+// to perform different s3 operations like upload, delete etc.,
 func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, err error) {
 	s3client = &S3Client{}
 	var instanceID string
@@ -114,7 +114,7 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 	return s3client, nil
 }
 
-//Func CheckBucketExists will verify for the existence of the bucket in the particular account
+// Func CheckBucketExists will verify for the existence of the bucket in the particular account
 func (c *S3Client) CheckBucketExists(bucketName string) (bool, error) {
 	result, err := c.S3Session.ListBuckets(nil)
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *S3Client) SelectObjects(bucketName string, regex string) ([]string, err
 	return matchedObjects, err
 }
 
-//Func CheckBucketLocationConstraint will verify the existence of the bucket in the particular locationConstraint
+// Func CheckBucketLocationConstraint will verify the existence of the bucket in the particular locationConstraint
 func (c *S3Client) CheckBucketLocationConstraint(bucketName string, bucketLocationConstraint string) (bool, error) {
 
 	getParams := &s3.GetBucketLocationInput{
@@ -196,7 +196,7 @@ func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) (bool, err
 	return true, nil
 }
 
-//To create a new bucket in the provided instance
+// To create a new bucket in the provided instance
 func (c *S3Client) CreateBucket(bucketName string) error {
 	_, err := c.S3Session.CreateBucket(&s3.CreateBucketInput{
 		Bucket: aws.String(bucketName), // New Bucket Name
@@ -214,7 +214,7 @@ func (c *S3Client) CreateBucket(bucketName string) error {
 	return err
 }
 
-//To copy the object from src bucket to target bucket
+// To copy the object from src bucket to target bucket
 func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName string, objectName string) error {
 	copyParams := s3.CopyObjectInput{
 		Bucket:     aws.String(destBucketName),
@@ -264,7 +264,7 @@ func (r *CustomReader) Seek(offset int64, whence int) (int64, error) {
 	return r.fp.Seek(offset, whence)
 }
 
-//To upload a object to S3 bucket
+// To upload a object to S3 bucket
 func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	klog.Infof("uploading the file %s\n", fileName)
 	//Read the content of the file
