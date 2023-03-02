@@ -25,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.26.2
-	k8s.io/klog/v2 v2.90.0
+	k8s.io/klog/v2 v2.90.1
 )
 
 require (
