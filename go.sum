@@ -10,8 +10,8 @@ github.com/IBM/go-sdk-core/v5 v5.13.1 h1:zD6p3t1whAlRJo/VBmE69c8RcH9LCHL1n0/sO1M
 github.com/IBM/go-sdk-core/v5 v5.13.1/go.mod h1:pVkN7IGmsSdmR1ZCU4E/cLcCclqRKMYgg7ya+O2Mk6g=
 github.com/IBM/ibm-cos-sdk-go v1.9.4 h1:jGIcufCP0ys7QFJKEYSy/0EWn3sl5kOo2LKfa6x4gHk=
 github.com/IBM/ibm-cos-sdk-go v1.9.4/go.mod h1:1VnKWJhPE536IvitwDxZFH9ycmj/7VDOiw8Mjljb160=
-github.com/IBM/platform-services-go-sdk v0.32.1 h1:BJW0DowS5Yy5JYMOUKk4ZlNELNLR/uUI1DZ3tXUP5pA=
-github.com/IBM/platform-services-go-sdk v0.32.1/go.mod h1:oFW/DQyAXGBcGytB+DtKjE3yNdEGM2bmw5SDOjrRwTw=
+github.com/IBM/platform-services-go-sdk v0.32.2 h1:gBuqdyAtJar9lrOpX1bxt9/3xOMtRT9dKH2aUA5TBgs=
+github.com/IBM/platform-services-go-sdk v0.32.2/go.mod h1:oFW/DQyAXGBcGytB+DtKjE3yNdEGM2bmw5SDOjrRwTw=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63nhn5WAunQHLTznkw5W8b1Xc0dNjp83s=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
