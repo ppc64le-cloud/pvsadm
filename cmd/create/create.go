@@ -22,9 +22,10 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create the resources",
-	Long:  `Create the resources`,
+	Use:     "create",
+	Short:   "Create the resources",
+	Long:    `Create the resources`,
+	GroupID: "resource",
 }
 
 func init() {

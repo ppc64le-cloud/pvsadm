@@ -22,9 +22,10 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete the resources",
-	Long:  `Delete the resources`,
+	Use:     "delete",
+	Short:   "Delete the resources",
+	Long:    `Delete the resources`,
+	GroupID: "resource",
 }
 
 func init() {

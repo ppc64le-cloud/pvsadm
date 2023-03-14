@@ -69,6 +69,7 @@ Examples:
   # Delete all the ssh keys starts with rdr-
   pvsadm purge keys --instance-name upstream-core --regexp "^rdr-.*"
 `,
+	GroupID: "resource",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Code block to execute the strict check mentioned in the rootcmd for the environment.
 		// This block is needed as a workaround mentioned in https://github.com/spf13/cobra/issues/252
