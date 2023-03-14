@@ -5,9 +5,21 @@ This is a tool to help with managing of resources in [IBM Power Systems Virtual 
 ❗ There is no formal support for any problems with this repo. For issues please open a GitHub [issue](https://github.com/ppc64le-cloud/pvsadm/issues)
 
 ## Installation
-1. Go to the [releases page](https://github.com/ppc64le-cloud/pvsadm/releases/)
-2. Select the latest release and download the relevant binary under the Assets section.
-3. Run the `pvsadm --help` command to check the available subcommands and the options.
+ ### Binary 
+  1. Go to the [releases page](https://github.com/ppc64le-cloud/pvsadm/releases/)
+  2. Select the latest release and download the relevant binary under the Assets section.
+  3. Run the `pvsadm --help` command to check the available subcommands and the options.
+ ### Homebrew 
+  Note: Currently supported only for Mac(x86&arm) and Linux(x86)
+  
+  ```
+  brew install ppc64le-cloud/pvsadm/pvsadm
+  ```
+  or
+  ```
+  brew tap ppc64le-cloud/pvsadm
+  brew install pvsadm
+  ```
 
 ## Image Management
 Sub command under the pvsadm tool to perform image related tasks like image conversion, uploading and importing into the IBM Power Systems Virtual Server instances. For more information, refer to the `pvsadm image --help` command.
