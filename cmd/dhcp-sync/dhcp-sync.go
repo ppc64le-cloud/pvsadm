@@ -149,9 +149,10 @@ func syncDHCPD() {
 }
 
 var Cmd = &cobra.Command{
-	Use:   "dhcp-sync",
-	Short: "dhcp-sync command",
-	Long:  `dhcp-sync tool is a tool populating the dhcpd.conf file from the PowerVS network and restart the dhcpd service.`,
+	Use:     "dhcp-sync",
+	Short:   "dhcp-sync command",
+	Long:    `dhcp-sync tool is a tool populating the dhcpd.conf file from the PowerVS network and restart the dhcpd service.`,
+	GroupID: "dhcp",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.InstanceID == "" {
 			return fmt.Errorf("--instance-id is required")

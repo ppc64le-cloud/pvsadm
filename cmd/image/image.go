@@ -24,9 +24,10 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "image",
-	Short: "PowerVS Image management",
-	Long:  `PowerVS Image management`,
+	Use:     "image",
+	Short:   "PowerVS Image management",
+	Long:    `PowerVS Image management`,
+	GroupID: "image",
 }
 
 func init() {

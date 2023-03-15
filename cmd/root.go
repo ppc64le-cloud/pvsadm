@@ -63,6 +63,12 @@ func init() {
 	klog.InitFlags(nil)
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
+	rootCmd.AddGroup(&cobra.Group{ID: "resource", Title: "Resource Management Commands:"})
+	rootCmd.AddGroup(&cobra.Group{ID: "dhcp", Title: "DHCP Commands:"})
+	rootCmd.AddGroup(&cobra.Group{ID: "image", Title: "Image Commands:"})
+	rootCmd.AddGroup(&cobra.Group{ID: "admin", Title: "Administration Commands:"})
+	rootCmd.SetHelpCommandGroupID("admin")
+	rootCmd.SetCompletionCommandGroupID("admin")
 	rootCmd.AddCommand(purge.Cmd)
 	rootCmd.AddCommand(get.Cmd)
 	rootCmd.AddCommand(version.Cmd)

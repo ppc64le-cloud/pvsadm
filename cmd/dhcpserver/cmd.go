@@ -23,8 +23,9 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "dhcpserver",
-	Short: "dhcpserver command",
+	Use:     "dhcpserver",
+	Short:   "dhcpserver command",
+	GroupID: "dhcp",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.APIKey == "" {
 			return fmt.Errorf("api-key can't be empty, pass the token via --api-key or set IBMCLOUD_API_KEY environment variable")
