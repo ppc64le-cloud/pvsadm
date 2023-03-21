@@ -34,7 +34,7 @@ subscription-manager register --force --auto-attach --username={{ .RHNUser }} --
 yum update -y && yum install -y yum-utils
 yum install -y cloud-init
 rm -rf /etc/systemd/system/multi-user.target.wants/firewalld.service
-rpm -vih --nodeps http://public.dhe.ibm.com/software/server/POWER/Linux/yum/download/ibm-power-repo-latest.noarch.rpm
+rpm -vih --nodeps https://public.dhe.ibm.com/software/server/POWER/Linux/yum/download/ibm-power-repo-latest.noarch.rpm
 sed -i 's/^more \/opt\/ibm\/lop\/notice/#more \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
 echo 'y' | /opt/ibm/lop/configure
 # Disable the AT repository due to slowness in nature
