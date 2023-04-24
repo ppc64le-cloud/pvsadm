@@ -74,3 +74,13 @@ jobs:
         name: pvsadm-binaries
         path: pvsadm-binaries.tar.gz
         if-no-files-found: error
+
+  auto-approve:
+    name: Auto-approve PRs by Dependabot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto approve
+        uses: cognitedata/auto-approve-dependabot-action@v3.0.1
+        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+        with:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
