@@ -33,6 +33,7 @@ subscription-manager register --force --auto-attach --username={{ .RHNUser }} --
 {{end}}
 yum update -y && yum install -y yum-utils
 yum install -y cloud-init
+yum reinstall grub2-common -y
 rm -rf /etc/systemd/system/multi-user.target.wants/firewalld.service
 rpm -vih --nodeps https://public.dhe.ibm.com/software/server/POWER/Linux/yum/download/ibm-power-repo-latest.noarch.rpm
 sed -i 's/^more \/opt\/ibm\/lop\/notice/#more \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
