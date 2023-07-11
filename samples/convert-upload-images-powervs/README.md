@@ -31,6 +31,7 @@ Args:
       --cos-instance-name string    COS instance name(Mandatory)
       --rhel-url url                url pointing to the RHEL qcow2 image(optional)
       --rhcos-url url               url pointing to the RHCOS qcow2 image(optional)
+      --skip-os-password            Skip the root user password(optional)
       --help                        help for upload
 ```
 #### How to download and use script
