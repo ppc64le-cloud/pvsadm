@@ -31,6 +31,9 @@ echo "nameserver 9.9.9.9" | tee /etc/resolv.conf
 {{if eq .Dist "rhel"}}
 subscription-manager register --force --auto-attach --username={{ .RHNUser }} --password={{ .RHNPassword }}
 {{end}}
+{{if .RootPasswd }}
+echo {{ .RootPasswd }} | passwd root --stdin
+{{end}}
 yum update -y && yum install -y yum-utils
 yum install -y cloud-init
 yum reinstall grub2-common -y
@@ -67,9 +70,6 @@ do
 done
 grub2-mkconfig -o /boot/grub2/grub.cfg
 rm -rf /etc/sysconfig/network-scripts/ifcfg-eth0
-{{if .RootPasswd }}
-echo {{ .RootPasswd }} | passwd root --stdin
-{{end}}
 {{if eq .Dist "rhel"}}
 subscription-manager unregister
 subscription-manager clean
