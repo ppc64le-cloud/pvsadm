@@ -61,6 +61,15 @@ Examples:
   # Step 2 - Make the necessary changes to the above generated template file(bash shell script) - image-prep.template
   # Step 3 - Run the qcow2ova with the modified image preparation template
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --prep-template image-prep.template
+
+Qcow2 images location:
+
+  # CentOS 8:     https://cloud.centos.org/centos/8-stream/ppc64le/images/
+  # CentOS 9:     https://cloud.centos.org/centos/9-stream/ppc64le/images/
+  # Old Centos:   https://cloud.centos.org/centos/8/ppc64le/images/
+  # RHEL image:   https://access.redhat.com/downloads/content/279/ver=/rhel---8/8.3/ppc64le/product-software 
+  # RHCOS images: https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/
+
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.ImageCMDOptions
