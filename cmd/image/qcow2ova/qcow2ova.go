@@ -61,6 +61,15 @@ Examples:
   # Step 2 - Make the necessary changes to the above generated template file(bash shell script) - image-prep.template
   # Step 3 - Run the qcow2ova with the modified image preparation template
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --prep-template image-prep.template
+ 
+  # Customize the cloud config and Convert image with user defined cloud config template.
+  # Step 1 - Dump the default cloud config template
+  pvsadm image qcow2ova --cloud-config-default > user_cloud.config
+  # Step 2 - Make the necessary changes to the above generated template file - user_cloud.config
+  # Step 3 - Run the qcow2ova with the modified cloud config template
+  pvsadm image qcow2ova --image-name centos-82 --image-dist centos --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --cloud-config user_cloud.config
+
+
 
 Qcow2 images location:
 
@@ -73,9 +82,13 @@ Qcow2 images location:
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.ImageCMDOptions
-
 		if opt.PrepTemplateDefault {
 			fmt.Println(prep.SetupTemplate)
+			os.Exit(0)
+		}
+
+		if opt.CloudConfigDefault {
+			fmt.Println(prep.CloudConfig)
 			os.Exit(0)
 		}
 
@@ -92,7 +105,15 @@ Qcow2 images location:
 				prep.SetupTemplate = string(content)
 			}
 		}
+		if opt.CloudConfig != "" {
+			klog.V(2).Info("Overriding with the user defined cloud config.")
+			content, err := ioutil.ReadFile(opt.CloudConfig)
+			if err != nil {
+				return err
+			}
+			prep.CloudConfig = string(content)
 
+		}
 		if !utils.Contains([]string{"rhel", "centos", "coreos"}, strings.ToLower(opt.ImageDist)) {
 			klog.Errorln("--image-dist is a mandatory flag and one of these [rhel, centos, coreos]")
 			os.Exit(1)
@@ -269,6 +290,8 @@ func init() {
 	Cmd.Flags().BoolVar(&pkg.ImageCMDOptions.PrepTemplateDefault, "prep-template-default", false, "Prints the default image preparation script template, use --prep-template to set the custom template script(supported distros: rhel and centos)")
 	Cmd.Flags().StringSliceVar(&pkg.ImageCMDOptions.PreflightSkip, "skip-preflight-checks", []string{}, "Skip the preflight checks(e.g: diskspace, platform, tools) - dev-only option")
 	Cmd.Flags().BoolVar(&pkg.ImageCMDOptions.OSPasswordSkip, "skip-os-password", false, "Skip the root user password")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.CloudConfig, "cloud-config", "", "Set the custom cloud config, use --cloud-config-default to print the default cloud config")
+	Cmd.Flags().BoolVar(&pkg.ImageCMDOptions.CloudConfigDefault, "cloud-config-default", false, "Prints the default cloud config template, use --cloud-config to set the custom cloud config template")
 	_ = Cmd.Flags().MarkHidden("skip-preflight-checks")
 	_ = Cmd.MarkFlagRequired("image-name")
 	_ = Cmd.MarkFlagRequired("image-url")
