@@ -19,4 +19,4 @@ bin/
 pvsadm
 
 # audit logfile
-pvsadm.log
+pvsadm_audit.log

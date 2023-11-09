@@ -15,9 +15,16 @@
 package main
 
 import (
+	"os"
+
 	"github.com/ppc64le-cloud/pvsadm/cmd"
+	"k8s.io/klog/v2"
 )
 
 func main() {
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		klog.Errorln(err)
+		os.Exit(1)
+	}
+
 }

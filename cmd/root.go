@@ -80,7 +80,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&pkg.Options.APIKey, "api-key", "k", "", "IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)")
 	rootCmd.PersistentFlags().StringVar(&pkg.Options.Environment, "env", client.DefaultEnv, "IBM Cloud Environments, supported are: ["+strings.Join(client.ListEnvironments(), ", ")+"]")
 	rootCmd.PersistentFlags().BoolVar(&pkg.Options.Debug, "debug", false, "Enable PowerVS debug option(ATTENTION: dev only option, may print sensitive data from APIs)")
-	rootCmd.PersistentFlags().StringVar(&pkg.Options.AuditFile, "audit-file", "pvsadm.log", "Audit logs for the tool")
+	rootCmd.PersistentFlags().StringVar(&pkg.Options.AuditFile, "audit-file", "pvsadm_audit.log", "Audit logs for the tool")
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false
 	_ = rootCmd.Flags().MarkHidden("debug")
@@ -96,11 +96,13 @@ func init() {
 	})
 
 	audit.Logger = audit.New(pkg.Options.AuditFile)
+
 }
 
-func Execute() {
+func Execute() error {
+	defer audit.Delete(pkg.Options.AuditFile)
 	if err := rootCmd.Execute(); err != nil {
-		klog.Errorln(err)
-		os.Exit(1)
+		return err
 	}
+	return nil
 }

@@ -16,11 +16,12 @@ package audit
 
 import (
 	"encoding/json"
-	"github.com/ppc64le-cloud/pvsadm/pkg"
-	"k8s.io/klog/v2"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"k8s.io/klog/v2"
 )
 
 var Logger *Audit
@@ -69,4 +70,15 @@ func (a *Audit) Log(name, op, value string) {
 		klog.Fatalf("log failed with error: %v", err)
 	}
 	a.mutex.Unlock()
+}
+
+func Delete(file string) {
+	check_file, err := os.Stat(file)
+	if err != nil {
+		klog.V(2).Infoln(err)
+		return
+	}
+	if check_file.Size() == 0 {
+		os.Remove(file)
+	}
 }
