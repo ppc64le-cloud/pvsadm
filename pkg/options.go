@@ -52,6 +52,8 @@ type imageCMDOptions struct {
 	TempDir             string
 	PrepTemplate        string
 	PrepTemplateDefault bool
+	CloudConfig         string
+	CloudConfigDefault  bool
 	OSPasswordSkip      bool
 	//upload options
 	InstanceName string

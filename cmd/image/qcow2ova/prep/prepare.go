@@ -16,11 +16,12 @@ package prep
 
 import (
 	"fmt"
-	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 
 	"k8s.io/klog/v2"
 )
@@ -101,7 +102,7 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(cloudConfig), 0644)
+	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(CloudConfig), 0644)
 	if err != nil {
 		return err
 	}

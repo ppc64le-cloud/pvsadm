@@ -82,7 +82,7 @@ mv /etc/resolv.conf.orig /etc/resolv.conf || true
 touch /.autorelabel
 `
 
-var cloudConfig = `# latest file from cloud-init-22.1-1.el8.noarch
+var CloudConfig = `# latest file from cloud-init-22.1-1.el8.noarch
 users:
  - default
 
