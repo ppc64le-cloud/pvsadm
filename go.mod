@@ -25,13 +25,13 @@ require (
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.28.4
-	k8s.io/klog/v2 v2.100.1
+	k8s.io/klog/v2 v2.110.1
 )
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
+	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.21.4 // indirect
 	github.com/go-openapi/errors v0.20.4 // indirect
