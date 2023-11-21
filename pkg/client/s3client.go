@@ -151,7 +151,7 @@ func (c *S3Client) SelectObjects(bucketName string, regex string) ([]string, err
 		return true
 	})
 	if err != nil {
-		klog.Infof("failed to list objects", err)
+		klog.Infof("failed to list objects, %v\n", err)
 		return nil, err
 	}
 	return matchedObjects, err
