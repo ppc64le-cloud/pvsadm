@@ -7,7 +7,7 @@ require (
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175
 	github.com/IBM-Cloud/power-go-client v1.5.5
 	github.com/IBM/go-sdk-core/v5 v5.15.0
-	github.com/IBM/ibm-cos-sdk-go v1.10.0
+	github.com/IBM/ibm-cos-sdk-go v1.10.1
 	github.com/IBM/platform-services-go-sdk v0.55.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.7.0
