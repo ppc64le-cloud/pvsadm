@@ -17,6 +17,8 @@ package client
 import (
 	"errors"
 	"os"
+
+	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 )
 
 const DefaultEnv = "prod"
@@ -56,6 +58,14 @@ func NewPVMClientWithEnv(c *Client, instanceID, instanceName, env string) (*PVMC
 		return nil, err
 	}
 	return NewPVMClient(c, instanceID, instanceName, e["PIEndpoint"])
+}
+
+func NewGenericPVMClientWithEnv(c *Client, instanceID, instanceName, env string, piSession *ibmpisession.IBMPISession) (*PVMClient, error) {
+	e, err := GetEnvironment(env)
+	if err != nil {
+		return nil, err
+	}
+	return NewGenericPVMClient(c, instanceID, instanceName, e["PIEndpoint"], piSession)
 }
 
 func NewClientWithEnv(apikey, env string, debug bool) (*Client, error) {
