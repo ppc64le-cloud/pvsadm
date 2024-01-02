@@ -15,7 +15,6 @@
 package qcow2ova
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
@@ -37,7 +36,7 @@ var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 
 	BeforeSuite(func() {
 		var err error
-		image, err = ioutil.TempFile("", "qcow2ova")
+		image, err = os.CreateTemp("", "qcow2ova")
 		Expect(err).NotTo(HaveOccurred())
 		_, err = image.WriteString("some dummy image")
 		Expect(err).NotTo(HaveOccurred())

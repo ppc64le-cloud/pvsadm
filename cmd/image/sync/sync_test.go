@@ -16,7 +16,6 @@ package sync
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -74,7 +73,7 @@ func TestGetSpec(t *testing.T) {
 		spec := mockCreateSpec()
 
 		// test case verification section
-		file, err := ioutil.TempFile("", "spec.*.yaml")
+		file, err := os.CreateTemp("", "spec.*.yaml")
 		require.NoError(t, err, "Error creating specfile")
 		defer file.Close()
 

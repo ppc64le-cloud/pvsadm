@@ -16,7 +16,6 @@ package qcow2ova
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -43,27 +42,27 @@ func Test_getImage(t *testing.T) {
 		fmt.Fprintf(w, "Hello World!")
 	})
 	mux.HandleFunc("/fail", func(w http.ResponseWriter, req *http.Request) {
-		http.Error(w, fmt.Sprintf("failed to handle the build"), http.StatusInternalServerError)
+		http.Error(w, "failed to handle the build", http.StatusInternalServerError)
 	})
 
 	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
 	content := []byte("temporary file's content")
-	dir, err := ioutil.TempDir("", "example")
+	dir, err := os.MkdirTemp("", "example")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
 
-	destDir, err := ioutil.TempDir("", "example")
+	destDir, err := os.MkdirTemp("", "example")
 	if err != nil {
 		log.Fatal(err)
 	}
 	//defer os.RemoveAll(destDir)
 
 	tmpfn := filepath.Join(dir, "tmpfile")
-	if err := ioutil.WriteFile(tmpfn, content, 0666); err != nil {
+	if err := os.WriteFile(tmpfn, content, 0666); err != nil {
 		log.Fatal(err)
 	}
 
