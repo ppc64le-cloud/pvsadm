@@ -21,12 +21,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	mocksync "github.com/ppc64le-cloud/pvsadm/cmd/image/sync/mock"
 	pkg "github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 )

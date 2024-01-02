@@ -1,6 +1,8 @@
 module github.com/ppc64le-cloud/pvsadm
 
-go 1.20
+go 1.21
+
+toolchain go1.21.3
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -13,7 +15,6 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-openapi/strfmt v0.22.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/golang/mock v1.6.0
 	github.com/klauspost/pgzip v1.2.6
 	github.com/manifoldco/promptui v0.9.0
 	github.com/olekukonko/tablewriter v0.0.5
@@ -23,6 +24,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
+	go.uber.org/mock v0.4.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.29.0
 	k8s.io/klog/v2 v2.110.1
