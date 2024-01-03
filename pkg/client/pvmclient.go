@@ -25,6 +25,7 @@ import (
 	"github.com/IBM/go-sdk-core/v5/core"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client/datacenter"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/dhcp"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/events"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/image"
@@ -41,15 +42,17 @@ type PVMClient struct {
 	Region       string
 	Zone         string
 
-	PISession      *ibmpisession.IBMPISession
-	InstanceClient *instance.Client
-	ImgClient      *image.Client
-	JobClient      *job.Client
-	VolumeClient   *volume.Client
-	NetworkClient  *network.Client
-	EventsClient   *events.Client
-	KeyClient      *key.Client
-	DHCPClient     *dhcp.Client
+	PISession *ibmpisession.IBMPISession
+
+	DatacenterClient *datacenter.Client
+	DHCPClient       *dhcp.Client
+	EventsClient     *events.Client
+	ImgClient        *image.Client
+	InstanceClient   *instance.Client
+	JobClient        *job.Client
+	KeyClient        *key.Client
+	NetworkClient    *network.Client
+	VolumeClient     *volume.Client
 }
 
 func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, error) {
@@ -97,13 +100,14 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 		return nil, err
 	}
 
-	pvmclient.ImgClient = image.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.JobClient = job.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.InstanceClient = instance.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.EventsClient = events.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.DatacenterClient = datacenter.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.DHCPClient = dhcp.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.EventsClient = events.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.ImgClient = image.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.InstanceClient = instance.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.JobClient = job.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }

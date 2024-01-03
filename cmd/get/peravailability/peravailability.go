@@ -12,28 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package events
+package peravailability
 
 import (
 	"fmt"
-	"time"
+	"sort"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
-	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
-var (
-	since time.Duration
-)
+const powerEdgeRouter = "power-edge-router"
 
 var Cmd = &cobra.Command{
-	Use:   "events",
-	Short: "Get Powervs events",
-	Long:  `Get the PowerVS events`,
+	Use:   "per-availability",
+	Short: "List regions that support PER",
+	Long:  "List regions that support Power Edge Router (PER)",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.InstanceID == "" && pkg.Options.InstanceName == "" {
 			return fmt.Errorf("--instance-id or --instance-name required")
@@ -41,8 +38,8 @@ var Cmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var perEnabledRegions = []string{}
 		opt := pkg.Options
-
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {
 			klog.Errorf("failed to create a session with IBM cloud: %v", err)
@@ -53,17 +50,26 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		events, err := pvmclient.EventsClient.GetPcloudEventsGetsince(since)
+		ret, err := pvmclient.DatacenterClient.GetAll()
 		if err != nil {
 			return err
 		}
-		table := utils.NewTable()
-		table.Render(events.Payload.Events, []string{"user", "timestamp"})
-
+		supportsPER := false
+		for _, datacenter := range ret.Datacenters {
+			if datacenter.Capabilities[powerEdgeRouter] {
+				perEnabledRegions = append(perEnabledRegions, *datacenter.Location.Region)
+				if pvmclient.Zone == *datacenter.Location.Region {
+					supportsPER = true
+				}
+			}
+		}
+		if !supportsPER {
+			klog.Infof("%s, where the current instance is present does not support PER.", pvmclient.Zone)
+		} else {
+			klog.Infof("%s, where the current instance is present supports PER.", pvmclient.Zone)
+		}
+		sort.Strings(perEnabledRegions)
+		klog.Infoln("The following zones/datacenters have support for PER:", perEnabledRegions, ".", "More information at https://cloud.ibm.com/docs/overview?topic=overview-locations")
 		return nil
 	},
-}
-
-func init() {
-	Cmd.PersistentFlags().DurationVar(&since, "since", 24*time.Hour, "Show events since")
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ppc64le-cloud/pvsadm/cmd/get/events"
+	"github.com/ppc64le-cloud/pvsadm/cmd/get/peravailability"
 	"github.com/ppc64le-cloud/pvsadm/cmd/get/ports"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 )
@@ -31,6 +32,7 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(events.Cmd)
+	Cmd.AddCommand(peravailability.Cmd)
 	Cmd.AddCommand(ports.Cmd)
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceName, "instance-name", "n", "", "Instance name of the PowerVS")
