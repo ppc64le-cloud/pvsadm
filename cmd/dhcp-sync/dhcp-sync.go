@@ -16,8 +16,8 @@ package dhcp
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -93,6 +93,9 @@ func syncDHCPD() {
 	}
 
 	n, err := pvmclient.NetworkClient.Get(networkID)
+	if err != nil {
+		klog.Fatalf("failed to fetch network by ID: %v", err)
+	}
 
 	ipv4Addr, ipv4Net, err := net.ParseCIDR(*n.Cidr)
 	if err != nil {
@@ -144,7 +147,9 @@ func syncDHCPD() {
 
 	content := fmt.Sprintf(dhcpdTemplate, subnetStmt.IndentedString(""))
 	mutex.Lock()
-	ioutil.WriteFile(file, []byte(content), 0644)
+	if err = os.WriteFile(file, []byte(content), 0644); err != nil {
+		klog.Fatalf("cannot write to dhcp.conf file: %v", err)
+	}
 	mutex.Unlock()
 }
 

@@ -16,7 +16,6 @@ package prep
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -97,17 +96,17 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(mnt, "setup.sh"), []byte(setupStr), 0744)
+	err = os.WriteFile(filepath.Join(mnt, "setup.sh"), []byte(setupStr), 0744)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(CloudConfig), 0644)
+	err = os.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(CloudConfig), 0644)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(mnt, "/etc/cloud/ds-identify.cfg"), []byte(dsIdentify), 0644)
+	err = os.WriteFile(filepath.Join(mnt, "/etc/cloud/ds-identify.cfg"), []byte(dsIdentify), 0644)
 	if err != nil {
 		return err
 	}

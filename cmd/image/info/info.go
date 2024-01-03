@@ -17,7 +17,7 @@ package info
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -97,7 +97,7 @@ pvsadm image info rhcos-46-12152021.ova.gz
 		}
 		defer xmlFile.Close()
 		var version Ovf
-		byteValue, err := ioutil.ReadAll(xmlFile)
+		byteValue, err := io.ReadAll(xmlFile)
 		if err != nil {
 			return err
 		}

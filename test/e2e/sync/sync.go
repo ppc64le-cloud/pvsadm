@@ -17,7 +17,6 @@ package sync
 import (
 	"errors"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -66,13 +65,13 @@ func runSyncCMD(args ...string) (int, string, string) {
 // Create Specifications yaml file
 func createSpecFile(spec []pkg.Spec) error {
 	klog.Infof("STEP: Creating Spec file")
-	dir, err := ioutil.TempDir(".", "spec")
+	dir, err := os.MkdirTemp(".", "spec")
 	if err != nil {
 		klog.Errorf("ERROR: %v", err)
 		return err
 	}
 
-	file, err := ioutil.TempFile(dir, "spec.*.yaml")
+	file, err := os.CreateTemp(dir, "spec.*.yaml")
 	if err != nil {
 		klog.Errorf("ERROR: %v", err)
 		return err
@@ -203,7 +202,7 @@ func createBucket(bucketName string, cos string, region string, storageClass str
 func createObjects() error {
 	klog.Infoln("STEP: Create Required Files")
 	var content string
-	dir, err := ioutil.TempDir(".", "objects")
+	dir, err := os.MkdirTemp(".", "objects")
 	if err != nil {
 		klog.Errorf("ERROR: %v", err)
 		return err
@@ -211,7 +210,7 @@ func createObjects() error {
 
 	ObjectsFolderName = dir
 	for i := 0; i < NoOfObjects; i++ {
-		file, err := ioutil.TempFile(ObjectsFolderName, "image-sync-*.txt")
+		file, err := os.CreateTemp(ObjectsFolderName, "image-sync-*.txt")
 		if err != nil {
 			klog.Errorf("ERROR: %v", err)
 			return err
@@ -265,7 +264,7 @@ func uploadWorker(s3Cli *client.S3Client, bucketName string, workerId int, filep
 func uploadObjects(src pkg.Source) error {
 	klog.Infoln("STEP: Upload Objects to source Bucket ", src.Bucket)
 	var filePath string
-	files, err := ioutil.ReadDir(ObjectsFolderName)
+	files, err := os.ReadDir(ObjectsFolderName)
 	if err != nil {
 		klog.Errorf("ERROR: %v", err)
 		return err
@@ -349,15 +348,23 @@ func verifyBucketObjects(tgt pkg.TargetItem, cos string, files []fs.FileInfo, re
 // Verify objects copied from source bucket to dest buckets
 func verifyObjectsCopied(spec []pkg.Spec) error {
 	klog.Infoln("STEP: Verify Objects Copied to dest buckets")
-	files, err := ioutil.ReadDir(ObjectsFolderName)
+	files, err := os.ReadDir(ObjectsFolderName)
 	if err != nil {
 		klog.Errorf("ERROR: %v", err)
 		return err
 	}
+	fileInfos := make([]fs.FileInfo, 0, len(files))
+	for _, entry := range files {
+		fileInfo, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		fileInfos = append(fileInfos, fileInfo)
+	}
 
 	for _, src := range spec {
 		for _, tgt := range src.Target {
-			err = verifyBucketObjects(tgt, src.Cos, files, src.Object)
+			err = verifyBucketObjects(tgt, src.Cos, fileInfos, src.Object)
 			if err != nil {
 				klog.Errorf("ERROR: %v", err)
 				return err

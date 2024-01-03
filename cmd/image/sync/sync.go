@@ -16,7 +16,7 @@ package sync
 
 import (
 	"errors"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -160,7 +160,7 @@ func getResults(results <-chan bool, totalChannels int) bool {
 func getSpec(specfileName string) ([]pkg.Spec, error) {
 	var spec []pkg.Spec
 	// Unmashalling yaml file
-	yamlFile, err := ioutil.ReadFile(specfileName)
+	yamlFile, err := os.ReadFile(specfileName)
 	if err != nil {
 		klog.Errorf("ERROR: Read yaml failed : %v", err)
 		return nil, err

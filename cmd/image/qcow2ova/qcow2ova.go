@@ -16,7 +16,6 @@ package qcow2ova
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -98,7 +97,7 @@ Qcow2 images location:
 				return fmt.Errorf("--prep-template option is not supported for coreos distro")
 			} else {
 				klog.Info("Overriding with the user defined image preparation template.")
-				content, err := ioutil.ReadFile(opt.PrepTemplate)
+				content, err := os.ReadFile(opt.PrepTemplate)
 				if err != nil {
 					return err
 				}
@@ -107,7 +106,7 @@ Qcow2 images location:
 		}
 		if opt.CloudConfig != "" {
 			klog.V(2).Info("Overriding with the user defined cloud config.")
-			content, err := ioutil.ReadFile(opt.CloudConfig)
+			content, err := os.ReadFile(opt.CloudConfig)
 			if err != nil {
 				return err
 			}
@@ -172,7 +171,7 @@ Qcow2 images location:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.ImageCMDOptions
 
-		tmpDir, err := ioutil.TempDir(opt.TempDir, "qcow2ova")
+		tmpDir, err := os.MkdirTemp(opt.TempDir, "qcow2ova")
 		if err != nil {
 			return fmt.Errorf("failed to create a temprory directory: %v", err)
 		}
