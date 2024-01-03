@@ -18,6 +18,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/management"
@@ -231,14 +232,15 @@ func createObjects() error {
 // Delete Temporarily created local object files and spec file
 func deleteTempFiles() error {
 	klog.Infoln("STEP: Delete created Files")
-	specFolder := strings.Split(SpecFileName, "/")[0]
-	klog.Infoln("Spec folder : ", specFolder)
+	specFolder := filepath.Dir(SpecFileName)
+	klog.Infoln("deleting spec folder:", specFolder)
 
 	err := os.RemoveAll(specFolder)
 	if err != nil {
 		klog.Errorf("ERROR: %v", err)
 	}
 
+	klog.Infoln("deleting object folder:", ObjectsFolderName)
 	err = os.RemoveAll(ObjectsFolderName)
 	if err != nil {
 		klog.Errorf("ERROR: %v", err)
