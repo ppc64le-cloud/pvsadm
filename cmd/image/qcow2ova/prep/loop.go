@@ -144,11 +144,11 @@ func Umount(dir string) error {
 	exitcode, out, err := utils.RunCMD("umount", dir)
 	if exitcode != 0 {
 		if strings.Contains(err, "not mounted") {
-			klog.Infof("Ignoring 'not mounted' error for %s", dir)
+			klog.V(1).Infof("Ignoring 'not mounted' error for %s", dir)
 			return nil
 		}
 		if strings.Contains(err, "no mount point specified") {
-			klog.Infof("Ignoring 'no mount point specified' error for %s", dir)
+			klog.V(1).Infof("Ignoring 'no mount point specified' error for %s", dir)
 			return nil
 		}
 		if strings.Contains(err, "target is busy") {
@@ -158,7 +158,7 @@ func Umount(dir string) error {
 					return nil
 				}
 			}
-			klog.Infof(" As '%s' is busy, unmounting it using lazy unmount", dir)
+			klog.V(1).Infof("As '%s' is busy, unmounting it using lazy unmount", dir)
 			exitcode, out, err = utils.RunCMD("umount", "-lf", dir)
 			if exitcode == 0 {
 				return nil

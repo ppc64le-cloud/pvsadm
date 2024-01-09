@@ -62,7 +62,7 @@ pvsadm purge --help for information
 					err = pvmclient.ImgClient.Delete(*image.ImageID)
 					if err != nil {
 						if opt.IgnoreErrors {
-							klog.Infof("error occurred while deleting the image: %v", err)
+							klog.Errorf("error occurred while deleting the image: %v", err)
 						} else {
 							return err
 						}

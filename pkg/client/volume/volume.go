@@ -55,7 +55,7 @@ func (c *Client) DeleteVolume(id string) error {
 }
 
 func (c *Client) GetAll() (*models.Volumes, error) {
-	klog.Infof("Calling the Power Volumes GetAll Method")
+	klog.V(1).Info("Calling the Power Volumes GetAll Method")
 	params := p_cloud_volumes.NewPcloudCloudinstancesVolumesGetallParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(c.instanceID)
 	resp, err := c.session.Power.PCloudVolumes.PcloudCloudinstancesVolumesGetall(params, c.session.AuthInfo(c.instanceID))
 	if err != nil {

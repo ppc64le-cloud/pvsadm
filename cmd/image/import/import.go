@@ -111,7 +111,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 		validStorageType := []string{"tier3", "tier1"}
 
 		if !utils.Contains(validStorageType, strings.ToLower(opt.StorageType)) {
-			klog.Errorf("Provide valid StorageType.. allowable values are [tier1, tier3]")
+			klog.Errorf("provide valid StorageType. Allowable values are [tier1, tier3]")
 			os.Exit(1)
 		}
 
@@ -148,7 +148,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 				}
 
 				// Create the service credential if does not exist
-				klog.Infof("Auto Generating the COS Service credential for importing the image with name: %s", opt.ServiceCredName)
+				klog.V(2).Infof("Auto Generating the COS Service credential for importing the image with name: %s", opt.ServiceCredName)
 				CreateServiceKeyRequest := controller.CreateServiceKeyRequest{
 					Name:       opt.ServiceCredName,
 					SourceCRN:  crn,
@@ -161,7 +161,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 				cred, ok = newKey.Credentials["cos_hmac_keys"].(map[string]interface{})
 			} else {
 				// Use the service credential already created
-				klog.Infof("Reading the existing service credential")
+				klog.V(2).Info("Reading the existing service credential")
 				cred, ok = keys[0].Credentials["cos_hmac_keys"].(map[string]interface{})
 			}
 			if !ok {
@@ -217,11 +217,11 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 			if err != nil {
 				return err
 			}
-			klog.Infof("Retriving image details")
+			klog.V(1).Info("Retrieving image details")
 		}
 
 		if !opt.Watch {
-			klog.Infof("Importing Image %s is currently in %s state, Please check the Progress in the IBM Cloud UI\n", *image.Name, *image.State)
+			klog.Infof("Image import for %s is currently in %s state, Please check the progress in the IBM cloud UI", *image.Name, *image.State)
 			return nil
 		}
 

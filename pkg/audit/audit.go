@@ -63,11 +63,11 @@ func (a *Audit) Log(name, op, value string) {
 	}
 	jsonEntry, err := json.Marshal(entry)
 	if err != nil {
-		klog.Fatalf("json marshal error: %v", err)
+		klog.Errorf("json marshal error: %v", err)
 	}
 	jsonEntry = append(jsonEntry, '\n')
 	if _, err := a.file.Write(jsonEntry); err != nil {
-		klog.Fatalf("log failed with error: %v", err)
+		klog.Errorf("log failed with error, err: %v", err)
 	}
 	a.mutex.Unlock()
 }
@@ -75,7 +75,7 @@ func (a *Audit) Log(name, op, value string) {
 func Delete(file string) {
 	check_file, err := os.Stat(file)
 	if err != nil {
-		klog.V(2).Infoln(err)
+		klog.Errorf("cannot retrieve file stats, err: %v", err)
 		return
 	}
 	if check_file.Size() == 0 {

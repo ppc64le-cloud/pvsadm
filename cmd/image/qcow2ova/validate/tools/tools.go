@@ -40,7 +40,7 @@ func (p *Rule) Verify() error {
 			p.failedCommand = command
 			return err
 		}
-		klog.Infof("%s found at %s\n", command, path)
+		klog.Infof("%s found at %s", command, path)
 	}
 	return nil
 }

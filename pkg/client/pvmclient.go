@@ -67,8 +67,8 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 		}
 		found := false
 		for _, svc := range svcs {
-			klog.V(4).Infof("Service ID: %s, region_id: %s, Name: %s", svc.Guid, svc.RegionID, svc.Name)
-			klog.V(4).Infof("crn: %v", svc.Crn)
+			klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", svc.Guid, svc.RegionID, svc.Name)
+			klog.V(3).Infof("crn: %v", svc.Crn)
 			if svc.Name == instanceName {
 				instanceID = svc.Guid
 				found = true

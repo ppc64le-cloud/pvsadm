@@ -20,9 +20,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
-
 	"k8s.io/klog/v2"
+
+	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
 var (
@@ -179,7 +179,7 @@ func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) e
 	case "rhel", "centos":
 		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd)
 	case "coreos":
-		klog.Infof("No image preparation required for the coreos...")
+		klog.Info("No image preparation required for the coreos.")
 		return nil
 	default:
 		return fmt.Errorf("not a supported distro: %s", dist)

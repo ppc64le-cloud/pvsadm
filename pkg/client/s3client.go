@@ -78,12 +78,12 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 		Name: instanceName,
 	})
 	if err != nil {
-		return s3client, fmt.Errorf("failed to list the resource instances: %v", err)
+		return s3client, fmt.Errorf("failed to list the resource instances, err: %v", err)
 	}
 	found := false
 	for _, svc := range svcs {
-		klog.V(4).Infof("Service ID: %s, region_id: %s, Name: %s", svc.Guid, svc.RegionID, svc.Name)
-		klog.V(4).Infof("crn: %v", svc.Crn)
+		klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", svc.Guid, svc.RegionID, svc.Name)
+		klog.V(3).Infof("crn: %v", svc.Crn)
 		if svc.Name == instanceName {
 			instanceID = svc.Guid
 			found = true
@@ -118,7 +118,7 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 func (c *S3Client) CheckBucketExists(bucketName string) (bool, error) {
 	result, err := c.S3Session.ListBuckets(nil)
 	if err != nil {
-		klog.Infof("Unable to list buckets, %v\n", err)
+		klog.Errorf("unable to list buckets, err: %v", err)
 		return false, err
 	}
 
@@ -151,7 +151,7 @@ func (c *S3Client) SelectObjects(bucketName string, regex string) ([]string, err
 		return true
 	})
 	if err != nil {
-		klog.Infof("failed to list objects, %v\n", err)
+		klog.Errorf("failed to list objects, err: %v", err)
 		return nil, err
 	}
 	return matchedObjects, err
@@ -166,7 +166,7 @@ func (c *S3Client) CheckBucketLocationConstraint(bucketName string, bucketLocati
 
 	result, err := c.S3Session.GetBucketLocation(getParams)
 	if err != nil {
-		klog.Infof("Unable to get bucket location %v\n", err)
+		klog.Errorf("unable to get bucket location, err: %v", err)
 		return false, err
 	}
 
@@ -187,11 +187,11 @@ func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) (bool, err
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			if aerr.Code() == s3.ErrCodeNoSuchKey {
-				klog.Infof("Object %s not found in %s bucket", objectName, bucketName)
+				klog.Errorf("object %s not found in %s bucket", objectName, bucketName)
 				return false, nil
 			}
 		}
-		return false, fmt.Errorf("unknown error occurred, %v", err)
+		return false, fmt.Errorf("unknown error occurred, err: %v", err)
 	}
 	return true, nil
 }
@@ -202,11 +202,11 @@ func (c *S3Client) CreateBucket(bucketName string) error {
 		Bucket: aws.String(bucketName), // New Bucket Name
 	})
 	if err != nil {
-		klog.Errorf("Unable to create bucket %q, %v", bucketName, err)
+		klog.Errorf("unable to create bucket %q, err: %v", bucketName, err)
 		return err
 	}
 	// Wait until bucket is created before finishing
-	klog.Infof("Waiting for bucket %q to be created...\n", bucketName)
+	klog.Infof("Waiting for bucket %s to be created.", bucketName)
 
 	err = c.S3Session.WaitUntilBucketExists(&s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
@@ -223,7 +223,7 @@ func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName strin
 	}
 	_, err := c.S3Session.CopyObject(&copyParams)
 	if err != nil {
-		klog.Errorf("Unable to copy object %s from bucket %s, to bucket %s Error: %v", objectName, srcBucketName, destBucketName, err)
+		klog.Errorf("unable to copy object %s from bucket %s, to bucket %s, err: %v", objectName, srcBucketName, destBucketName, err)
 		return err
 	}
 
@@ -266,17 +266,17 @@ func (r *CustomReader) Seek(offset int64, whence int) (int64, error) {
 
 // To upload a object to S3 bucket
 func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
-	klog.Infof("uploading the file %s\n", fileName)
+	klog.Infof("uploading the file %s", fileName)
 	//Read the content of the file
 	file, err := os.Open(fileName)
 	if err != nil {
-		return fmt.Errorf("err opening file %s: %s", fileName, err)
+		return fmt.Errorf("err opening file %s, err: %s", fileName, err)
 	}
 	defer file.Close()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to stat file %v, %v", fileName, err)
+		return fmt.Errorf("failed to stat file %v, err: %v", fileName, err)
 
 	}
 	reader := &CustomReader{
@@ -303,6 +303,6 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 		return err
 	}
 	fmt.Println()
-	klog.Infof("Upload completed successfully in %f seconds to location %s\n", time.Since(startTime).Seconds(), result.Location)
+	klog.Infof("Upload completed successfully in %f seconds to location %s", time.Since(startTime).Seconds(), result.Location)
 	return err
 }

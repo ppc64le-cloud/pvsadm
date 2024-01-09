@@ -184,10 +184,9 @@ var Cmd = &cobra.Command{
 					if !ok {
 						return
 					}
-					klog.Info("event:", event)
+					klog.V(2).Infof("event: %v", event)
 					if event.Op&fsnotify.Write == fsnotify.Write {
-						klog.Info("modified file:", event.Name)
-						klog.Info("restarting the dhcpd service")
+						klog.V(2).Infof("%s has been modified, proceeding to restart dhcpd service", event.Name)
 						exitcode, out, err := utils.RunCMD("systemctl", "restart", "dhcpd")
 						if exitcode != 0 {
 							klog.Errorf("failed to restart the dhcpd service, exitcode: %d, stdout: %s, err: %s", exitcode, out, err)

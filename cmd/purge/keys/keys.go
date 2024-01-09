@@ -46,7 +46,7 @@ pvsadm purge --help for information
 
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {
-			klog.Errorf("failed to create a session with IBM cloud: %v", err)
+			klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
 			return err
 		}
 
@@ -67,7 +67,7 @@ pvsadm purge --help for information
 					err = pvmclient.KeyClient.Delete(key)
 					if err != nil {
 						if opt.IgnoreErrors {
-							klog.Infof("error occurred while deleting the key: %v", err)
+							klog.Errorf("error occurred while deleting the key: %v", err)
 						} else {
 							return fmt.Errorf("failed to delete a key, err: %v", err)
 						}
