@@ -58,13 +58,13 @@ pvsadm image info rhcos-46-12152021.ova.gz
 			return fmt.Errorf("failed to detect the image filetype: %v", err)
 		}
 		if checkGzip {
-			klog.Infof("Image %s is in gzip format, extracting it", fileName)
+			klog.V(1).Infof("Image %s is in gzip format, extracting it", fileName)
 			ova = filepath.Join(ovaImgDir, "image.ova")
 			err = utils.GunzipIt(fileName, ova)
 			if err != nil {
 				return err
 			}
-			klog.Infof("Extract complete")
+			klog.V(1).Info("Extract complete")
 		} else {
 			ova = fileName
 		}

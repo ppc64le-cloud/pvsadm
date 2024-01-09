@@ -37,9 +37,9 @@ func AddRule(r Rule) {
 func Validate() error {
 	for _, rule := range rules {
 		ruleStr := rule.String()
-		klog.Infof("Checking: %s\n", ruleStr)
+		klog.Infof("Checking: %s", ruleStr)
 		if utils.Contains(pkg.ImageCMDOptions.PreflightSkip, ruleStr) {
-			klog.Infof("SKIPPED!")
+			klog.Info("SKIPPED!")
 			continue
 		}
 		err := rule.Verify()
