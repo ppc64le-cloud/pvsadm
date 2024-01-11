@@ -231,8 +231,8 @@ Qcow2 images location:
 		if err != nil {
 			return err
 		}
-
-		rawImg := filepath.Join(ovaImgDir, ova.VolNameRaw)
+		volumeDiskName := fmt.Sprintf("%s-%s", opt.ImageName, ova.VolNameRaw)
+		rawImg := filepath.Join(ovaImgDir, volumeDiskName)
 
 		klog.Infof("Converting Qcow2(%s) image to raw(%s) format", qcow2Img, rawImg)
 		err = qemuImgConvertQcow2Raw(qcow2Img, rawImg)
@@ -257,7 +257,7 @@ Qcow2 images location:
 
 		klog.Infof("Creating an OVA bundle")
 		ovafile := filepath.Join(tmpDir, opt.ImageName+".ova")
-		if err := ova.CreateTarArchive(ovaImgDir, ovafile, opt.TargetDiskSize, opt.ImageDist); err != nil {
+		if err := ova.CreateTarArchive(ovaImgDir, ovafile, opt.TargetDiskSize, opt.ImageDist, volumeDiskName); err != nil {
 			return fmt.Errorf("failed to create ova bundle, err: %v", err)
 		}
 		klog.Infof("OVA bundle creation completed: %s", ovafile)

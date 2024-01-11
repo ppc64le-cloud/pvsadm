@@ -75,8 +75,8 @@ func RenderMeta(imageName string) (string, error) {
 }
 
 // bundles the dir into a OVA image
-func CreateTarArchive(dir string, target string, targetDiskSize int64, imageDist string) error {
-	ovf := filepath.Join(dir, VolNameRaw)
+func CreateTarArchive(dir string, target string, targetDiskSize int64, imageDist string, volumeDiskName string) error {
+	ovf := filepath.Join(dir, volumeDiskName)
 	info, err := os.Stat(ovf)
 	if os.IsNotExist(err) {
 		return err
@@ -86,7 +86,7 @@ func CreateTarArchive(dir string, target string, targetDiskSize int64, imageDist
 	if err != nil {
 		return fmt.Errorf("failed to render the meta specfile, got error '%s'", err.Error())
 	}
-	ovfSpec, err := Render(filepath.Base(target), VolNameRaw, volSize, targetDiskSize, imageDist)
+	ovfSpec, err := Render(filepath.Base(target), volumeDiskName, volSize, targetDiskSize, imageDist)
 	if err != nil {
 		return fmt.Errorf("failed to render the ovf specfile, got error '%s'", err.Error())
 	}
