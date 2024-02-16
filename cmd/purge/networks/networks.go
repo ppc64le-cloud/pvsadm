@@ -59,7 +59,7 @@ pvsadm purge --help for information
 
 		table.Render(networks, []string{"href"})
 		if !opt.DryRun && len(networks) != 0 {
-			if opt.NoPrompt || utils.AskYesOrNo(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
 				for _, network := range networks {
 					if deleteInstances || deletePorts {
 						ports, err := pvmclient.NetworkClient.GetAllPorts(*network.NetworkID)
