@@ -15,7 +15,11 @@
 package prep
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"k8s.io/klog/v2"
@@ -102,6 +106,39 @@ func mount(opts, src, target string) error {
 		return fmt.Errorf("failed to bind mount, source: %s and target: %s, exitcode: %d, stdout: %s, err: %s", src, target, exitcode, out, err)
 	}
 	return nil
+}
+
+// checkFileExists return True if file with the name exists else False
+func checkFileExists(name string) (bool, error) {
+	matches, err := filepath.Glob(name)
+	return len(matches) > 0, err
+}
+
+// bootDeviceuuid takes fstab file path as input and returns uuid of boot device
+func bootDeviceuuid(file string) (string, error) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	deviceuuid := ""
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "boot") {
+			fields := strings.Fields(line)
+			deviceuuid = strings.Split(fields[0], "=")[1]
+		}
+	}
+	return deviceuuid, nil
+}
+
+// findDevice takes UUID as input and returns the device/partition associated with it.
+func findDevice(uuid string) (string, error) {
+	exitcode, out, err := utils.RunCMD("blkid", "--uuid", uuid)
+	if exitcode != 0 {
+		return "", fmt.Errorf("failed to get the device name, exitcode: %d, stdout: %s, err: %s", exitcode, out, err)
+	}
+	return strings.TrimSpace(out), nil
 }
 
 func Umount(dir string) error {
