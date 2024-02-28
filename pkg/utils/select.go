@@ -14,43 +14,52 @@
 
 package utils
 
-import "github.com/AlecAivazis/survey/v2"
+import (
+	"errors"
+
+	"k8s.io/klog/v2"
+
+	"github.com/charmbracelet/huh"
+	access "github.com/charmbracelet/huh/accessibility"
+)
 
 func SelectItem(msg string, instances []string) string {
-	instance := ""
-	prompt := &survey.Select{
-		Message: msg,
-		Options: instances,
+	var choice string
+	err :=
+		huh.NewForm(
+			huh.NewGroup(
+				huh.NewSelect[string]().Title(msg).
+					Options(huh.NewOptions(instances...)...).Value(&choice))).Run()
+
+	if err != nil {
+		klog.Fatalf("Couldn't process the inputs: %v", err)
 	}
-	survey.AskOne(prompt, &instance)
-	return instance
+	return choice
 }
 
 func AskConfirmation(message string) bool {
-	result := false
-	prompt := &survey.Confirm{
-		Message: message,
+	var confirm bool
+	err :=
+		huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title(message).
+					Affirmative("Yes").
+					Negative("No").
+					Value(&confirm))).Run()
+	if err != nil {
+		klog.Fatalf("couldn't process inputs: %v", err)
 	}
-	survey.AskOne(prompt, &result)
-	return result
+	return confirm
 }
 
 func ReadUserInput(message string) string {
-	name := ""
-	prompt := &survey.Input{
-		Message: message,
-	}
-	survey.AskOne(prompt, &name, survey.WithValidator(survey.Required))
-	return name
-}
-
-func MultiSelect(msg string, input []string) []string {
-	selected := []string{}
-	prompt := &survey.MultiSelect{
-		Message: msg,
-		Options: input,
+	validateInput := func(data string) error {
+		if data == "" {
+			return errors.New("input cannot be empty, please retry")
+		}
+		return nil
 	}
 
-	survey.AskOne(prompt, &selected)
-	return selected
+	return access.PromptString(message, validateInput)
 }

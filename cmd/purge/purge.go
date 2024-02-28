@@ -85,7 +85,7 @@ Examples:
 			return fmt.Errorf("--since and --before options can not be set at a time")
 		}
 		if pkg.Options.InstanceID == "" && pkg.Options.InstanceName == "" {
-			return fmt.Errorf("--instance-name or --instance-name required")
+			return fmt.Errorf("--instance-id or --instance-name required")
 		}
 		return nil
 	},

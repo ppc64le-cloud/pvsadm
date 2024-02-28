@@ -63,7 +63,7 @@ pvsadm purge --help for information
 
 		if !opt.DryRun && len(volumes) != 0 {
 			klog.Infof("Deleting all the volumes in available state")
-			if opt.NoPrompt || utils.AskYesOrNo(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
 				for _, volume := range volumes {
 					if *volume.State == "available" {
 						klog.Infof("Deleting the %s, and ID: %s", *volume.Name, *volume.VolumeID)

@@ -56,7 +56,7 @@ pvsadm purge --help for information
 
 		table.Render(images, []string{"href", "specifications"})
 		if !opt.DryRun && len(images) != 0 {
-			if opt.NoPrompt || utils.AskYesOrNo(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
 				for _, image := range images {
 					klog.Infof("Deleting the %s, and ID: %s", *image.Name, *image.ImageID)
 					err = pvmclient.ImgClient.Delete(*image.ImageID)
