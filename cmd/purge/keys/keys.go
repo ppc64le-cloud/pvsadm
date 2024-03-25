@@ -46,7 +46,7 @@ pvsadm purge --help for information
 
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {
-			klog.Errorf("failed to create a session with IBM cloud: %v", err)
+			klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
 			return err
 		}
 

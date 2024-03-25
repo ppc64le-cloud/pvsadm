@@ -149,12 +149,12 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 				}
 			}
 		} else if len(instances) == 0 {
-			klog.Infof("No active Cloud Object Storage instances were found in the account\n")
+			klog.Info("No active Cloud Object Storage instances were found in the account")
 		}
 
 		// Ask if user likes to use existing instance
 		if opt.InstanceName == "" && len(instances) != 0 {
-			klog.Infof("Bucket %s not found in the account provided\n", opt.BucketName)
+			klog.Infof("Bucket %s not found in the account provided", opt.BucketName)
 			if utils.AskConfirmation(UseExistingPromptMessage) {
 				availableInstances := []string{}
 				for name := range instances {
@@ -162,14 +162,14 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 				}
 				selectedInstance := utils.SelectItem("Select Cloud Object Storage Instance:", availableInstances)
 				opt.InstanceName = selectedInstance
-				klog.Infof("Selected InstanceName is %s\n", opt.InstanceName)
+				klog.Infof("Selected InstanceName is %s", opt.InstanceName)
 			}
 		}
 
 		//Create a new instance
 		if opt.InstanceName == "" {
 			if !utils.AskConfirmation(CreatePromptMessage) {
-				return fmt.Errorf("Create Cloud Object Storage instance either offline or use the pvsadm command\n")
+				return fmt.Errorf("create Cloud Object Storage instance either offline or use the pvsadm command")
 			}
 			if opt.ResourceGrp == "" {
 				resourceGroupQuery := management.ResourceGroupQuery{
@@ -190,7 +190,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			}
 
 			opt.InstanceName = utils.ReadUserInput("Type Name of the Cloud Object Storage instance:")
-			klog.Infof("Creating a new cos %s instance\n", opt.InstanceName)
+			klog.Infof("Creating a new cos %s instance", opt.InstanceName)
 
 			_, err = bxCli.CreateServiceInstance(opt.InstanceName, ServiceType, opt.ServicePlan,
 				opt.ResourceGrp, ResourceGroupAPIRegion)
@@ -215,7 +215,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 
 		//Create a new bucket
 		if !bucketExists {
-			klog.Infof("Creating a new bucket %s\n", opt.BucketName)
+			klog.Infof("Creating a new bucket %s", opt.BucketName)
 			s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
 			if err != nil {
 				return err

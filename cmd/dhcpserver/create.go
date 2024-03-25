@@ -16,6 +16,7 @@ package dhcpserver
 
 import (
 	"fmt"
+
 	"github.com/IBM/go-sdk-core/v5/core"
 
 	"github.com/spf13/cobra"
@@ -40,7 +41,7 @@ var createCmd = &cobra.Command{
 
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {
-			klog.Errorf("failed to create a session with IBM cloud: %v", err)
+			klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
 			return err
 		}
 
@@ -69,7 +70,7 @@ var createCmd = &cobra.Command{
 			return fmt.Errorf("failed to create a dhcpserver, err: %v", err)
 		}
 
-		klog.Infof("Successfully created a DHCP server")
+		klog.Info("Successfully created a DHCP server")
 		return nil
 	},
 }

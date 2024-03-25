@@ -30,6 +30,7 @@ import (
 	"github.com/IBM-Cloud/bluemix-go/rest"
 	bxsession "github.com/IBM-Cloud/bluemix-go/session"
 	"k8s.io/klog/v2"
+
 	//"golang.org/x/oauth2/jwt"
 	"github.com/golang-jwt/jwt"
 )
@@ -222,7 +223,7 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, r
 		for l := range supportedLocations {
 			locationList = append(locationList, l)
 		}
-		return "", fmt.Errorf("No deployment found for service plan %s at location %s.\nValid location(s) are: %q.\nUse service instance example if the service is a Cloud Foundry service.",
+		return "", fmt.Errorf("no deployment found for service plan %s at location %s.\nValid location(s) are: %q.\nUse service instance example if the service is a Cloud Foundry service",
 			servicePlan, region, locationList)
 	}
 
@@ -246,8 +247,8 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, r
 		return "", err
 	}
 
-	klog.Infof("Resource service Instance Details :%v\n", serviceInstance)
-	klog.Infof("Resource service InstanceID :%v\n", serviceInstance.Crn.ServiceInstance)
+	klog.Infof("Resource service Instance Details :%v", serviceInstance)
+	klog.Infof("Resource service InstanceID :%v", serviceInstance.Crn.ServiceInstance)
 
 	return serviceInstance.Crn.ServiceInstance, nil
 }

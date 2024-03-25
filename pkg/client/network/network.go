@@ -57,7 +57,7 @@ func (c *Client) GetAll() (*models.Networks, error) {
 	resp, err := c.session.Power.PCloudNetworks.PcloudNetworksGetall(params, c.session.AuthInfo(c.instanceID))
 
 	if err != nil || resp.Payload == nil {
-		klog.Infof("Failed to perform the operation... %v", err)
+		klog.Errorf("failed to perform the operation, err: %v", err)
 		return nil, errors.ToError(err)
 	}
 

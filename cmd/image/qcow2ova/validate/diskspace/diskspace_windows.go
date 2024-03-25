@@ -26,7 +26,7 @@ func (p *Rule) String() string {
 }
 
 func (p *Rule) Verify() error {
-	return fmt.Errorf("Not supported on Windows platform")
+	return fmt.Errorf("not supported on Windows platform")
 }
 
 func (p *Rule) Hint() string {
