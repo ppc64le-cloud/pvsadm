@@ -18,13 +18,13 @@ import (
 	"fmt"
 	"os"
 
-	"k8s.io/klog/v2"
-
 	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/IBM/go-sdk-core/v5/core"
+	"k8s.io/klog/v2"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client/cloudconnection"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/datacenter"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/dhcp"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/events"
@@ -44,15 +44,16 @@ type PVMClient struct {
 
 	PISession *ibmpisession.IBMPISession
 
-	DatacenterClient *datacenter.Client
-	DHCPClient       *dhcp.Client
-	EventsClient     *events.Client
-	ImgClient        *image.Client
-	InstanceClient   *instance.Client
-	JobClient        *job.Client
-	KeyClient        *key.Client
-	NetworkClient    *network.Client
-	VolumeClient     *volume.Client
+	CloudConnectionClient *cloudconnection.Client
+	DatacenterClient      *datacenter.Client
+	DHCPClient            *dhcp.Client
+	EventsClient          *events.Client
+	ImgClient             *image.Client
+	InstanceClient        *instance.Client
+	JobClient             *job.Client
+	KeyClient             *key.Client
+	NetworkClient         *network.Client
+	VolumeClient          *volume.Client
 }
 
 func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, error) {
@@ -109,5 +110,24 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, instanceID)
+	return pvmclient, nil
+}
+
+func NewGenericPVMClient(c *Client, instanceID, instanceName, ep string, session *ibmpisession.IBMPISession) (*PVMClient, error) {
+	pvmclient := &PVMClient{}
+	pvmclient.InstanceID = instanceID
+	svc, err := c.ResourceClientV2.GetInstance(instanceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get a service with ID: %s, err: %v", instanceID, err)
+	}
+
+	pvmclient.InstanceName = svc.Name
+	pvmclient.Zone = svc.RegionID
+	if power_api_endpoint := os.Getenv("IBMCLOUD_POWER_API_ENDPOINT"); power_api_endpoint == "" {
+		os.Setenv("IBMCLOUD_POWER_API_ENDPOINT", ep)
+	}
+
+	pvmclient.PISession = session
+	pvmclient.CloudConnectionClient = cloudconnection.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }

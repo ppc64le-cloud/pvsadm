@@ -17,6 +17,7 @@ package get
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ppc64le-cloud/pvsadm/cmd/get/cloudconnections"
 	"github.com/ppc64le-cloud/pvsadm/cmd/get/events"
 	"github.com/ppc64le-cloud/pvsadm/cmd/get/peravailability"
 	"github.com/ppc64le-cloud/pvsadm/cmd/get/ports"
@@ -31,6 +32,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
+	Cmd.AddCommand(cloudconnections.Cmd)
 	Cmd.AddCommand(events.Cmd)
 	Cmd.AddCommand(peravailability.Cmd)
 	Cmd.AddCommand(ports.Cmd)

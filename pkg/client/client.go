@@ -29,19 +29,39 @@ import (
 	"github.com/IBM-Cloud/bluemix-go/models"
 	"github.com/IBM-Cloud/bluemix-go/rest"
 	bxsession "github.com/IBM-Cloud/bluemix-go/session"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
+
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
+
+	"github.com/IBM/go-sdk-core/v5/core"
+
 	//"golang.org/x/oauth2/jwt"
 	"github.com/golang-jwt/jwt"
 )
 
+const (
+	serviceInstance = "service_instance"
+	serviceIBMCloud = "IBMCLOUD"
+	// PowerVSResourceID is Power VS power-iaas service id, can be retrieved using ibmcloud cli
+	// ibmcloud catalog service power-iaas.
+	PowerVSResourceID = "abd259f0-9990-11e8-acc8-b9f54a8f1661"
+
+	// PowerVSResourcePlanID is Power VS power-iaas plan id, can be retrieved using ibmcloud cli
+	// ibmcloud catalog service power-iaas.
+	PowerVSResourcePlanID = "f165dd34-3a40-423b-9d95-e90a23f724dd"
+)
+
 type Client struct {
 	*bxsession.Session
-	User               *User
-	ResourceClientV2   controllerv2.ResourceServiceInstanceRepository
-	ResourceClientV1   controller.ResourceServiceInstanceRepository
-	ResourceServiceKey controller.ResourceServiceKeyRepository
-	ResCatalogAPI      catalog.ResourceCatalogRepository
-	ResGroupAPI        management.ResourceGroupRepository
+	User                    *User
+	ResourceClientV2        controllerv2.ResourceServiceInstanceRepository
+	ResourceClientV1        controller.ResourceServiceInstanceRepository
+	ResourceServiceKey      controller.ResourceServiceKeyRepository
+	ResouceControllerClient *resourcecontrollerv2.ResourceControllerV2
+	ResourceControllerOpts  *resourcecontrollerv2.ResourceControllerV2Options
+	ResCatalogAPI           catalog.ResourceCatalogRepository
+	ResGroupAPI             management.ResourceGroupRepository
 }
 
 func authenticateAPIKey(sess *bxsession.Session) error {
@@ -172,6 +192,32 @@ func (c *Client) ListServiceInstances(serviceType string) (map[string]string, er
 		}
 	}
 	return instances, nil
+}
+
+// func ListWorkspaceInstances is used to retrieve serviceInstances aloong with their regions.
+func (c *Client) ListWorkspaceInstances() (*resourcecontrollerv2.ResourceInstancesList, error) {
+	auth, err := core.GetAuthenticatorFromEnvironment(serviceIBMCloud)
+
+	if err != nil {
+		return nil, err
+	}
+	c.ResouceControllerClient, err = resourcecontrollerv2.NewResourceControllerV2(&resourcecontrollerv2.ResourceControllerV2Options{Authenticator: auth})
+	if err != nil {
+		return nil, err
+	}
+
+	listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
+		Type:           ptr.To(serviceInstance),
+		ResourceID:     ptr.To(PowerVSResourceID),
+		ResourcePlanID: ptr.To(PowerVSResourcePlanID),
+	}
+	workspaces, _, err := c.ResouceControllerClient.ListResourceInstances(listServiceInstanceOptions)
+	if err != nil {
+		klog.Errorf("Error!: %+v", err)
+		return nil, err
+	}
+	return workspaces, nil
+
 }
 
 func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, resourceGrp, region string) (string, error) {
