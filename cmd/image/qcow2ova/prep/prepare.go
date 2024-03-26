@@ -83,6 +83,38 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 		return fmt.Errorf("unable to handle the %s filesystem for %s", fsType, partDev)
 	}
 
+	fstabPath := filepath.Join(mnt, "etc", "fstab")
+
+	//get the boot partition name
+	deviceuuid, err := bootDeviceuuid(fstabPath)
+	if err != nil {
+		return err
+	}
+
+	if deviceuuid != "" {
+		bootDev, err := findDevice(deviceuuid)
+		if err != nil {
+			return err
+		}
+		err = mount("nouuid", bootDev, filepath.Join(mnt, "boot"))
+		if err != nil {
+			return err
+		}
+		defer Umount(filepath.Join(mnt, "boot"))
+	}
+
+	// Verify /boot is mounted properly and files are present.
+	bootDirFiles := []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.gz", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
+	for _, file := range bootDirFiles {
+		exist, err := checkFileExists(filepath.Join(mnt, "boot", file))
+		if err != nil {
+			return fmt.Errorf("error while validating contents of /boot directory. %v", err)
+		}
+		if !exist {
+			return fmt.Errorf("%s does not exist in the boot directory", file)
+		}
+	}
+
 	// mount the host partitions
 	for _, p := range hostPartitions {
 		err = mount("bind", p, filepath.Join(mnt, p))
