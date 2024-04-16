@@ -48,8 +48,24 @@ var listCmd = &cobra.Command{
 			return fmt.Errorf("failed to get the networks, err: %v", err)
 		}
 
+		if len(dhcpservers) == 0 {
+			klog.Info("There are no DHCP servers associated with the instance id provided.")
+			return nil
+		}
+
 		table := utils.NewTable()
-		table.Render(dhcpservers, nil)
+		table.SetHeader([]string{"ID", "Network ID", "Network Name", "Status"})
+		for _, dhcpserver := range dhcpservers {
+			if dhcpserver.Network.ID == nil || dhcpserver.Network.Name == nil {
+				// just in case, if the network is not ready, and the DHCP status reports as BUILD.
+				// printing the available information must suffice.
+				table.Append([]string{*dhcpserver.ID, "", "", *dhcpserver.Status})
+				continue
+			}
+			table.Append([]string{*dhcpserver.ID, *dhcpserver.Network.ID, *dhcpserver.Network.Name, *dhcpserver.Status})
+		}
+		table.Table.Render()
 		return nil
+
 	},
 }
