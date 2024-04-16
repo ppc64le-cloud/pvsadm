@@ -41,8 +41,14 @@ rm -rf /etc/systemd/system/multi-user.target.wants/firewalld.service
 rpm -vih --nodeps https://public.dhe.ibm.com/software/server/POWER/Linux/yum/download/ibm-power-repo-latest.noarch.rpm
 sed -i 's/^more \/opt\/ibm\/lop\/notice/#more \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
 echo 'y' | /opt/ibm/lop/configure
+{{if eq .Dist "rhel"}}
 # Disable the AT repository due to slowness in nature
 yum-config-manager --disable Advance_Toolchain
+{{end}}
+{{if eq .Dist "centos"}}
+yum-config-manager --add-repo=https://public.dhe.ibm.com/software/server/POWER/Linux/yum/IBM/RHEL/$(rpm -E %{rhel})/ppc64le/
+rpm --import https://public.dhe.ibm.com/software/server/POWER/Linux/yum/IBM/RHEL/$(rpm -E %{rhel})/ppc64le/repodata/repomd.xml.key
+{{end}}
 yum install  powerpc-utils librtas DynamicRM  devices.chrp.base.ServiceRM rsct.opt.storagerm rsct.core rsct.basic rsct.core src -y
 yum install -y device-mapper-multipath
 cat <<EOF > /etc/multipath.conf
