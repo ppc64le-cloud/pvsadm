@@ -17,12 +17,12 @@ package dhcpserver
 import (
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
+	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
 var (
@@ -47,12 +47,22 @@ var getCmd = &cobra.Command{
 			return err
 		}
 
-		servers, err := pvmclient.DHCPClient.Get(id)
+		server, err := pvmclient.DHCPClient.Get(id)
 		if err != nil {
 			return fmt.Errorf("failed to get a dhcpserver, err: %v", err)
 		}
-
-		spew.Dump(servers)
+		if server.Network.Name == nil {
+			klog.Infof("DHCP client reports status: %s, please retry in sometime.", *server.Status)
+			return nil
+		}
+		var IPandMAC string
+		for _, lease := range server.Leases {
+			IPandMAC += fmt.Sprintf("%s-%s\n", *lease.InstanceIP, *lease.InstanceMacAddress)
+		}
+		table := utils.NewTable()
+		table.SetHeader([]string{"Network Name", "IP - MAC", "Status"})
+		table.Append([]string{*server.Network.Name, IPandMAC, *server.Status})
+		table.Table.Render()
 		return nil
 	},
 }
