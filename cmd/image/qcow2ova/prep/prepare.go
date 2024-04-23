@@ -39,6 +39,7 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	if err != nil {
 		return err
 	}
+	defer removeLoop(lo)
 
 	err = partprobe(lo)
 	if err != nil {

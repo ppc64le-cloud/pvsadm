@@ -29,15 +29,6 @@ import (
 
 const losetupCMD = "losetup"
 
-func findFreeLoop(file string) (string, error) {
-	exitcode, out, err := utils.RunCMD(losetupCMD, "-f")
-	if exitcode != 0 {
-		return "", fmt.Errorf("failed to find an unused loop device, exitcode: %d, stdout: %s, err: %s", exitcode, out, err)
-	}
-
-	return strings.TrimSpace(out), nil
-}
-
 // setupLoop allocates the free loop device for the backing store
 func setupLoop(file string) (string, error) {
 	exitcode, out, err := utils.RunCMD(losetupCMD, "-f", "--show", file)
@@ -46,6 +37,14 @@ func setupLoop(file string) (string, error) {
 	}
 
 	return strings.TrimSpace(out), nil
+}
+
+func removeLoop(loopPath string) error {
+	exitcode, stdout, stderr := utils.RunCMD(losetupCMD, "-d", loopPath)
+	if exitcode != 0 {
+		return fmt.Errorf("failed to remove loop device: %s, exitcode: %d, stdout: %s, err: %s", loopPath, exitcode, stdout, stderr)
+	}
+	return nil
 }
 
 func partprobe(device string) error {
