@@ -23,7 +23,7 @@ import (
 	access "github.com/charmbracelet/huh/accessibility"
 )
 
-func SelectItem(msg string, instances []string) string {
+func SelectItem(msg string, instances []string) (string, error) {
 	var choice string
 	err :=
 		huh.NewForm(
@@ -32,9 +32,10 @@ func SelectItem(msg string, instances []string) string {
 					Options(huh.NewOptions(instances...)...).Value(&choice))).Run()
 
 	if err != nil {
-		klog.Fatalf("Couldn't process the inputs: %v", err)
+		klog.Errorf("couldn't process the inputs: %v", err)
+		return "", err
 	}
-	return choice
+	return choice, nil
 }
 
 func AskConfirmation(message string) bool {
@@ -49,6 +50,7 @@ func AskConfirmation(message string) bool {
 					Value(&confirm))).Run()
 	if err != nil {
 		klog.Fatalf("couldn't process inputs: %v", err)
+
 	}
 	return confirm
 }

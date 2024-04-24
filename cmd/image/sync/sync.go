@@ -54,7 +54,7 @@ func copyWorker(copyJobs <-chan copyWorkload, results chan<- bool, workerId int)
 		klog.Infof("Copying object: %s src bucket: %s dest bucket: %s", copyJob.srcObject, copyJob.srcBucket, copyJob.tgtBucket)
 		err := copyJob.s3Cli.CopyObjectToBucket(copyJob.srcBucket, copyJob.tgtBucket, copyJob.srcObject)
 		if err != nil {
-			klog.Errorf("ERROR: %v, Copy object %s failed", err, copyJob.srcObject)
+			klog.Errorf("copy object %s failed, err: %v", copyJob.srcObject, err)
 			results <- false
 		}
 		duration := time.Since(start)
@@ -92,13 +92,13 @@ func calculateChannels(spec []pkg.Spec, instanceList []InstanceItem) (int, error
 	for item_no, item := range spec {
 		_, err := instanceList[item_no].Source.CheckBucketLocationConstraint(item.Source.Bucket, item.Source.Region+"-"+item.Source.StorageClass)
 		if err != nil {
-			klog.Errorf("Location constraint verification failed for src bucket: %s", item.Source.Bucket)
+			klog.Errorf("location constraint verification failed for src bucket %s", item.Source.Bucket)
 			return 0, err
 		}
 
 		selectedObjects, err := instanceList[item_no].Source.SelectObjects(item.Source.Bucket, item.Source.Object)
 		if err != nil {
-			klog.Errorf("Select Objects failed: %v", err)
+			klog.Errorf("select Objects failed, err: %v", err)
 			return 0, err
 		}
 
@@ -114,7 +114,7 @@ func copyObjects(spec []pkg.Spec, instanceList []InstanceItem, copyJobs chan<- c
 	for item_no, item := range spec {
 		selectedObjects, err := instanceList[item_no].Source.SelectObjects(item.Source.Bucket, item.Source.Object)
 		if err != nil {
-			klog.Errorf("Select Objects failed: %v", err)
+			klog.Errorf("select Objects failed, err: %v", err)
 			return err
 		}
 
@@ -122,7 +122,7 @@ func copyObjects(spec []pkg.Spec, instanceList []InstanceItem, copyJobs chan<- c
 		for targetItemNo, targetItem := range item.Target {
 			_, err = instanceList[item_no].Target[targetItemNo].CheckBucketLocationConstraint(targetItem.Bucket, targetItem.Region+"-"+targetItem.StorageClass)
 			if err != nil {
-				klog.Errorf("Location constraint verification failed for dest bucket: %s", targetItem.Bucket)
+				klog.Errorf("location constraint verification failed for dest bucket %s", targetItem.Bucket)
 				return errors.New("bucket location constraint verification failed")
 			}
 
@@ -162,13 +162,13 @@ func getSpec(specfileName string) ([]pkg.Spec, error) {
 	// Unmashalling yaml file
 	yamlFile, err := os.ReadFile(specfileName)
 	if err != nil {
-		klog.Errorf("ERROR: Read yaml failed : %v", err)
+		klog.Errorf("read yaml failed, err: %v", err)
 		return nil, err
 	}
 
 	err = yaml.Unmarshal(yamlFile, &spec)
 	if err != nil {
-		klog.Errorf("Unmarshal: %v", err)
+		klog.Errorf("unmarshal failed, err: %v", err)
 		return nil, err
 	}
 

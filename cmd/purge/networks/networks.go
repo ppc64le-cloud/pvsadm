@@ -91,7 +91,7 @@ pvsadm purge --help for information
 					err = pvmclient.NetworkClient.Delete(*network.NetworkID)
 					if err != nil {
 						if opt.IgnoreErrors {
-							klog.Infof("error occurred while deleting the network: %v", err)
+							klog.Errorf("error occurred while deleting the network: %v", err)
 						} else {
 							return err
 						}

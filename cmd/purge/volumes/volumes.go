@@ -70,7 +70,7 @@ pvsadm purge --help for information
 						err = pvmclient.VolumeClient.DeleteVolume(*volume.VolumeID)
 						if err != nil {
 							if opt.IgnoreErrors {
-								klog.Infof("error occurred while deleting the volume: %v", err)
+								klog.Errorf("error occurred while deleting the volume: %v", err)
 							} else {
 								return err
 							}

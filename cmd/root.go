@@ -47,7 +47,7 @@ This is a tool built for the Power Systems Virtual Server helps managing and mai
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.APIKey == "" {
 			if key := os.Getenv("IBMCLOUD_API_KEY"); key != "" {
-				klog.Infof("Using an API key from IBMCLOUD_API_KEY environment variable")
+				klog.V(1).Info("Using an API key from IBMCLOUD_API_KEY environment variable")
 				pkg.Options.APIKey = key
 			}
 		}

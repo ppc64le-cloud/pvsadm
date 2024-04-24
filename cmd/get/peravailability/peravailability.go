@@ -42,7 +42,7 @@ var Cmd = &cobra.Command{
 		opt := pkg.Options
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {
-			klog.Errorf("failed to create a session with IBM cloud: %v", err)
+			klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
 			return err
 		}
 
@@ -69,7 +69,7 @@ var Cmd = &cobra.Command{
 			klog.Infof("%s, where the current instance is present supports PER.", pvmclient.Zone)
 		}
 		sort.Strings(perEnabledRegions)
-		klog.Infoln("The following zones/datacenters have support for PER:", perEnabledRegions, ".", "More information at https://cloud.ibm.com/docs/overview?topic=overview-locations")
+		klog.Infof("The following zones/datacenters have support for PER:%v.More information at https://cloud.ibm.com/docs/overview?topic=overview-locations", perEnabledRegions)
 		return nil
 	},
 }

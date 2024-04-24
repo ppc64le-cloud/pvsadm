@@ -40,18 +40,18 @@ func getImage(downloadDir string, srcUrl string, timeout time.Duration) (string,
 		if !fileExists(srcUrl) {
 			return "", fmt.Errorf("not a valid URL or file does not exist at %s", srcUrl)
 		}
-		klog.Infof("Copying %s into %s", srcUrl, dest)
+		klog.V(1).Infof("Copying %s into %s", srcUrl, dest)
 		if err := cp(srcUrl, dest); err != nil {
 			return "", err
 		}
-		klog.Infof("Copy Completed!")
+		klog.V(1).Info("Copy Completed!")
 	} else {
 		out, err := os.Create(dest)
 		if err != nil {
 			return "", err
 		}
 		defer out.Close()
-		klog.Infof("Downloading %s into %s", srcUrl, dest)
+		klog.V(1).Infof("Downloading %s into %s", srcUrl, dest)
 		client := http.Client{
 			Timeout: timeout,
 		}
@@ -69,7 +69,7 @@ func getImage(downloadDir string, srcUrl string, timeout time.Duration) (string,
 		if err != nil {
 			return "", err
 		}
-		klog.Infof("Download Completed!")
+		klog.V(1).Info("Download Completed!")
 	}
 	return dest, nil
 }

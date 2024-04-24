@@ -213,7 +213,7 @@ func (c *Client) ListWorkspaceInstances() (*resourcecontrollerv2.ResourceInstanc
 	}
 	workspaces, _, err := c.ResouceControllerClient.ListResourceInstances(listServiceInstanceOptions)
 	if err != nil {
-		klog.Errorf("Error!: %+v", err)
+		klog.Errorf("error while listing Resource Instances: %+v", err)
 		return nil, err
 	}
 	return workspaces, nil
@@ -268,7 +268,7 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, r
 		for l := range supportedLocations {
 			locationList = append(locationList, l)
 		}
-		return "", fmt.Errorf("No deployment found for service plan %s at location %s.\nValid location(s) are: %q.\nUse service instance example if the service is a Cloud Foundry service.",
+		return "", fmt.Errorf("no deployment found for service plan %s at location %s.\nValid location(s) are: %q.\nUse service instance example if the service is a Cloud Foundry service",
 			servicePlan, region, locationList)
 	}
 
@@ -292,8 +292,8 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, r
 		return "", err
 	}
 
-	klog.Infof("Resource service Instance Details :%v\n", serviceInstance)
-	klog.Infof("Resource service InstanceID :%v\n", serviceInstance.Crn.ServiceInstance)
+	klog.Infof("Resource service Instance Details :%v", serviceInstance)
+	klog.Infof("Resource service InstanceID :%v", serviceInstance.Crn.ServiceInstance)
 
 	return serviceInstance.Crn.ServiceInstance, nil
 }
@@ -302,7 +302,7 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, r
 func (c *Client) DeleteServiceInstance(instanceID string, recursive bool) error {
 	err := c.ResourceClientV1.DeleteInstance(instanceID, recursive)
 	if err != nil {
-		klog.Infof("Failed to delete the instance with id %s because of the error %s", instanceID, err)
+		klog.Errorf("failed to delete the instance with id %s because of the error %s", instanceID, err)
 		return err
 	}
 	return nil

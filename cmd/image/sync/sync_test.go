@@ -79,7 +79,7 @@ func TestGetSpec(t *testing.T) {
 
 		SpecFileName := file.Name()
 		defer os.Remove(SpecFileName)
-		klog.Infoln("Specfile :", SpecFileName)
+		klog.V(1).Infof("Specfile :%s", SpecFileName)
 
 		specString, merr := yaml.Marshal(&spec)
 		require.NoError(t, merr, "Error in Unmarshalling Specfile")
@@ -247,7 +247,7 @@ func mockCreateInstances(mockSyncClient *mocksync.MockSyncClient) []InstanceItem
 }
 
 func mockCreateSpec() []pkg.Spec {
-	klog.Infoln("STEP: Generating Spec")
+	klog.V(1).Info("STEP: Generating Spec")
 	specSlice := make([]pkg.Spec, 0)
 	for i := 0; i < noOfSources; i++ {
 		specSlice = append(specSlice, utils.GenerateSpec(noOfTargetsPerSource))

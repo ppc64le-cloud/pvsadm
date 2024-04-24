@@ -57,7 +57,7 @@ pvsadm purge --help for information
 		for _, instance := range instances {
 			ins, err := pvmclient.InstanceClient.Get(*instance.PvmInstanceID)
 			if err != nil {
-				klog.Infof("Error occurred while getting the vm %s", err)
+				klog.Errorf("error occurred while getting the vm %s", err)
 				continue
 			}
 			var ipAddrsPrivate, ipAddrsPublic []string
@@ -80,7 +80,7 @@ pvsadm purge --help for information
 					err = pvmclient.InstanceClient.Delete(*instance.PvmInstanceID)
 					if err != nil {
 						if opt.IgnoreErrors {
-							klog.Infof("error occurred while deleting the vm: %v", err)
+							klog.Errorf("error occurred while deleting the vm: %v", err)
 						} else {
 							return err
 						}
