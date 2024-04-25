@@ -68,6 +68,6 @@ var getCmd = &cobra.Command{
 }
 
 func init() {
-	getCmd.Flags().StringVar(&id, "id", "", "Instance ID of the Cloud connection")
+	getCmd.Flags().StringVar(&id, "id", "", "ID of the DHCP server")
 	_ = getCmd.MarkFlagRequired("id")
 }
