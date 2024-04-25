@@ -38,6 +38,7 @@ The typical image workflow comprises of the following steps:
 - Advanced scenarios for Qcow2 to ova image conversion - [guide](docs/Advanced%20Scenarios%20for%20Qcow2%20to%20OVA.md)
 - How to import image to PowerVS instance from COS - [guide](docs/How%20to%20Import%20Image%20to%20PowerVS%20Instance.md)
 - How to upload image to COS bucket using pvsadm - [guide](docs/How%20to%20Upload%20Image%20to%20COS.md)
+- How to build DHCP supported centos image - [guide](docs/Build%20DHCP%20enabled%20Centos%20Images.md)
 
 ### Samples
 Please take a look at the [samples](samples/README.md)  folder for end-to-end examples.
