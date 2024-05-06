@@ -93,8 +93,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 		if err != nil {
 			return err
 		}
-		var accessKey string
-		var accessSecret string
+		var accessKey, accessSecret string
 
 		//Create AccessKey and SecretKey for the bucket provided if bucket access is private
 		if (opt.AccessKey == "" || opt.SecretKey == "") && (!opt.Public) {
@@ -106,7 +105,9 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 			if err != nil {
 				return fmt.Errorf("failed to list the resource instances: %v", err)
 			}
-
+			if len(workspaces.Resources) == 0 {
+				return fmt.Errorf("there are no resouces under the resource instance shared")
+			}
 			getServiceInstanceOptions := &resourcecontrollerv2.GetResourceInstanceOptions{
 				// TODO: possibility of workspaces to either be of type service_instance or composite_instance.
 				ID: workspaces.Resources[0].ID,

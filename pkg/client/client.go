@@ -165,10 +165,7 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, resourcePlan, 
 	if err != nil {
 		return nil, err
 	}
-
-	klog.Infof("Resource service Instance Details :%+v\n", resp)
-	klog.Infof("Resource service InstanceID :%v\n", resp.ID)
-
+	klog.Infof("Created service instance %s of %s-%s in %s", instanceName, serviceName, resourcePlan, region)
 	return resp, nil
 }
 

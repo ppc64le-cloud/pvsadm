@@ -38,13 +38,6 @@ const (
 	CosResourceID = "dff97f5c-bc5e-4455-b470-411c3edbe49c"
 )
 
-// CosResourcePlanID is IBM COS plan id, can be retrieved using ibmcloud cli
-var CosResourcePlans = map[string]string{
-	"onerate":  "1e4e33e4-cfa6-4f12-9016-be594a6d5f87",
-	"lite":     "2fdf0c08-2d32-4f46-84b5-32e0c92fffd8",
-	"standard": "744bfc56-d12c-4866-88d5-dac9139e0e5d",
-}
-
 var Cmd = &cobra.Command{
 	Use:   "upload",
 	Short: "Upload the image to the IBM COS",
