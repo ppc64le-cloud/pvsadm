@@ -16,28 +16,14 @@ package client
 
 import (
 	"fmt"
-	gohttp "net/http"
-	"strings"
 
-	"github.com/IBM-Cloud/bluemix-go"
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/catalog"
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/controller"
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/management"
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
-	"github.com/IBM-Cloud/bluemix-go/authentication"
-	"github.com/IBM-Cloud/bluemix-go/http"
-	"github.com/IBM-Cloud/bluemix-go/models"
-	"github.com/IBM-Cloud/bluemix-go/rest"
-	bxsession "github.com/IBM-Cloud/bluemix-go/session"
+	"github.com/IBM/go-sdk-core/core"
+	"github.com/IBM/platform-services-go-sdk/iamidentityv1"
 	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
+	"github.com/IBM/platform-services-go-sdk/resourcemanagerv2"
 
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
-
-	"github.com/IBM/go-sdk-core/v5/core"
-
-	//"golang.org/x/oauth2/jwt"
-	"github.com/golang-jwt/jwt"
 )
 
 const (
@@ -52,159 +38,90 @@ const (
 	PowerVSResourcePlanID = "f165dd34-3a40-423b-9d95-e90a23f724dd"
 )
 
-type Client struct {
-	*bxsession.Session
-	User                    *User
-	ResourceClientV2        controllerv2.ResourceServiceInstanceRepository
-	ResourceClientV1        controller.ResourceServiceInstanceRepository
-	ResourceServiceKey      controller.ResourceServiceKeyRepository
-	ResouceControllerClient *resourcecontrollerv2.ResourceControllerV2
-	ResourceControllerOpts  *resourcecontrollerv2.ResourceControllerV2Options
-	ResCatalogAPI           catalog.ResourceCatalogRepository
-	ResGroupAPI             management.ResourceGroupRepository
+var CosResourcePlanIDs = map[string]string{
+	"onerate":  "1e4e33e4-cfa6-4f12-9016-be594a6d5f87",
+	"lite":     "2fdf0c08-2d32-4f46-84b5-32e0c92fffd8",
+	"standard": "744bfc56-d12c-4866-88d5-dac9139e0e5d",
 }
 
-func authenticateAPIKey(sess *bxsession.Session) error {
-	config := sess.Config
-	tokenRefresher, err := authentication.NewIAMAuthRepository(config, &rest.Client{
-		DefaultHeader: gohttp.Header{
-			"User-Agent": []string{http.UserAgent()},
-		},
-	})
-	if err != nil {
-		return err
-	}
-	return tokenRefresher.AuthenticateAPIKey(config.BluemixAPIKey)
+type Client struct {
+	User                    *User
+	ResouceControllerClient *resourcecontrollerv2.ResourceControllerV2
+	ResourceManagerClient   *resourcemanagerv2.ResourceManagerV2
+	ResourceControllerOpts  *resourcecontrollerv2.ResourceControllerV2Options
 }
 
 type User struct {
-	ID         string
-	Email      string
-	Account    string
-	cloudName  string `default:"bluemix"`
-	cloudType  string `default:"public"`
-	generation int    `default:"2"`
+	ID      string
+	Email   string
+	Account string
 }
 
-func fetchUserDetails(sess *bxsession.Session, generation int) (*User, error) {
-	config := sess.Config
-	user := User{}
-	var bluemixToken string
-
-	if strings.HasPrefix(config.IAMAccessToken, "Bearer") {
-		bluemixToken = config.IAMAccessToken[7:len(config.IAMAccessToken)]
-	} else {
-		bluemixToken = config.IAMAccessToken
-	}
-
-	token, err := jwt.Parse(bluemixToken, func(token *jwt.Token) (interface{}, error) {
-		return "", nil
-	})
-	if err != nil && !strings.Contains(err.Error(), "key is of invalid type") {
-		return &user, err
-	}
-
-	claims := token.Claims.(jwt.MapClaims)
-	if email, ok := claims["email"]; ok {
-		user.Email = email.(string)
-	}
-	user.ID = claims["id"].(string)
-	user.Account = claims["account"].(map[string]interface{})["bss"].(string)
-	iss := claims["iss"].(string)
-	if strings.Contains(iss, "https://iam.cloud.ibm.com") {
-		user.cloudName = "bluemix"
-	} else {
-		user.cloudName = "staging"
-	}
-	user.cloudType = "public"
-
-	user.generation = generation
-	return &user, nil
-}
-
-func NewClient(apikey, ep string, debug bool) (*Client, error) {
+func NewClient(apikey string, ep map[string]string, debug bool) (*Client, error) {
 	c := &Client{}
 
-	bxSess, err := bxsession.New(&bluemix.Config{
-		BluemixAPIKey:         apikey,
-		TokenProviderEndpoint: &ep,
-		Debug:                 debug,
+	auth, err := core.GetAuthenticatorFromEnvironment(serviceIBMCloud)
+	if err != nil {
+		return nil, err
+	}
+
+	iamv1, err := iamidentityv1.NewIamIdentityV1(&iamidentityv1.IamIdentityV1Options{
+		Authenticator: auth,
+		URL:           ep["TPEndpoint"],
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	c.Session = bxSess
-
-	err = authenticateAPIKey(bxSess)
+	apiKeyDetailsOpt := iamidentityv1.GetAPIKeysDetailsOptions{IamAPIKey: ptr.To(apikey)}
+	apiKey, _, err := iamv1.GetAPIKeysDetails(&apiKeyDetailsOpt)
 	if err != nil {
 		return nil, err
 	}
-
-	c.User, err = fetchUserDetails(bxSess, 2)
+	if apiKey == nil {
+		return nil, fmt.Errorf("could not retrieve account id")
+	}
+	c.User = &User{
+		ID:      *apiKey.ID,
+		Account: *apiKey.AccountID,
+	}
+	resourceControllerOptions := &resourcecontrollerv2.ResourceControllerV2Options{
+		URL:           ep["RCEndpoint"],
+		Authenticator: auth}
+	c.ResouceControllerClient, err = resourcecontrollerv2.NewResourceControllerV2(resourceControllerOptions)
 	if err != nil {
 		return nil, err
 	}
-
-	ctrlv2, err := controllerv2.New(bxSess)
+	c.ResourceManagerClient, err = resourcemanagerv2.NewResourceManagerV2(&resourcemanagerv2.ResourceManagerV2Options{Authenticator: auth})
 	if err != nil {
 		return nil, err
 	}
-
-	ctrlv1, err := controller.New(bxSess)
-	if err != nil {
-		return nil, err
-	}
-
-	catalogClient, err := catalog.New(bxSess)
-	if err != nil {
-		return nil, err
-	}
-
-	managementClient, err := management.New(bxSess)
-	if err != nil {
-		return nil, err
-	}
-
-	c.ResourceClientV2 = ctrlv2.ResourceServiceInstanceV2()
-	c.ResourceClientV1 = ctrlv1.ResourceServiceInstance()
-	c.ResourceServiceKey = ctrlv1.ResourceServiceKey()
-	c.ResCatalogAPI = catalogClient.ResourceCatalog()
-	c.ResGroupAPI = managementClient.ResourceGroup()
 	return c, nil
 }
 
 // Func ListServiceInstances, list all available instances of particular servicetype
-func (c *Client) ListServiceInstances(serviceType string) (map[string]string, error) {
-	svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-		Type: "service_instance",
-	})
+func (c *Client) ListServiceInstances(resourceId string) (map[string]string, error) {
+	instances := make(map[string]string)
+
+	listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
+		ResourceID: ptr.To(resourceId),
+	}
+
+	workspaces, _, err := c.ResouceControllerClient.ListResourceInstances(listServiceInstanceOptions)
 
 	if err != nil {
+		klog.Errorf("error while listing resource instances: %+v", err)
 		return nil, err
 	}
 
-	instances := make(map[string]string)
-
-	for _, svc := range svcs {
-		if svc.Crn.ServiceName == serviceType {
-			instances[svc.Name] = svc.Guid
-		}
+	for _, workspace := range workspaces.Resources {
+		instances[*workspace.Name] = *workspace.GUID
 	}
+
 	return instances, nil
 }
 
-// func ListWorkspaceInstances is used to retrieve serviceInstances aloong with their regions.
+// func ListWorkspaceInstances is used to retrieve serviceInstances along with their regions.
 func (c *Client) ListWorkspaceInstances() (*resourcecontrollerv2.ResourceInstancesList, error) {
-	auth, err := core.GetAuthenticatorFromEnvironment(serviceIBMCloud)
-
-	if err != nil {
-		return nil, err
-	}
-	c.ResouceControllerClient, err = resourcecontrollerv2.NewResourceControllerV2(&resourcecontrollerv2.ResourceControllerV2Options{Authenticator: auth})
-	if err != nil {
-		return nil, err
-	}
 
 	listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
 		Type:           ptr.To(serviceInstance),
@@ -213,111 +130,57 @@ func (c *Client) ListWorkspaceInstances() (*resourcecontrollerv2.ResourceInstanc
 	}
 	workspaces, _, err := c.ResouceControllerClient.ListResourceInstances(listServiceInstanceOptions)
 	if err != nil {
-		klog.Errorf("error while listing Resource Instances: %+v", err)
+		klog.Errorf("error while listing resource instances: %+v", err)
 		return nil, err
 	}
 	return workspaces, nil
 
 }
 
-func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, resourceGrp, region string) (string, error) {
-	//Check Service using ServiceName and returns []models.Service
-	service, err := c.ResCatalogAPI.FindByName(serviceName, true)
+func (c *Client) CreateServiceInstance(instanceName, serviceName, resourcePlan, resourceGrp, region string) (*resourcecontrollerv2.ResourceInstance, error) {
+	rmv2ListResourceGroupOpt := &resourcemanagerv2.ListResourceGroupsOptions{
+		//	AccountID: &c.User.Account,
+		Name: &resourceGrp,
+	}
+
+	resourceGroupList, _, err := c.ResourceManagerClient.ListResourceGroups(rmv2ListResourceGroupOpt)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("failed to list the reclamations instances: %v", err)
 	}
 
-	//GetServicePlanID takes models.Service as the input and returns serviceplanid as the output
-	servicePlanID, err := c.ResCatalogAPI.GetServicePlanID(service[0], servicePlan)
+	resourceGroup := resourceGroupList.Resources[0]
+
+	klog.Infof("Resource group: %s and ID: %s", *resourceGroup.Name, *resourceGroup.ID)
+
+	createServiceInstanceOpts := &resourcecontrollerv2.CreateResourceInstanceOptions{
+		Name:           ptr.To(instanceName),
+		ResourcePlanID: ptr.To(CosResourcePlanIDs[resourcePlan]),
+		ResourceGroup:  resourceGroup.ID,
+		Target:         ptr.To(region),
+	}
+	resp, _, err := c.ResouceControllerClient.CreateResourceInstance(createServiceInstanceOpts)
 	if err != nil {
-		return "", err
+		klog.Errorf("An error occured while creating service instance: %v", err)
 	}
-
-	if servicePlanID == "" {
-		_, err := c.ResCatalogAPI.GetServicePlan(servicePlan)
-		if err != nil {
-			return "", err
-		}
-		servicePlanID = servicePlan
-	}
-
-	deployments, err := c.ResCatalogAPI.ListDeployments(servicePlanID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if len(deployments) == 0 {
-		klog.Infof("No deployment found for service plan : %s", servicePlan)
-		return "", err
-	}
+	klog.Infof("Resource service Instance Details :%+v\n", resp)
+	klog.Infof("Resource service InstanceID :%v\n", resp.ID)
 
-	supportedDeployments := []models.ServiceDeployment{}
-	supportedLocations := make(map[string]bool)
-	for _, d := range deployments {
-		if d.Metadata.RCCompatible {
-			deploymentLocation := d.Metadata.Deployment.Location
-			supportedLocations[deploymentLocation] = true
-			if deploymentLocation == region {
-				supportedDeployments = append(supportedDeployments, d)
-			}
-		}
-	}
-
-	if len(supportedDeployments) == 0 {
-		locationList := make([]string, 0, len(supportedLocations))
-		for l := range supportedLocations {
-			locationList = append(locationList, l)
-		}
-		return "", fmt.Errorf("no deployment found for service plan %s at location %s.\nValid location(s) are: %q.\nUse service instance example if the service is a Cloud Foundry service",
-			servicePlan, region, locationList)
-	}
-
-	//FindByName returns []models.ResourceGroup
-	resGrp, err := c.ResGroupAPI.FindByName(nil, resourceGrp)
-	if err != nil {
-		return "", err
-	}
-
-	klog.Infof("Resource group: %s and ID: %s", resGrp[0].Name, resGrp[0].ID)
-
-	var serviceInstancePayload = controller.CreateServiceInstanceRequest{
-		Name:            instanceName,
-		ServicePlanID:   servicePlanID,
-		ResourceGroupID: resGrp[0].ID,
-		TargetCrn:       supportedDeployments[0].CatalogCRN,
-	}
-
-	serviceInstance, err := c.ResourceClientV1.CreateInstance(serviceInstancePayload)
-	if err != nil {
-		return "", err
-	}
-
-	klog.Infof("Resource service Instance Details :%v", serviceInstance)
-	klog.Infof("Resource service InstanceID :%v", serviceInstance.Crn.ServiceInstance)
-
-	return serviceInstance.Crn.ServiceInstance, nil
+	return resp, nil
 }
 
 // DeleteSericeInstance deletes service instances on the IBM Cloud, takes instanceID as input
 func (c *Client) DeleteServiceInstance(instanceID string, recursive bool) error {
-	err := c.ResourceClientV1.DeleteInstance(instanceID, recursive)
-	if err != nil {
-		klog.Errorf("failed to delete the instance with id %s because of the error %s", instanceID, err)
+	deleteServiceInstanceOpts := &resourcecontrollerv2.DeleteResourceInstanceOptions{
+		ID:        ptr.To(instanceID),
+		Recursive: ptr.To(recursive),
+	}
+	if _, err := c.ResouceControllerClient.DeleteResourceInstance(deleteServiceInstanceOpts); err != nil {
+		klog.Errorf("An error occured while deleting service instance: %v", err)
 		return err
 	}
 	return nil
-}
-
-func (c *Client) GetResourceKeys(instanceID string) ([]models.ServiceKey, error) {
-	keys, err := c.ResourceServiceKey.GetKeys("")
-	if err != nil {
-		return nil, err
-	}
-	var instance_keys []models.ServiceKey
-	for _, key := range keys {
-		if key.Crn.ServiceInstance == instanceID && key.State == "active" {
-			instance_keys = append(instance_keys, key)
-		}
-	}
-	return instance_keys, nil
 }

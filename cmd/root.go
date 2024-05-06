@@ -46,14 +46,32 @@ Integrated with the IBM Cloud platform for on-demand provisioning.
 This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.APIKey == "" {
+			// TODO : deprecate IBMCLOUD_API_KEY for IBMCLOUD_APIKEY
 			if key := os.Getenv("IBMCLOUD_API_KEY"); key != "" {
+				klog.Warning("IBMCLOUD_API_KEY will be deprecated in future releases. Use IBMCLOUD_APIKEY instead.")
 				klog.V(1).Info("Using an API key from IBMCLOUD_API_KEY environment variable")
 				pkg.Options.APIKey = key
+				os.Setenv("IBMCLOUD_APIKEY", pkg.Options.APIKey)
 			}
 		}
+		// The GetAuthenticatorFromEnvironment requires "IBMCLOUD_APIKEY" to be set, apart from IBMCLOUD_API_KEY used in the project.
+		// In order to use the resourcecontrollerv2's functionality, the IBMCLOUD_API_KEY is re-exported as IBMCLOUD_APIKEY.
+		// Ref: github.com/ibm/go-sdk-core/v5@v5.17.2/core/config_utils.go, which is available from either from a credentials file, environment or VCAP service.
+		if key := os.Getenv("IBMCLOUD_APIKEY"); key != "" {
+			pkg.Options.APIKey = os.Getenv("IBMCLOUD_APIKEY")
+		}
+		// If the API-key was set through flags, export it under IBMCLOUD_APIKEY.
+		if pkg.Options.APIKey != "" {
+			os.Setenv("IBMCLOUD_APIKEY", pkg.Options.APIKey)
+		}
+
 		if _, err := client.GetEnvironment(pkg.Options.Environment); err != nil {
 			return fmt.Errorf("invalid \"%s\" IBM Cloud Environment passed, valid values are: %s", pkg.Options.Environment, strings.Join(client.ListEnvironments(), ", "))
 		}
+		return nil
+	},
+	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+		os.Unsetenv("IBMCLOUD_APIKEY")
 		return nil
 	},
 }

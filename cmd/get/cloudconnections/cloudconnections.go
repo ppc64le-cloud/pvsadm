@@ -15,7 +15,6 @@
 package cloudconnections
 
 import (
-	"os"
 	"strings"
 
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
@@ -46,13 +45,6 @@ var Cmd = &cobra.Command{
 	Use:   "cloud-connections",
 	Short: "List the existing cloud connections in the account",
 	Long:  "List the existing cloud connections enabled across all workspaces in the account",
-	PreRunE: func(md *cobra.Command, args []string) error {
-		opt := pkg.Options
-		// TODO: The GetAuthenticatorFromEnvironment function seems to refer to "IBMCLOUD_APIKEY" rather than IBMCLOUD_API_KEY as used in the project.
-		// In order to use the resourcecontrollerv2's functionality, the IBMCLOUD_API_KEY is re-exported as IBMCLOUD_APIKEY.
-		os.Setenv("IBMCLOUD_APIKEY", opt.APIKey)
-		return nil
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
@@ -60,7 +52,10 @@ var Cmd = &cobra.Command{
 			klog.Errorf("failed to create a session with IBM cloud: %v", err)
 			return err
 		}
-
+		e, err := client.GetEnvironment(opt.Environment)
+		if err != nil {
+			return err
+		}
 		// Retrieve all workspaces that are available in the account.
 		workspaceInstances, err := c.ListWorkspaceInstances()
 		if err != nil {
@@ -73,18 +68,24 @@ var Cmd = &cobra.Command{
 			zoneWorkspaces[*workspaceInstance.RegionID] = append(zoneWorkspaces[*workspaceInstance.RegionID], workspaceDetails{name: *workspaceInstance.Name, guid: *workspaceInstance.GUID})
 		}
 		cloudConnections := map[string]cloudConnectionDetails{}
-		authenticator := &core.IamAuthenticator{ApiKey: c.Config.BluemixAPIKey, URL: *c.Config.TokenProviderEndpoint}
+		authenticator := &core.IamAuthenticator{ApiKey: pkg.Options.APIKey, URL: e["TPEndpoint"]}
 		klog.Info("Listing cloud connections across all workspaces, please wait..")
 		// Create a IBM PI Session per zone and reuse them across the workspaces in the same zone.
 		for workspaceZone, workspaces := range zoneWorkspaces {
-			pvmclientOptions := ibmpisession.IBMPIOptions{Authenticator: authenticator, Debug: pkg.Options.Debug, UserAccount: c.User.Account, Zone: workspaceZone}
+			pvmclientOptions := ibmpisession.IBMPIOptions{
+				URL:           e["PIEndpoint"],
+				Authenticator: authenticator,
+				Debug:         pkg.Options.Debug,
+				UserAccount:   c.User.Account,
+				Zone:          workspaceZone,
+			}
 			piSession, err := ibmpisession.NewIBMPISession(&pvmclientOptions)
 			if err != nil {
 				return err
 			}
 			// Iterate over the workspaces available in the zone.
 			for _, workspace := range workspaces {
-				pvmClient, err := client.NewGenericPVMClientWithEnv(c, workspace.guid, workspace.name, opt.Environment, piSession)
+				pvmClient, err := client.NewGenericPVMClientWithEnv(c, workspace.guid, opt.Environment, piSession)
 				if err != nil {
 					return err
 				}
@@ -128,10 +129,6 @@ var Cmd = &cobra.Command{
 			return nil
 		}
 		klog.Info("There are no active cloud connections in this account.")
-		return nil
-	},
-	PostRunE: func(md *cobra.Command, args []string) error {
-		os.Unsetenv("IBMCLOUD_APIKEY")
 		return nil
 	},
 }

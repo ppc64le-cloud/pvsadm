@@ -28,11 +28,10 @@ type Client struct {
 }
 
 func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client {
-	c := &Client{
+	return &Client{
 		instanceID: powerinstanceid,
+		client:     instance.NewIBMPICloudConnectionClient(context.Background(), sess, powerinstanceid),
 	}
-	c.client = instance.NewIBMPICloudConnectionClient(context.Background(), sess, powerinstanceid)
-	return c
 }
 
 func (c *Client) Get(id string) (*models.CloudConnection, error) {

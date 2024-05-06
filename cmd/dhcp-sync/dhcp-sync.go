@@ -203,7 +203,7 @@ var Cmd = &cobra.Command{
 
 		err = watcher.Add(file)
 		if err != nil {
-			klog.Fatal(err)
+			klog.Fatalf("cannot sync DHCP server: %+v", err)
 		}
 		<-done
 		return nil

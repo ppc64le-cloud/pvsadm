@@ -64,18 +64,18 @@ func copyWorker(copyJobs <-chan copyWorkload, results chan<- bool, workerId int)
 }
 
 // Method to create the list of required instances
-func createInstanceList(spec []pkg.Spec, bxCli *client.Client) ([]InstanceItem, error) {
+func createInstanceList(spec []pkg.Spec, pvsClient *client.Client) ([]InstanceItem, error) {
 	var instanceList []InstanceItem
 	for _, item := range spec {
 		instance := InstanceItem{}
-		s3Cli, err := NewS3Client(bxCli, item.Source.Cos, item.Source.Region)
+		s3Cli, err := NewS3Client(pvsClient, item.Source.Cos, item.Source.Region)
 		if err != nil {
 			return nil, err
 		}
 
 		instance.Source = s3Cli
 		for _, targetItem := range item.Target {
-			s3Cli, err := NewS3Client(bxCli, item.Source.Cos, targetItem.Region)
+			s3Cli, err := NewS3Client(pvsClient, item.Source.Cos, targetItem.Region)
 			if err != nil {
 				return nil, err
 			}
@@ -257,7 +257,7 @@ Sample spec.yaml file:
 		start := time.Now()
 
 		//Create bluemix client
-		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+		pvsClient, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
 			return err
 		}
@@ -269,7 +269,7 @@ Sample spec.yaml file:
 		}
 
 		// Create necessary objects
-		instanceList, err := createInstanceList(spec, bxCli)
+		instanceList, err := createInstanceList(spec, pvsClient)
 		if err != nil {
 			return err
 		}

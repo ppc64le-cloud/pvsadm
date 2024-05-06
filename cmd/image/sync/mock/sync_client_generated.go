@@ -19,6 +19,7 @@
 //
 //	mockgen -source=./sync_client.go -destination=./mock/sync_client_generated.go -package=mock -copyright_file=../../../hack/copyright_file
 //
+
 // Package mock is a generated GoMock package.
 package mock
 

@@ -16,14 +16,15 @@ package client
 
 import (
 	"errors"
-	"os"
 
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
+	"github.com/IBM/platform-services-go-sdk/iamidentityv1"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 )
 
 const DefaultEnv = "prod"
 
-var EnvironmentNotFound = errors.New("environment not found")
+var ErrEnvironmentNotFound = errors.New("error environment not found")
 
 var Environments = map[string]map[string]string{
 	"test": {
@@ -32,8 +33,8 @@ var Environments = map[string]map[string]string{
 		"PIEndpoint": "power-iaas.test.cloud.ibm.com",
 	},
 	"prod": {
-		"TPEndpoint": "https://iam.cloud.ibm.com",
-		"RCEndpoint": "https://resource-controller.cloud.ibm.com",
+		"TPEndpoint": iamidentityv1.DefaultServiceURL,
+		"RCEndpoint": resourcecontrollerv2.DefaultServiceURL,
 		"PIEndpoint": "power-iaas.cloud.ibm.com",
 	},
 }
@@ -47,7 +48,7 @@ func ListEnvironments() (keys []string) {
 
 func GetEnvironment(env string) (map[string]string, error) {
 	if _, ok := Environments[env]; !ok {
-		return nil, EnvironmentNotFound
+		return nil, ErrEnvironmentNotFound
 	}
 	return Environments[env], nil
 }
@@ -57,15 +58,15 @@ func NewPVMClientWithEnv(c *Client, instanceID, instanceName, env string) (*PVMC
 	if err != nil {
 		return nil, err
 	}
-	return NewPVMClient(c, instanceID, instanceName, e["PIEndpoint"])
+	return NewPVMClient(c, instanceID, instanceName, e)
 }
 
-func NewGenericPVMClientWithEnv(c *Client, instanceID, instanceName, env string, piSession *ibmpisession.IBMPISession) (*PVMClient, error) {
+func NewGenericPVMClientWithEnv(c *Client, instanceID, env string, piSession *ibmpisession.IBMPISession) (*PVMClient, error) {
 	e, err := GetEnvironment(env)
 	if err != nil {
 		return nil, err
 	}
-	return NewGenericPVMClient(c, instanceID, instanceName, e["PIEndpoint"], piSession)
+	return NewGenericPVMClient(c, instanceID, e, piSession)
 }
 
 func NewClientWithEnv(apikey, env string, debug bool) (*Client, error) {
@@ -73,6 +74,5 @@ func NewClientWithEnv(apikey, env string, debug bool) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	os.Setenv("IBMCLOUD_RESOURCE_CONTROLLER_API_ENDPOINT", e["RCEndpoint"])
-	return NewClient(apikey, e["TPEndpoint"], debug)
+	return NewClient(apikey, e, debug)
 }
