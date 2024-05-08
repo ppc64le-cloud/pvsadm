@@ -129,6 +129,11 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			if err != nil {
 				return err
 			}
+
+			if !bucketExists {
+				klog.Infof("Bucket %s not found in the instance %s provided", opt.BucketName, opt.InstanceName)
+			}
+
 		} else if len(instances) != 0 {
 			//check for bucket across the instances
 			for instanceName := range instances {
@@ -210,17 +215,16 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		if err != nil {
 			return err
 		}
-
-		objectExists, err := s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName)
-		if err != nil {
-			return err
-		}
-		if objectExists {
-			return fmt.Errorf("%s object already exists in the %s bucket", opt.ObjectName, opt.BucketName)
-		}
-
-		//Create a new bucket
-		if !bucketExists {
+		if bucketExists {
+			objectExists, err := s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName)
+			if err != nil {
+				return err
+			}
+			if objectExists {
+				return fmt.Errorf("%s object already exists in the %s bucket", opt.ObjectName, opt.BucketName)
+			}
+		} else {
+			//Create a new bucket
 			klog.Infof("Creating a new bucket %s", opt.BucketName)
 			s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
 			if err != nil {
