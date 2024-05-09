@@ -4,8 +4,8 @@ github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175 h1:FuzMrve2T3
 github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175/go.mod h1:r4ZaLtgP9ghpBmnZd77tSjM2LwfOiCLOG6XmCoutnOQ=
 github.com/IBM-Cloud/power-go-client v1.6.0 h1:X+QX+WSF66+aouyaf4r+IeBLXUurAJj9+Bd+vH7G5I0=
 github.com/IBM-Cloud/power-go-client v1.6.0/go.mod h1:0ad5Lcq1utoYVJx0uqooMjCpUaYaK0ItP9QJYtY6k0Y=
-github.com/IBM/go-sdk-core/v5 v5.17.0 h1:J/8by7r70JmCYqXL/NHFcgpneFAqv16oKMtif+syA14=
-github.com/IBM/go-sdk-core/v5 v5.17.0/go.mod h1:GatGZpxlo1KaxiRN6E10/rNgWtUtx1hN/GoHSCaSPKA=
+github.com/IBM/go-sdk-core/v5 v5.17.2 h1:MyFCUPYqcNUQIx9d9srq9znMEZcvu6X3DOGIPjegP8o=
+github.com/IBM/go-sdk-core/v5 v5.17.2/go.mod h1:GatGZpxlo1KaxiRN6E10/rNgWtUtx1hN/GoHSCaSPKA=
 github.com/IBM/ibm-cos-sdk-go v1.10.3 h1:YfZSLqMiCrqDPbr3r+amY2sicIXlrd+3L5pok6QRXIQ=
 github.com/IBM/ibm-cos-sdk-go v1.10.3/go.mod h1:T9x7pC47DUd5jD/TMFzlvly39P6EdW5wOemA78XEo2g=
 github.com/IBM/platform-services-go-sdk v0.62.11 h1:EGsiY90bM9M9sSdBVgpsX4QK1z99JZzedVDlrY2gzmc=
