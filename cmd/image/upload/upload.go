@@ -18,19 +18,24 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/management"
+	"github.com/IBM/platform-services-go-sdk/resourcemanagerv2"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/spf13/cobra"
+
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 )
 
 const (
 	ServiceType              = "cloud-object-storage"
-	UseExistingPromptMessage = "Would You Like to use Available COS Instance for creating bucket?"
+	UseExistingPromptMessage = "Would you like to use an available COS instance for creating bucket?"
 	CreatePromptMessage      = "Would you like to create new COS Instance?"
 	ResourceGroupAPIRegion   = "global"
+	// CosResourceID is IBM COS service id, can be retrieved using ibmcloud cli
+	// ibmcloud catalog service cloud-object-storage.
+	CosResourceID = "dff97f5c-bc5e-4455-b470-411c3edbe49c"
 )
 
 var Cmd = &cobra.Command{
@@ -68,10 +73,8 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			return fmt.Errorf("image upload in test/staging env storage bucket is not supported")
 		}
 
-		case1 := pkg.ImageCMDOptions.AccessKey == "" && pkg.ImageCMDOptions.SecretKey != ""
-		case2 := pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey == ""
-
-		if case1 || case2 {
+		// ensure that both, the AccessKey and SecretKey are set.
+		if (len(pkg.ImageCMDOptions.AccessKey) > 0) != (len(pkg.ImageCMDOptions.SecretKey) > 0) {
 			return fmt.Errorf("required both --accesskey and --secretkey values")
 		}
 
@@ -79,7 +82,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var s3Cli *client.S3Client
-		var bucketExists bool = false
+		var bucketExists bool
 		var apikey string = pkg.Options.APIKey
 		opt := pkg.ImageCMDOptions
 
@@ -107,20 +110,19 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		}
 
 		//Create bluemix client
-		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
-
+		pvsClient, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
 			return err
 		}
 
-		instances, err := bxCli.ListServiceInstances(ServiceType)
+		instances, err := pvsClient.ListServiceInstances(CosResourceID)
 		if err != nil {
 			return err
 		}
 
 		//check if bucket exists
 		if opt.InstanceName != "" {
-			s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
+			s3Cli, err = client.NewS3Client(pvsClient, opt.InstanceName, opt.Region)
 			if err != nil {
 				return err
 			}
@@ -137,7 +139,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		} else if len(instances) != 0 {
 			//check for bucket across the instances
 			for instanceName := range instances {
-				s3Cli, err = client.NewS3Client(bxCli, instanceName, opt.Region)
+				s3Cli, err = client.NewS3Client(pvsClient, instanceName, opt.Region)
 				if err != nil {
 					return err
 				}
@@ -180,18 +182,15 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 				return fmt.Errorf("create Cloud Object Storage instance either offline or use the pvsadm command")
 			}
 			if opt.ResourceGrp == "" {
-				resourceGroupQuery := management.ResourceGroupQuery{
-					AccountID: bxCli.User.Account,
-				}
-
-				resGrpList, err := bxCli.ResGroupAPI.List(&resourceGroupQuery)
+				rmv2ListResourceGroupOpt := resourcemanagerv2.ListResourceGroupsOptions{AccountID: ptr.To(pvsClient.User.Account)}
+				resourceGroupList, _, err := pvsClient.ResourceManagerClient.ListResourceGroups(&rmv2ListResourceGroupOpt)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to list the reclamations instances: %v", err)
 				}
 
 				var resourceGroupNames []string
-				for _, resgrp := range resGrpList {
-					resourceGroupNames = append(resourceGroupNames, resgrp.Name)
+				for _, resgrp := range resourceGroupList.Resources {
+					resourceGroupNames = append(resourceGroupNames, *resgrp.Name)
 				}
 
 				opt.ResourceGrp, err = utils.SelectItem("Select ResourceGroup having required permissions for creating a service instance from the below:", resourceGroupNames)
@@ -201,32 +200,21 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			}
 
 			opt.InstanceName = utils.ReadUserInput("Type Name of the Cloud Object Storage instance:")
-			klog.Infof("Creating a new cos %s instance", opt.InstanceName)
-
-			_, err = bxCli.CreateServiceInstance(opt.InstanceName, ServiceType, opt.ServicePlan,
+			klog.Infof("Creating a new cos instance: %s", opt.InstanceName)
+			_, err = pvsClient.CreateServiceInstance(opt.InstanceName, ServiceType, opt.ServicePlan,
 				opt.ResourceGrp, ResourceGroupAPIRegion)
 			if err != nil {
 				return err
 			}
 		}
-
-		//create s3 client
-		s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
+		s3Cli, err = client.NewS3Client(pvsClient, opt.InstanceName, opt.Region)
 		if err != nil {
 			return err
 		}
-		if bucketExists {
-			objectExists, err := s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName)
-			if err != nil {
-				return err
-			}
-			if objectExists {
-				return fmt.Errorf("%s object already exists in the %s bucket", opt.ObjectName, opt.BucketName)
-			}
-		} else {
-			//Create a new bucket
-			klog.Infof("Creating a new bucket %s", opt.BucketName)
-			s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
+		//Create a new bucket in the created COS instance.
+		if !bucketExists {
+			klog.Infof("Creating a new bucket: %s", opt.BucketName)
+			s3Cli, err = client.NewS3Client(pvsClient, opt.InstanceName, opt.Region)
 			if err != nil {
 				return err
 			}
@@ -236,7 +224,13 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 				return err
 			}
 		}
-
+		objectExists, err := s3Cli.CheckIfObjectExists(opt.BucketName, opt.ObjectName)
+		if err != nil {
+			return err
+		}
+		if objectExists {
+			return fmt.Errorf("%s object already exists in the %s bucket", opt.ObjectName, opt.BucketName)
+		}
 		//upload the Image to S3 bucket
 		err = s3Cli.UploadObject(opt.ImageName, opt.ObjectName, opt.BucketName)
 		if err != nil {

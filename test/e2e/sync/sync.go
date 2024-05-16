@@ -16,21 +16,23 @@ package sync
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/management"
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM/ibm-cos-sdk-go/aws"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
+	"github.com/IBM/platform-services-go-sdk/resourcemanagerv2"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/ppc64le-cloud/pvsadm/test/e2e/framework"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -38,19 +40,18 @@ import (
 
 // Test case variables
 var (
+	pvsClient         *client.Client
 	APIKey            = os.Getenv("IBMCLOUD_API_KEY")
-	ObjectsFolderName = "tempFolder"
+	objectsFolderName = "tempFolder"
 	SpecFileName      = "spec/spec.yaml"
 )
 
 // Test case constants
 const (
-	ServiceType            = "cloud-object-storage"
-	ResourceGroupAPIRegion = "global"
-	ServicePlan            = "standard"
-	Debug                  = false
-	Recursive              = false
-	InstanceType           = "service_instance"
+	serviceType            = "cloud-object-storage"
+	resourceGroupAPIRegion = "global"
+	servicePlan            = "standard"
+	debug                  = false
 	NoOfSources            = 2
 	NoOfTargetsPerSource   = 2
 	NoOfObjects            = 200
@@ -97,81 +98,47 @@ func createSpecFile(spec []pkg.Spec) error {
 }
 
 // Create Cloud Object Storage Service instance
-func createCOSInstance(instanceName string) error {
+func createCOSInstance(instanceName string) (string, error) {
 	klog.V(4).Infof("STEP: Creating COS instance : %s", instanceName)
-	bxCli, err := client.NewClientWithEnv(APIKey, client.DefaultEnv, Debug)
-	if err != nil {
-		klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
-		return err
-	}
 
-	resourceGroupQuery := management.ResourceGroupQuery{
-		AccountID: bxCli.User.Account,
-	}
-	resGrpList, err := bxCli.ResGroupAPI.List(&resourceGroupQuery)
+	rmv2ListResourceGroupOpt := resourcemanagerv2.ListResourceGroupsOptions{AccountID: ptr.To(pvsClient.User.Account)}
+	resourceGroupList, _, err := pvsClient.ResourceManagerClient.ListResourceGroups(&rmv2ListResourceGroupOpt)
 	if err != nil {
-		klog.Errorf("error while listing resource groups, err: %v", err)
-		return err
+		return "", fmt.Errorf("failed to list the reclamations instances: %v", err)
 	}
 
 	var resourceGroupNames []string
-	for _, resgrp := range resGrpList {
-		resourceGroupNames = append(resourceGroupNames, resgrp.Name)
+	for _, resgrp := range resourceGroupList.Resources {
+		resourceGroupNames = append(resourceGroupNames, *resgrp.Name)
 	}
 	klog.V(3).Infof("Resource Group names: %v", resourceGroupNames)
 
-	_, err = bxCli.CreateServiceInstance(instanceName, ServiceType, ServicePlan,
-		resourceGroupNames[0], ResourceGroupAPIRegion)
+	serviceInstance, err := pvsClient.CreateServiceInstance(instanceName, serviceType, servicePlan,
+		resourceGroupNames[0], resourceGroupAPIRegion)
 	if err != nil {
 		klog.Errorf("unable to create Service Instance, err: %v", err)
-		return err
+		return "", err
 	}
-
-	return nil
+	return *serviceInstance.ID, nil
 }
 
 // Delete Cloud Object Storage Service instance
-func deleteCOSInstance(instanceName string) error {
-	klog.V(4).Infof("STEP: Deleting COS instance %s", instanceName)
-	bxCli, err := client.NewClientWithEnv(APIKey, client.DefaultEnv, Debug)
-	if err != nil {
-		klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
+func deleteCOSInstance(instanceId string) error {
+	klog.V(4).Infof("STEP: Deleting COS instance ID: %s", instanceId)
+	deleteServiceInstanceOpts := &resourcecontrollerv2.DeleteResourceInstanceOptions{
+		ID: ptr.To(instanceId),
+	}
+	if _, err := pvsClient.ResouceControllerClient.DeleteResourceInstance(deleteServiceInstanceOpts); err != nil {
+		klog.Errorf("An error occured while deleting service instance: %v", err)
 		return err
 	}
-
-	svcs, err := bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-		Type: InstanceType,
-		Name: instanceName,
-	})
-	if err != nil {
-		klog.Errorf("unable to list instance, err: %v", err)
-		return err
-	}
-
-	for _, svc := range svcs {
-		if svc.Name == instanceName {
-			err = bxCli.DeleteServiceInstance(svc.ID, Recursive)
-			if err != nil {
-				klog.Errorf("unable to delete Service Instance, err: %v", err)
-				return err
-			}
-			klog.V(2).Infof("Service Instance Deleted: %s", svc.Name)
-		}
-	}
-
 	return nil
 }
 
 // Create S3 bucket in the given region and storage class
 func createBucket(bucketName string, cos string, region string, storageClass string) error {
-	klog.V(4).Infof("STEP: Creating Bucket %s in region %s in COS %s storageClass %s", bucketName, region, cos, storageClass)
-	bxCli, err := client.NewClientWithEnv(APIKey, client.DefaultEnv, Debug)
-	if err != nil {
-		klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
-		return err
-	}
 
-	s3Cli, err := client.NewS3Client(bxCli, cos, region)
+	s3Cli, err := client.NewS3Client(pvsClient, cos, region)
 	if err != nil {
 		klog.Errorf("unable to create S3Client, err: %v", err)
 		return err
@@ -209,9 +176,9 @@ func createObjects() error {
 		return err
 	}
 
-	ObjectsFolderName = dir
+	objectsFolderName = dir
 	for i := 0; i < NoOfObjects; i++ {
-		file, err := os.CreateTemp(ObjectsFolderName, "image-sync-*.txt")
+		file, err := os.CreateTemp(objectsFolderName, "image-sync-*.txt")
 		if err != nil {
 			klog.Errorf("unable to create a temp file, err: %v", err)
 			return err
@@ -240,8 +207,8 @@ func deleteTempFiles() error {
 		klog.Errorf("error while deleting spec folder, err: %v", err)
 	}
 
-	klog.V(3).Infof("deleting object folder:%s", ObjectsFolderName)
-	err = os.RemoveAll(ObjectsFolderName)
+	klog.V(3).Infof("deleting object folder:%s", objectsFolderName)
+	err = os.RemoveAll(objectsFolderName)
 	if err != nil {
 		klog.Errorf("error while deleting object folder, err: %v", err)
 	}
@@ -266,19 +233,13 @@ func uploadWorker(s3Cli *client.S3Client, bucketName string, workerId int, filep
 func uploadObjects(src pkg.Source) error {
 	klog.V(4).Infof("STEP: Upload Objects to source Bucket %s", src.Bucket)
 	var filePath string
-	files, err := os.ReadDir(ObjectsFolderName)
+	files, err := os.ReadDir(objectsFolderName)
 	if err != nil {
-		klog.Errorf("error while reading the directory, err: %v", err)
+		klog.Errorf("ERROR: %v", err)
 		return err
 	}
 
-	bxCli, err := client.NewClientWithEnv(APIKey, client.DefaultEnv, Debug)
-	if err != nil {
-		klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
-		return err
-	}
-
-	s3Cli, err := client.NewS3Client(bxCli, src.Cos, src.Region)
+	s3Cli, err := client.NewS3Client(pvsClient, src.Cos, src.Region)
 	if err != nil {
 		klog.Errorf("unable to create S3Client, err: %v", err)
 		return err
@@ -292,7 +253,7 @@ func uploadObjects(src pkg.Source) error {
 	}
 
 	for _, f := range files {
-		filePath = ObjectsFolderName + "/" + f.Name()
+		filePath = objectsFolderName + "/" + f.Name()
 		filepaths <- filePath
 	}
 	close(filepaths)
@@ -309,13 +270,7 @@ func uploadObjects(src pkg.Source) error {
 // Verify the copied Objects exists in the target bucket
 func verifyBucketObjects(tgt pkg.TargetItem, cos string, files []fs.FileInfo, regex string) error {
 	klog.V(4).Infof("STEP: Verify objects in Bucket %s", tgt.Bucket)
-	bxCli, err := client.NewClientWithEnv(APIKey, client.DefaultEnv, Debug)
-	if err != nil {
-		klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
-		return err
-	}
-
-	s3Cli, err := client.NewS3Client(bxCli, cos, tgt.Region)
+	s3Cli, err := client.NewS3Client(pvsClient, cos, tgt.Region)
 	if err != nil {
 		klog.Errorf("unable to create S3Client, err: %v", err)
 		return err
@@ -350,7 +305,7 @@ func verifyBucketObjects(tgt pkg.TargetItem, cos string, files []fs.FileInfo, re
 // Verify objects copied from source bucket to dest buckets
 func verifyObjectsCopied(spec []pkg.Spec) error {
 	klog.V(4).Info("STEP: Verify Objects Copied to dest buckets")
-	files, err := os.ReadDir(ObjectsFolderName)
+	files, err := os.ReadDir(objectsFolderName)
 	if err != nil {
 		klog.Errorf("error while reading directory, err: %v", err)
 		return err
@@ -378,50 +333,50 @@ func verifyObjectsCopied(spec []pkg.Spec) error {
 }
 
 // Create necessary resources to run the sync command
-func createResources(spec []pkg.Spec) error {
+func createResources(spec []pkg.Spec) ([]string, error) {
 	klog.V(4).Info("STEP: Create resources")
-	err := createSpecFile(spec)
-	if err != nil {
-		return err
+	cosInstances := make([]string, 0)
+	if err := createSpecFile(spec); err != nil {
+		return nil, err
 	}
 
-	err = createObjects()
-	if err != nil {
-		return err
+	if err := createObjects(); err != nil {
+		return nil, err
 	}
 
 	for _, src := range spec {
-		err = createCOSInstance(src.Cos)
+		cosInstance, err := createCOSInstance(src.Cos)
+		cosInstances = append(cosInstances, cosInstance)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		err = createBucket(src.Bucket, src.Cos, src.Region, src.StorageClass)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		err = uploadObjects(src.Source)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		for _, tgt := range src.Target {
 			err = createBucket(tgt.Bucket, src.Cos, tgt.Region, tgt.StorageClass)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	return nil
+	return cosInstances, nil
 }
 
 // Delete the resources
-func deleteResources(spec []pkg.Spec) error {
+func deleteResources(cosInstances []string) error {
 	klog.V(4).Info("STEP: Delete resources")
-	for _, src := range spec {
-		err := deleteCOSInstance(src.Cos)
+	for _, src := range cosInstances {
+		err := deleteCOSInstance(src)
 		if err != nil {
 			return err
 		}
@@ -436,43 +391,50 @@ func deleteResources(spec []pkg.Spec) error {
 }
 
 var _ = CMDDescribe("pvsadm image sync tests", func() {
+	BeforeEach(func() {
+		var err error
+		pvsClient, err = client.NewClientWithEnv(APIKey, client.DefaultEnv, debug)
+		Expect(err).To(BeNil())
+	})
 
 	It("run with --help option", func() {
 		status, stdout, stderr := runSyncCMD(
 			"--help",
 		)
-		Expect(status).To(Equal(0))
-		Expect(stderr).To(Equal(""))
+		Expect(status).To(BeZero())
+		Expect(stderr).To(BeEmpty())
 		Expect(stdout).To(ContainSubstring("Examples:"))
 	})
 
 	framework.NegativeIt("run without spec-file flag", func() {
 		status, _, stderr := runSyncCMD()
-		Expect(status).NotTo(Equal(0))
+		Expect(status).NotTo(BeZero())
 		Expect(stderr).To(ContainSubstring(`"spec-file" not set`))
 	})
 
 	framework.NegativeIt("run with yaml file that doesn't exist", func() {
 		status, _, stderr := runSyncCMD("--spec-file", "fakefile.yaml")
-		Expect(status).NotTo(Equal(0))
+		Expect(status).NotTo(BeZero())
 		Expect(stderr).To(ContainSubstring(`no such file or directory`))
 	})
 
 	It("Copy Object Between Buckets", func() {
+		os.Setenv("IBMCLOUD_APIKEY", APIKey)
 		specSlice := make([]pkg.Spec, 0)
 		for i := 0; i < NoOfSources; i++ {
 			specSlice = append(specSlice, utils.GenerateSpec(NoOfTargetsPerSource))
 		}
 
-		err := createResources(specSlice)
+		instances, err := createResources(specSlice)
 		Expect(err).NotTo(HaveOccurred())
-		defer deleteResources(specSlice)
+		defer deleteResources(instances)
 
 		status, _, _ := runSyncCMD("--spec-file", SpecFileName)
-		Expect(status).To(Equal(0))
+		Expect(status).To(BeZero())
 
 		err = verifyObjectsCopied(specSlice)
 		Expect(err).NotTo(HaveOccurred())
+		os.Unsetenv("IBMCLOUD_APIKEY")
 	})
 
 })

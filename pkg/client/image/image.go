@@ -34,13 +34,13 @@ type Client struct {
 }
 
 func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client {
-	c := &Client{
+	return &Client{
 		session:    sess,
 		instanceID: powerinstanceid,
+		jobclient:  instance.NewIBMPIJobClient(context.Background(), sess, powerinstanceid),
+		client:     instance.NewIBMPIImageClient(context.Background(), sess, powerinstanceid),
 	}
-	c.client = instance.NewIBMPIImageClient(context.Background(), sess, powerinstanceid)
-	c.jobclient = instance.NewIBMPIJobClient(context.Background(), sess, powerinstanceid)
-	return c
+
 }
 
 func (c *Client) Get(id string) (*models.Image, error) {

@@ -22,7 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM/ibm-cos-sdk-go/aws"
 	"github.com/IBM/ibm-cos-sdk-go/aws/awserr"
 	"github.com/IBM/ibm-cos-sdk-go/aws/credentials"
@@ -30,8 +29,10 @@ import (
 	"github.com/IBM/ibm-cos-sdk-go/aws/session"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3/s3manager"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 )
 
 type S3Client struct {
@@ -52,9 +53,10 @@ const (
 // to perform different s3 operations like upload, delete etc.,
 func NewS3Clientwithkeys(accesskey, secretkey, region string) (s3client *S3Client, err error) {
 
-	s3client = &S3Client{}
-	s3client.SvcEndpoint = fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region)
-	s3client.StorageClass = fmt.Sprintf("%s-standard", region)
+	s3client = &S3Client{
+		SvcEndpoint:  fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region),
+		StorageClass: fmt.Sprintf("%s-standard", region),
+	}
 	conf := aws.NewConfig().
 		WithRegion(s3client.StorageClass).
 		WithEndpoint(s3client.SvcEndpoint).
@@ -73,19 +75,22 @@ func NewS3Clientwithkeys(accesskey, secretkey, region string) (s3client *S3Clien
 func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, err error) {
 	s3client = &S3Client{}
 	var instanceID string
-	svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-		Type: "service_instance",
-		Name: instanceName,
-	})
+
+	listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
+		Type: ptr.To(serviceInstance),
+		Name: ptr.To(instanceName),
+	}
+
+	workspaces, _, err := c.ResouceControllerClient.ListResourceInstances(listServiceInstanceOptions)
 	if err != nil {
 		return s3client, fmt.Errorf("failed to list the resource instances, err: %v", err)
 	}
 	found := false
-	for _, svc := range svcs {
-		klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", svc.Guid, svc.RegionID, svc.Name)
-		klog.V(3).Infof("crn: %v", svc.Crn)
-		if svc.Name == instanceName {
-			instanceID = svc.Guid
+	for _, svc := range workspaces.Resources {
+		klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", *svc.ID, *svc.RegionID, *svc.Name)
+		klog.V(3).Infof("crn: %v", *svc.CRN)
+		if *svc.Name == instanceName {
+			instanceID = *svc.GUID
 			found = true
 			break
 		}
@@ -154,7 +159,7 @@ func (c *S3Client) SelectObjects(bucketName string, regex string) ([]string, err
 		klog.Errorf("failed to list objects, err: %v", err)
 		return nil, err
 	}
-	return matchedObjects, err
+	return matchedObjects, nil
 }
 
 // Func CheckBucketLocationConstraint will verify the existence of the bucket in the particular locationConstraint
@@ -228,7 +233,7 @@ func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName strin
 	}
 
 	klog.Infof("Copy successful for object: %s from bucket: %s to bucket: %s", objectName, srcBucketName, destBucketName)
-	return err
+	return nil
 }
 
 type CustomReader struct {
@@ -257,7 +262,7 @@ func (r *CustomReader) ReadAt(p []byte, off int64) (int, error) {
 		r.signMap[off] = struct{}{}
 	}
 	r.mux.Unlock()
-	return n, err
+	return n, nil
 }
 
 func (r *CustomReader) Seek(offset int64, whence int) (int64, error) {
@@ -304,5 +309,5 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	}
 	fmt.Println()
 	klog.Infof("Upload completed successfully in %f seconds to location %s", time.Since(startTime).Seconds(), result.Location)
-	return err
+	return nil
 }
