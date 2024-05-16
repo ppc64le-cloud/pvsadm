@@ -38,7 +38,7 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(c, opt.InstanceID, opt.InstanceName, opt.Environment)
+		pvmclient, err := client.NewPVMClientWithEnv(c, opt.WorkspaceID, opt.WorkspaceName, opt.Environment)
 		if err != nil {
 			return err
 		}

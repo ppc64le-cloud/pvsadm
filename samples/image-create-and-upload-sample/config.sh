@@ -21,4 +21,4 @@ RHEL_PASSWORD="" #Rhel Password required for rhel image conversion
 BUCKET_NAME="test-bucket" #Bucket name for uploading image. (Can be a new or an existing bucket)
 BUCKET_REGION="us-south" #Region where the bucket is present
 RESOURCE_GROUP="default" #Resource group required while uploading image
-PVS_INSTANCE_NAME="" #PVS instance name where the image needs to be imported
+WORKSPACE_NAME="" #PVS workspace name where the image needs to be imported

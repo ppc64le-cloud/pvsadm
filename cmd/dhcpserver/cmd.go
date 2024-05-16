@@ -30,6 +30,9 @@ var Cmd = &cobra.Command{
 		if pkg.Options.APIKey == "" {
 			return fmt.Errorf("api-key can't be empty, pass the token via --api-key or set IBMCLOUD_API_KEY environment variable")
 		}
+		if pkg.Options.WorkspaceID == "" {
+			return fmt.Errorf("--workspace-id required")
+		}
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,6 +46,7 @@ func init() {
 	Cmd.AddCommand(getCmd)
 	Cmd.AddCommand(deleteCmd)
 
-	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
-	_ = Cmd.MarkPersistentFlagRequired("instance-id")
+	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
+	Cmd.PersistentFlags().MarkDeprecated("instance-id", "instance-id is deprecated, workspace-id should be used")
+	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceID, "workspace-id", "", "", "Workspace ID of the PowerVS instance")
 }

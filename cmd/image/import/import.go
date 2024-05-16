@@ -64,8 +64,8 @@ func findCOSInstanceDetails(resources []models.ServiceInstanceV2, bxCli *client.
 
 var Cmd = &cobra.Command{
 	Use:   "import",
-	Short: "Import the image into PowerVS instances",
-	Long: `Import the image into PowerVS instances
+	Short: "Import the image into PowerVS workpace",
+	Long: `Import the image into PowerVS workpace
 pvsadm image import --help for information
 
 # Set the API key or feed the --api-key commandline argument
@@ -90,11 +90,11 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --pvs-storagetype <ST
 pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION>
 
 # import image from a public IBM Cloud Storage bucket
-pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION> --public-bucket
+pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION> --public-bucket
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.ImageCMDOptions.InstanceID == "" && pkg.ImageCMDOptions.InstanceName == "" {
-			return fmt.Errorf("--pvs-instance-name or --pvs-instance-id required")
+		if pkg.ImageCMDOptions.WorkspaceID == "" && pkg.ImageCMDOptions.WorkspaceName == "" {
+			return fmt.Errorf("--workspace-name or --workspace-id required")
 		}
 
 		case1 := pkg.ImageCMDOptions.AccessKey == "" && pkg.ImageCMDOptions.SecretKey != ""
@@ -174,7 +174,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 			opt.SecretKey = cred["secret_access_key"].(string)
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(bxCli, opt.InstanceID, opt.InstanceName, pkg.Options.Environment)
+		pvmclient, err := client.NewPVMClientWithEnv(bxCli, opt.WorkspaceID, opt.WorkspaceName, pkg.Options.Environment)
 		if err != nil {
 			return err
 		}
@@ -242,8 +242,13 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "pvs-instance-name", "n", "", "PowerVS Instance name.")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceID, "pvs-instance-id", "i", "", "PowerVS Instance ID.")
+	// TODO pvs-instance-name and pvs-instance-id is deprecated and will be removed in a future release
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceName, "pvs-instance-name", "n", "", "PowerVS Instance name.")
+	Cmd.Flags().MarkDeprecated("pvs-instance-name", "pvs-instance-name is deprecated, workspace-name should be used")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceID, "pvs-instance-id", "i", "", "PowerVS Instance ID.")
+	Cmd.Flags().MarkDeprecated("pvs-instance-id", "pvs-instance-id is deprecated, workspace-id should be used")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceName, "workspace-name", "", "", "PowerVS Workspace name.")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceID, "workspace-id", "", "", "PowerVS Workspace ID.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Object Storage bucket name.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.COSInstanceName, "cos-instance-name", "s", "", "Cloud Object Storage instance name.")
 	// TODO It's deprecated and will be removed in a future release

@@ -35,6 +35,12 @@ var Cmd = &cobra.Command{
 	Use:   "port",
 	Short: "Create PowerVS network port",
 	Long:  `Create PowerVS network port`,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if pkg.Options.WorkspaceID == "" {
+			return fmt.Errorf("--workspace-id required")
+		}
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 
@@ -44,7 +50,7 @@ var Cmd = &cobra.Command{
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(c, opt.InstanceID, opt.InstanceName, opt.Environment)
+		pvmclient, err := client.NewPVMClientWithEnv(c, opt.WorkspaceID, opt.WorkspaceName, opt.Environment)
 		if err != nil {
 			return err
 		}

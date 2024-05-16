@@ -87,7 +87,7 @@ func syncDHCPD() {
 		klog.Fatalf("failed to create a session with IBM cloud: %v", err)
 	}
 
-	pvmclient, err := client.NewPVMClientWithEnv(c, pkg.Options.InstanceID, "", "prod")
+	pvmclient, err := client.NewPVMClientWithEnv(c, pkg.Options.WorkspaceID, "", "prod")
 	if err != nil {
 		klog.Fatalf("failed to create a PVM client: %v", err)
 	}
@@ -159,8 +159,8 @@ var Cmd = &cobra.Command{
 	Long:    `dhcp-sync tool is a tool populating the dhcpd.conf file from the PowerVS network and restart the dhcpd service.`,
 	GroupID: "dhcp",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.Options.InstanceID == "" {
-			return fmt.Errorf("--instance-id is required")
+		if pkg.Options.WorkspaceID == "" {
+			return fmt.Errorf("--workspace-id is required")
 		}
 		if pkg.Options.APIKey == "" {
 			return fmt.Errorf("api-key can't be empty, pass the token via --api-key or set IBMCLOUD_API_KEY environment variable")
@@ -211,7 +211,9 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&pkg.Options.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
+	Cmd.Flags().StringVarP(&pkg.Options.WorkspaceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
+	Cmd.Flags().MarkDeprecated("instance-id", "instance-id is deprecated, workspace-id should be used")
+	Cmd.Flags().StringVarP(&pkg.Options.WorkspaceID, "workspace-id", "w", "", "Workspace ID of the PowerVS instance")
 	Cmd.Flags().StringVar(&networkID, "network-id", "", "Network ID to be monitored")
 	Cmd.Flags().StringVar(&file, "file", "/etc/dhcp/dhcpd.conf", "DHCP conf file")
 	Cmd.Flags().StringVar(&gateway, "gateway", "", "Override the gateway value with")

@@ -32,8 +32,8 @@ var Cmd = &cobra.Command{
 	Short: "List regions that support PER",
 	Long:  "List regions that support Power Edge Router (PER)",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.Options.InstanceID == "" && pkg.Options.InstanceName == "" {
-			return fmt.Errorf("--instance-id or --instance-name required")
+		if pkg.Options.WorkspaceID == "" && pkg.Options.WorkspaceName == "" {
+			return fmt.Errorf("--workspace-id or --workspace-name required")
 		}
 		return nil
 	},
@@ -46,7 +46,7 @@ var Cmd = &cobra.Command{
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(c, opt.InstanceID, opt.InstanceName, opt.Environment)
+		pvmclient, err := client.NewPVMClientWithEnv(c, opt.WorkspaceID, opt.WorkspaceName, opt.Environment)
 		if err != nil {
 			return err
 		}
@@ -64,9 +64,9 @@ var Cmd = &cobra.Command{
 			}
 		}
 		if !supportsPER {
-			klog.Infof("%s, where the current instance is present does not support PER.", pvmclient.Zone)
+			klog.Infof("%s, where the current workspace is present does not support PER.", pvmclient.Zone)
 		} else {
-			klog.Infof("%s, where the current instance is present supports PER.", pvmclient.Zone)
+			klog.Infof("%s, where the current workspace is present supports PER.", pvmclient.Zone)
 		}
 		sort.Strings(perEnabledRegions)
 		klog.Infof("The following zones/datacenters have support for PER:%v.More information at https://cloud.ibm.com/docs/overview?topic=overview-locations", perEnabledRegions)

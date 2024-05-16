@@ -19,20 +19,20 @@ import "time"
 var Options = &options{}
 
 type options struct {
-	InstanceID   string
-	APIKey       string
-	Environment  string
-	Region       string
-	Zone         string
-	DryRun       bool
-	Debug        bool
-	Since        time.Duration
-	Before       time.Duration
-	InstanceName string
-	NoPrompt     bool
-	IgnoreErrors bool
-	AuditFile    string
-	Expr         string
+	WorkspaceID   string
+	APIKey        string
+	Environment   string
+	Region        string
+	Zone          string
+	DryRun        bool
+	Debug         bool
+	Since         time.Duration
+	Before        time.Duration
+	WorkspaceName string
+	NoPrompt      bool
+	IgnoreErrors  bool
+	AuditFile     string
+	Expr          string
 }
 
 // Options for pvsadm image command
@@ -56,19 +56,19 @@ type imageCMDOptions struct {
 	CloudConfigDefault  bool
 	OSPasswordSkip      bool
 	//upload options
-	InstanceName string
-	Region       string
-	BucketName   string
-	ResourceGrp  string
-	ServicePlan  string
-	ObjectName   string
+	WorkspaceName string
+	Region        string
+	BucketName    string
+	ResourceGrp   string
+	ServicePlan   string
+	ObjectName    string
 	//import options
 	COSInstanceName string
 	ImageFilename   string
 	AccessKey       string
 	SecretKey       string
 	StorageType     string
-	InstanceID      string
+	WorkspaceID     string
 	ServiceCredName string
 	Public          bool
 	Watch           bool

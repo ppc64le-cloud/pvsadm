@@ -34,7 +34,7 @@ var Cmd = &cobra.Command{
 pvsadm purge --help for information
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		klog.Infof("Purge the images for the instance: %v", pkg.Options.InstanceID)
+		klog.Infof("Purge the images for the workspace: %v", pkg.Options.WorkspaceID)
 		opt := pkg.Options
 
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
@@ -43,7 +43,7 @@ pvsadm purge --help for information
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(c, opt.InstanceID, opt.InstanceName, pkg.Options.Environment)
+		pvmclient, err := client.NewPVMClientWithEnv(c, opt.WorkspaceID, opt.WorkspaceName, pkg.Options.Environment)
 		if err != nil {
 			return err
 		}

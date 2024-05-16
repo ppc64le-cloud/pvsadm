@@ -35,8 +35,8 @@ var Cmd = &cobra.Command{
 	Short: "Get Powervs events",
 	Long:  `Get the PowerVS events`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.Options.InstanceID == "" && pkg.Options.InstanceName == "" {
-			return fmt.Errorf("--instance-id or --instance-name required")
+		if pkg.Options.WorkspaceID == "" && pkg.Options.WorkspaceName == "" {
+			return fmt.Errorf("--workspace-id or --workspace-name required")
 		}
 		return nil
 	},
@@ -49,7 +49,7 @@ var Cmd = &cobra.Command{
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(c, opt.InstanceID, opt.InstanceName, opt.Environment)
+		pvmclient, err := client.NewPVMClientWithEnv(c, opt.WorkspaceID, opt.WorkspaceName, opt.Environment)
 		if err != nil {
 			return err
 		}
