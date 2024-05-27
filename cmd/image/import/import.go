@@ -26,7 +26,6 @@ import (
 	"github.com/IBM-Cloud/bluemix-go/models"
 	pmodels "github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
@@ -36,6 +35,9 @@ import (
 
 const (
 	serviceCredPrefix = "pvsadm-service-cred"
+	imageStateActive  = "active"
+	jobStateCompleted = "completed"
+	jobStateFailed    = "failed"
 )
 
 // Find COSINSTANCE details of the Provided bucket
@@ -182,71 +184,60 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME>  --object rhel-83-100
 		if opt.Public {
 			bucketAccess = "public"
 		}
+		klog.Infof("Importing image %s. Please wait...", opt.ImageName)
 		jobRef, err := pvmclient.ImgClient.ImportImage(opt.ImageName, opt.ImageFilename, opt.Region,
 			opt.AccessKey, opt.SecretKey, opt.BucketName, strings.ToLower(opt.StorageType), bucketAccess)
 		if err != nil {
 			return err
 		}
-
 		start := time.Now()
-		pollErr := wait.PollImmediate(2*time.Minute, opt.WatchTimeout, func() (bool, error) {
+		err = utils.PollUntil(time.Tick(2*time.Minute), time.After(opt.WatchTimeout), func() (bool, error) {
 			job, err := pvmclient.JobClient.Get(*jobRef.ID)
 			if err != nil {
-				return false, err
+				return false, fmt.Errorf("image import job failed to complete, err: %v", err)
 			}
-			if *job.Status.State == "completed" {
+			if *job.Status.State == jobStateCompleted {
+				klog.Infof("Image imported successfully, took %s", time.Since(start))
 				return true, nil
 			}
-			if *job.Status.State == "failed" {
+			if *job.Status.State == jobStateFailed {
 				return false, fmt.Errorf("image import job failed to complete, err: %v", job.Status.Message)
 			}
-			klog.Infof("Image Import Job in-progress, current state: %s", *job.Status.State)
+			klog.Infof("Image import is in-progress, current state: %s", *job.Status.State)
 			return false, nil
 		})
-		if pollErr == wait.ErrWaitTimeout {
-			pollErr = fmt.Errorf("timed out while waiting for image import job to complete")
-		}
-
-		if pollErr != nil {
-			return fmt.Errorf("image import job failed to complete, err: %v", pollErr)
+		if err != nil {
+			return err
 		}
 
 		var image *pmodels.ImageReference = &pmodels.ImageReference{}
-		for image.ImageID == nil {
+		klog.V(1).Info("Retrieving image details")
+
+		if image.ImageID == nil {
 			image, err = pvmclient.ImgClient.GetImageByName(opt.ImageName)
 			if err != nil {
 				return err
 			}
-			klog.V(1).Info("Retrieving image details")
 		}
 
 		if !opt.Watch {
 			klog.Infof("Image import for %s is currently in %s state, Please check the progress in the IBM cloud UI", *image.Name, *image.State)
 			return nil
 		}
-
-		pollErr = wait.PollImmediate(2*time.Minute, opt.WatchTimeout, func() (bool, error) {
+		klog.Infof("Waiting for image %s to be active. Please wait...", opt.ImageName)
+		start = time.Now()
+		return utils.PollUntil(time.Tick(10*time.Second), time.After(opt.WatchTimeout), func() (bool, error) {
 			img, err := pvmclient.ImgClient.Get(*image.ImageID)
 			if err != nil {
-				return false, err
+				return false, fmt.Errorf("failed to import the image, err: %v\n\nRun the command \"pvsadm get events -i %s\" to get more information about the failure", err, pvmclient.InstanceID)
 			}
-			if img.State == "active" {
+			if img.State == imageStateActive {
+				klog.Infof("Successfully imported the image: %s with ID: %s in %s", *image.Name, *image.ImageID, time.Since(start))
 				return true, nil
 			}
-			klog.Infof("Import in-progress, current state: %s", img.State)
+			klog.Infof("Waiting for image to be active. Current state: %s", img.State)
 			return false, nil
 		})
-		if pollErr == wait.ErrWaitTimeout {
-			pollErr = fmt.Errorf("timed out while waiting for image to become ready state")
-		}
-
-		if pollErr != nil {
-			return fmt.Errorf("failed to import the image, err: %v\n\nRun this command to get more information for the failure: pvsadm get events -i %s", pollErr, pvmclient.InstanceID)
-		}
-
-		klog.Infof("Successfully imported the image: %s with ID: %s within %s", *image.Name, *image.ImageID, time.Since(start))
-
-		return nil
 	},
 }
 
