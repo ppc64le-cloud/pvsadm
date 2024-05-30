@@ -30,6 +30,7 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(port.Cmd)
-	Cmd.PersistentFlags().StringVarP(&pkg.Options.InstanceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
-	_ = Cmd.MarkPersistentFlagRequired("instance-id")
+	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
+	Cmd.PersistentFlags().MarkDeprecated("instance-id", "instance-id is deprecated, workspace-id should be used")
+	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceID, "workspace-id", "", "", "Workspace ID of the PowerVS workspace")
 }

@@ -119,8 +119,8 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		}
 
 		//check if bucket exists
-		if opt.InstanceName != "" {
-			s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
+		if opt.COSInstanceName != "" {
+			s3Cli, err = client.NewS3Client(bxCli, opt.COSInstanceName, opt.Region)
 			if err != nil {
 				return err
 			}
@@ -131,7 +131,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			}
 
 			if !bucketExists {
-				klog.Infof("Bucket %s not found in the instance %s provided", opt.BucketName, opt.InstanceName)
+				klog.Infof("Bucket %s not found in the instance %s provided", opt.BucketName, opt.COSInstanceName)
 			}
 
 		} else if len(instances) != 0 {
@@ -148,8 +148,8 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 				}
 
 				if bucketExists {
-					opt.InstanceName = instanceName
-					klog.Infof("Found bucket %s in the %s instance", opt.BucketName, opt.InstanceName)
+					opt.COSInstanceName = instanceName
+					klog.Infof("Found bucket %s in the %s instance", opt.BucketName, opt.COSInstanceName)
 					break
 				}
 			}
@@ -158,7 +158,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		}
 
 		// Ask if user likes to use existing instance
-		if opt.InstanceName == "" && len(instances) != 0 {
+		if opt.COSInstanceName == "" && len(instances) != 0 {
 			klog.Infof("Bucket %s not found in the account provided", opt.BucketName)
 			if utils.AskConfirmation(UseExistingPromptMessage) {
 				availableInstances := []string{}
@@ -169,13 +169,13 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 				if err != nil {
 					return err
 				}
-				opt.InstanceName = selectedInstance
-				klog.Infof("Selected InstanceName is %s", opt.InstanceName)
+				opt.COSInstanceName = selectedInstance
+				klog.Infof("Selected InstanceName is %s", opt.COSInstanceName)
 			}
 		}
 
 		//Create a new instance
-		if opt.InstanceName == "" {
+		if opt.COSInstanceName == "" {
 			if !utils.AskConfirmation(CreatePromptMessage) {
 				return fmt.Errorf("create Cloud Object Storage instance either offline or use the pvsadm command")
 			}
@@ -200,10 +200,10 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 				}
 			}
 
-			opt.InstanceName = utils.ReadUserInput("Type Name of the Cloud Object Storage instance:")
-			klog.Infof("Creating a new cos %s instance", opt.InstanceName)
+			opt.COSInstanceName = utils.ReadUserInput("Type Name of the Cloud Object Storage instance:")
+			klog.Infof("Creating a new cos %s instance", opt.COSInstanceName)
 
-			_, err = bxCli.CreateServiceInstance(opt.InstanceName, ServiceType, opt.ServicePlan,
+			_, err = bxCli.CreateServiceInstance(opt.COSInstanceName, ServiceType, opt.ServicePlan,
 				opt.ResourceGrp, ResourceGroupAPIRegion)
 			if err != nil {
 				return err
@@ -211,7 +211,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		}
 
 		//create s3 client
-		s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
+		s3Cli, err = client.NewS3Client(bxCli, opt.COSInstanceName, opt.Region)
 		if err != nil {
 			return err
 		}
@@ -226,7 +226,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		} else {
 			//Create a new bucket
 			klog.Infof("Creating a new bucket %s", opt.BucketName)
-			s3Cli, err = client.NewS3Client(bxCli, opt.InstanceName, opt.Region)
+			s3Cli, err = client.NewS3Client(bxCli, opt.COSInstanceName, opt.Region)
 			if err != nil {
 				return err
 			}
@@ -249,7 +249,8 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ResourceGrp, "resource-group", "", "Name of user resource group.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServicePlan, "cos-serviceplan", "standard", "Cloud Object Storage Class type, available values are [standard, lite].")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.InstanceName, "cos-instance-name", "n", "", "Cloud Object Storage instance name.")
+	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.COSInstanceName, "cos-instance-name", "n", "", "Cloud Object Storage instance name.")
+	Cmd.Flags().MarkShorthandDeprecated("cos-instance-name", "please use --cos-instance-name")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Object Storage bucket name.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageName, "file", "f", "", "The PATH to the file to upload.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ObjectName, "cos-object-name", "o", "", "Cloud Object Storage Object Name(Default: filename from --file|-f option)")

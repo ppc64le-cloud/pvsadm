@@ -493,7 +493,7 @@ function import_image_remote {
   for i in $(seq 1 "$NO_OF_RETRY"); do
     echo "Attempt: $i/$NO_OF_RETRY"
     LOG_FILE="logs/import_image_remote_${service_name}_${i}_${LOGFILE}.log"
-    import_cmd="cd \"$REMOTE_TEMP_DIR\"; pvsadm image import --pvs-instance-name \"$service_name\" --bucket \"$cos_bucket_name\" --bucket-region \"$cos_bucket_region\" --object \"$object_name\" --pvs-image-name \"$image_name\" --api-key \"$IBMCLOUD_API_KEY\" -w  --watch-timeout 2h "
+    import_cmd="cd \"$REMOTE_TEMP_DIR\"; pvsadm image import --workspace-name \"$service_name\" --bucket \"$cos_bucket_name\" --bucket-region \"$cos_bucket_region\" --object \"$object_name\" --pvs-image-name \"$image_name\" --api-key \"$IBMCLOUD_API_KEY\" -w  --watch-timeout 2h "
     if [ -n "${access_key}" ] && [ -n "${secret_key}" ] ; then
       import_cmd+="--accesskey \"$access_key\" --secretkey \"$secret_key\" "
     fi

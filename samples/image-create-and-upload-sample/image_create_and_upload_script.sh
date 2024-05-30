@@ -59,7 +59,7 @@ function create_and_upload_image() {
   echo "Uploading $DISTRO image"
   pvsadm image upload  --bucket $BUCKET_NAME --file $OBJECT_NAME --bucket-region $BUCKET_REGION --resource-group $RESOURCE_GROUP
   echo "Importing $DISTRO Image"
-  pvsadm image import --pvs-instance-name $PVS_INSTANCE_NAME --bucket $BUCKET_NAME --object $OBJECT_NAME --pvs-image-name $IMAGE_NAME --bucket-region $BUCKET_REGION
+  pvsadm image import --workspace-name $WORKSPACE_NAME --bucket $BUCKET_NAME --object $OBJECT_NAME --pvs-image-name $IMAGE_NAME --bucket-region $BUCKET_REGION
 }
 
 dnf install -y  qemu-img cloud-utils-growpart
