@@ -157,11 +157,13 @@ write_files:
       set -e
       for i in /dev/sd[a-z]; do
         partprobe $i || true
-        growpart $i 2 || true
+        part=$(partprobe -s $i | awk '{print $NF}')
+        growpart $i $part || true
       done
       for i in /dev/mapper/mpath[a-z]; do
         partprobe $i || true
-        growpart $i 2 || true
+        part=$(partprobe -s $i | awk '{print $NF}')
+        growpart $i $part || true
       done
 
 runcmd:
