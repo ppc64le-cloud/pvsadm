@@ -29,8 +29,8 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:   "purge",
-	Short: "Purge the powervs resources",
-	Long: `Purge the powervs resources
+	Short: "Purge the PowerVS resources",
+	Long: `Purge the PowerVS resources
 
 # Set the API key or feed the --api-key commandline argument
 export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>

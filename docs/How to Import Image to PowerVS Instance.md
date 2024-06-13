@@ -1,9 +1,9 @@
 # Overview
-This guide talks about how to import image to PowerVs workspace using pvsadm.
+This guide talks about how to import image to PowerVS workspace using pvsadm.
 
 # Prerequisite
 - pvsadm tool
-- IBMCLOUD_API_KEY. [How to create api key](https://cloud.ibm.com/docs/account?topic=account-userapikey#create_user_key)
+- IBMCLOUD_API_KEY. [How to create API key](https://cloud.ibm.com/docs/account?topic=account-userapikey#create_user_key)
 - S3 BucketName, Bucket Region, ObjectName
 - PowerVS Workspace Name/PowerVS Workspace ID.
 

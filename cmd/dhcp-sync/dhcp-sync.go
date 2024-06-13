@@ -172,7 +172,7 @@ var Cmd = &cobra.Command{
 
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
-			klog.Fatal(err)
+			klog.Fatalf("cannot create a new fsNotify watcher: %v", err)
 		}
 		defer watcher.Close()
 
@@ -184,7 +184,7 @@ var Cmd = &cobra.Command{
 					if !ok {
 						return
 					}
-					klog.V(2).Infof("event: %v", event)
+					klog.V(2).Infof("received an fsWatcher event: %v", event)
 					if event.Op&fsnotify.Write == fsnotify.Write {
 						klog.V(2).Infof("%s has been modified, proceeding to restart dhcpd service", event.Name)
 						exitcode, out, err := utils.RunCMD("systemctl", "restart", "dhcpd")
@@ -196,14 +196,14 @@ var Cmd = &cobra.Command{
 					if !ok {
 						return
 					}
-					klog.Error("error:", err)
+					klog.Errorf("received an fsWatcher error: %v", err)
 				}
 			}
 		}()
 
 		err = watcher.Add(file)
 		if err != nil {
-			klog.Fatal(err)
+			klog.Fatalf("cannot sync DHCP server: %v", err)
 		}
 		<-done
 		return nil

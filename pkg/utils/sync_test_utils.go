@@ -42,7 +42,7 @@ func GenerateRandomString(length int) string {
 }
 
 // Generate Specifications
-func GenerateSpec(NoOfTargetsPerSource int) pkg.Spec {
+func GenerateSpec(numTargetsPerSource int) pkg.Spec {
 	var spec pkg.Spec
 	spec.Source = pkg.Source{
 		Bucket:       "image-sync-" + GenerateRandomString(6),
@@ -53,7 +53,7 @@ func GenerateSpec(NoOfTargetsPerSource int) pkg.Spec {
 	}
 
 	spec.Target = make([]pkg.TargetItem, 0)
-	for tgt := 0; tgt < NoOfTargetsPerSource; tgt++ {
+	for tgt := 0; tgt < numTargetsPerSource; tgt++ {
 		spec.Target = append(spec.Target, pkg.TargetItem{
 			Bucket:       "image-sync-" + GenerateRandomString(6),
 			StorageClass: planSlice[randomInt(0, len(planSlice))],

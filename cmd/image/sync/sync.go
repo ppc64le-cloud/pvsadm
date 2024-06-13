@@ -43,8 +43,8 @@ type InstanceItem struct {
 
 // sync constants
 const (
-	serviceType     = "cloud-object-storage"
-	noOfcopyWorkers = 20
+	serviceType = "cloud-object-storage"
+	maxWorkers  = 20
 )
 
 // Worker method to copy object from source bucket to target bucket
@@ -102,8 +102,8 @@ func calculateChannels(spec []pkg.Spec, instanceList []InstanceItem) (int, error
 			return 0, err
 		}
 
-		noOfTargets := len(item.Target)
-		totalChannelsForSrc := noOfTargets * len(selectedObjects)
+		numTargets := len(item.Target)
+		totalChannelsForSrc := numTargets * len(selectedObjects)
 		totalChannels = totalChannels + totalChannelsForSrc
 	}
 	return totalChannels, nil
@@ -186,8 +186,8 @@ func syncObjects(spec []pkg.Spec, instanceList []InstanceItem) error {
 	// Creating workers and channels
 	copyJobs := make(chan copyWorkload, totalChannels)
 	results := make(chan bool, totalChannels)
-	for w := 1; w <= noOfcopyWorkers; w++ {
-		go copyWorker(copyJobs, results, w)
+	for worker := 1; worker <= maxWorkers; worker++ {
+		go copyWorker(copyJobs, results, worker)
 	}
 
 	// Copy objects

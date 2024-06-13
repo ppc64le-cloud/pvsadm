@@ -36,6 +36,7 @@ var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 
 	BeforeSuite(func() {
 		var err error
+		Expect(os.Getenv("IBMCLOUD_API_KEY")).NotTo(BeEmpty(), "IBMCLOUD_API_KEY must be set before running \"make test\"")
 		image, err = os.CreateTemp("", "qcow2ova")
 		Expect(err).NotTo(HaveOccurred())
 		_, err = image.WriteString("some dummy image")
@@ -50,8 +51,8 @@ var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 		status, stdout, stderr := runImageQcow2OvaCMD(
 			"--help",
 		)
-		Expect(status).To(Equal(0))
-		Expect(stderr).To(Equal(""))
+		Expect(status).To(BeZero())
+		Expect(stderr).To(BeEmpty())
 		Expect(stdout).To(ContainSubstring("Examples:"))
 	})
 
@@ -59,7 +60,7 @@ var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 		status, _, stderr := runImageQcow2OvaCMD(
 			"--image-url", image.Name(),
 		)
-		Expect(status).NotTo(Equal(0))
+		Expect(status).NotTo(BeZero())
 		Expect(stderr).To(ContainSubstring("image-dist is a mandatory flag"))
 	})
 })

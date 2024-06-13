@@ -28,8 +28,8 @@ import (
 
 const (
 	ServiceType              = "cloud-object-storage"
-	UseExistingPromptMessage = "Would You Like to use Available COS Instance for creating bucket?"
-	CreatePromptMessage      = "Would you like to create new COS Instance?"
+	UseExistingPromptMessage = "Would you like to use an existing COS Instance for creating bucket?"
+	CreatePromptMessage      = "Would you like to create a new COS Instance?"
 	ResourceGroupAPIRegion   = "global"
 )
 
@@ -68,10 +68,8 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			return fmt.Errorf("image upload in test/staging env storage bucket is not supported")
 		}
 
-		case1 := pkg.ImageCMDOptions.AccessKey == "" && pkg.ImageCMDOptions.SecretKey != ""
-		case2 := pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey == ""
-
-		if case1 || case2 {
+		// ensure that both, the AccessKey and SecretKey are set.
+		if (len(pkg.ImageCMDOptions.AccessKey) > 0) != (len(pkg.ImageCMDOptions.SecretKey) > 0) {
 			return fmt.Errorf("required both --accesskey and --secretkey values")
 		}
 
@@ -79,7 +77,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var s3Cli *client.S3Client
-		var bucketExists bool = false
+		var bucketExists bool
 		var apikey string = pkg.Options.APIKey
 		opt := pkg.ImageCMDOptions
 
@@ -88,7 +86,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		}
 
 		if pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey != "" {
-			s3Cli, err := client.NewS3Clientwithkeys(pkg.ImageCMDOptions.AccessKey, pkg.ImageCMDOptions.SecretKey, opt.Region)
+			s3Cli, err := client.NewS3ClientWithKeys(pkg.ImageCMDOptions.AccessKey, pkg.ImageCMDOptions.SecretKey, opt.Region)
 			if err != nil {
 				return err
 			}
