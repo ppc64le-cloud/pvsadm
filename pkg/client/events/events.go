@@ -30,12 +30,11 @@ type Client struct {
 }
 
 func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client {
-	c := &Client{
+	return &Client{
 		session:    sess,
 		instanceID: powerinstanceid,
 		client:     sess.Power.PCloudEvents,
 	}
-	return c
 }
 
 func (c *Client) GetPcloudEventsGetsince(since time.Duration) (*p_cloud_events.PcloudEventsGetqueryOK, error) {

@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	network, ipaddress, description string
+	network, ipaddress, description, netID string
 )
 
 var Cmd = &cobra.Command{
@@ -65,8 +65,6 @@ var Cmd = &cobra.Command{
 			networkIDs = append(networkIDs, *net.NetworkID)
 			networkNames = append(networkNames, *net.Name)
 		}
-
-		var netID string
 
 		if utils.Contains(networkIDs, network) {
 			netID = network

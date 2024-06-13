@@ -17,12 +17,13 @@ package instance
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/IBM-Cloud/power-go-client/clients/instance"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
-	"regexp"
-	"time"
 )
 
 type Client struct {
@@ -31,11 +32,10 @@ type Client struct {
 }
 
 func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client {
-	c := &Client{
+	return &Client{
 		instanceID: powerinstanceid,
+		client:     instance.NewIBMPIInstanceClient(context.Background(), sess, powerinstanceid),
 	}
-	c.client = instance.NewIBMPIInstanceClient(context.Background(), sess, powerinstanceid)
-	return c
 }
 
 func (c *Client) Get(id string) (*models.PVMInstance, error) {

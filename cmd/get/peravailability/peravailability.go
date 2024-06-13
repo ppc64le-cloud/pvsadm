@@ -54,7 +54,7 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		supportsPER := false
+		var supportsPER bool
 		for _, datacenter := range ret.Datacenters {
 			if datacenter.Capabilities[powerEdgeRouter] {
 				perEnabledRegions = append(perEnabledRegions, *datacenter.Location.Region)

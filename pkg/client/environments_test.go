@@ -64,7 +64,7 @@ func TestGetEnvironment(t *testing.T) {
 			"valid environment - prod",
 			args{"fake"},
 			nil,
-			EnvironmentNotFound,
+			ErrEnvironmentNotFound,
 		},
 	}
 	for _, tt := range tests {

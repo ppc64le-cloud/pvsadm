@@ -32,8 +32,8 @@ const deletePromptMessage = "Deleting all the volumes in available state, volume
 
 var Cmd = &cobra.Command{
 	Use:   "volumes",
-	Short: "Purge the powervs volumes",
-	Long: `Deletes all the volumes for the powervs instance which are in available state(not attached to any instances)
+	Short: "Purge the PowerVS volumes",
+	Long: `Deletes all the volumes for the PowerVS instance which are in available state(not attached to any instances)
 pvsadm purge --help for information
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {

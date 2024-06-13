@@ -39,7 +39,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "pvsadm",
-	Short: "pvsadm is a command for managing powervs infra",
+	Short: "pvsadm is a command line tool for managing IBM Cloud PowerVS infrastructure",
 	Long: `Power Systems Virtual Server projects deliver flexible compute capacity for Power Systems workloads.
 Integrated with the IBM Cloud platform for on-demand provisioning.
 

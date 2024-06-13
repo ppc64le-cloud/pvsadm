@@ -33,8 +33,8 @@ var (
 
 var Cmd = &cobra.Command{
 	Use:   "networks",
-	Short: "Purge the powervs networks",
-	Long: `Purge the powervs networks!
+	Short: "Purge the PowerVS networks",
+	Long: `Purge the PowerVS networks!
 pvsadm purge --help for information
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
