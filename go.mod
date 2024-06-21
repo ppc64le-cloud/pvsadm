@@ -8,7 +8,7 @@ require (
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175
 	github.com/IBM-Cloud/power-go-client v1.6.0
 	github.com/IBM/go-sdk-core/v5 v5.17.3
-	github.com/IBM/ibm-cos-sdk-go v1.10.3
+	github.com/IBM/ibm-cos-sdk-go v1.11.0
 	github.com/IBM/platform-services-go-sdk v0.63.1
 	github.com/charmbracelet/huh v0.4.2
 	github.com/fsnotify/fsnotify v1.7.0
@@ -89,11 +89,11 @@ require (
 	go.opentelemetry.io/otel v1.17.0 // indirect
 	go.opentelemetry.io/otel/metric v1.17.0 // indirect
 	go.opentelemetry.io/otel/trace v1.17.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
