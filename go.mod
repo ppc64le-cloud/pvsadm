@@ -1,7 +1,6 @@
 module github.com/ppc64le-cloud/pvsadm
 
-go 1.21
-toolchain go1.22.4
+go 1.22.4
 
 require (
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20220221162715-e08ea9e7c175
