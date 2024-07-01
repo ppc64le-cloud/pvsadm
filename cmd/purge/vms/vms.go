@@ -30,8 +30,8 @@ const deletePromptMessage = "Deleting all the above instances, instances can't b
 
 var Cmd = &cobra.Command{
 	Use:   "vms",
-	Short: "Purge the powervs vms",
-	Long: `Purge the powervs vms!
+	Short: "Purge the PowerVS vms",
+	Long: `Purge the PowerVS vms!
 pvsadm purge --help for information
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -29,8 +29,8 @@ const deletePromptMessage = "Deleting all the above images, images can't be clai
 
 var Cmd = &cobra.Command{
 	Use:   "images",
-	Short: "Purge the powervs images",
-	Long: `Purge the powervs images!
+	Short: "Purge the PowerVS images",
+	Long: `Purge the PowerVS images!
 pvsadm purge --help for information
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {

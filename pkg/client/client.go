@@ -194,7 +194,7 @@ func (c *Client) ListServiceInstances(serviceType string) (map[string]string, er
 	return instances, nil
 }
 
-// func ListWorkspaceInstances is used to retrieve serviceInstances aloong with their regions.
+// func ListWorkspaceInstances is used to retrieve serviceInstances along with their regions.
 func (c *Client) ListWorkspaceInstances() (*resourcecontrollerv2.ResourceInstancesList, error) {
 	auth, err := core.GetAuthenticatorFromEnvironment(serviceIBMCloud)
 
@@ -213,7 +213,7 @@ func (c *Client) ListWorkspaceInstances() (*resourcecontrollerv2.ResourceInstanc
 	}
 	workspaces, _, err := c.ResouceControllerClient.ListResourceInstances(listServiceInstanceOptions)
 	if err != nil {
-		klog.Errorf("error while listing Resource Instances: %+v", err)
+		klog.Errorf("error while listing resource instances: %+v", err)
 		return nil, err
 	}
 	return workspaces, nil
@@ -292,8 +292,8 @@ func (c *Client) CreateServiceInstance(instanceName, serviceName, servicePlan, r
 		return "", err
 	}
 
-	klog.Infof("Resource service Instance Details :%v", serviceInstance)
-	klog.Infof("Resource service InstanceID :%v", serviceInstance.Crn.ServiceInstance)
+	klog.Infof("Resource service instance details :%v", serviceInstance)
+	klog.Infof("Resource service instanceID :%v", serviceInstance.Crn.ServiceInstance)
 
 	return serviceInstance.Crn.ServiceInstance, nil
 }

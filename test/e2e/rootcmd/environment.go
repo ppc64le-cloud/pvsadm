@@ -33,7 +33,7 @@ var _ = CMDDescribe("run pvsadm with", func() {
 			"-n", "fake_powervs_instance",
 			"--env", "fake",
 		)
-		Expect(status).NotTo(Equal(0))
+		Expect(status).NotTo(BeZero())
 		Expect(stderr).To(ContainSubstring("invalid \"fake\" IBM Cloud Environment passed"))
 	})
 })

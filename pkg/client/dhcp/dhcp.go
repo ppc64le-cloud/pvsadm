@@ -29,12 +29,11 @@ type Client struct {
 }
 
 func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client {
-	c := &Client{
+	return &Client{
 		session:    sess,
 		instanceID: powerinstanceid,
+		client:     instance.NewIBMPIDhcpClient(context.Background(), sess, powerinstanceid),
 	}
-	c.client = instance.NewIBMPIDhcpClient(context.Background(), sess, powerinstanceid)
-	return c
 }
 
 func (c *Client) Get(id string) (*models.DHCPServerDetail, error) {

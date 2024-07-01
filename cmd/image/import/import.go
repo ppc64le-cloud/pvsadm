@@ -71,7 +71,7 @@ pvsadm image import --help for information
 # Set the API key or feed the --api-key commandline argument
 export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
 
-# To Import the imge across the two different IBM account use accesskey and secretkey options
+# To Import the image across the two different IBM account use accesskey and secretkey options
 
 # To Import the image from public bucket use public-bucket option
 
@@ -97,10 +97,8 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return fmt.Errorf("--workspace-name or --workspace-id required")
 		}
 
-		case1 := pkg.ImageCMDOptions.AccessKey == "" && pkg.ImageCMDOptions.SecretKey != ""
-		case2 := pkg.ImageCMDOptions.AccessKey != "" && pkg.ImageCMDOptions.SecretKey == ""
-
-		if case1 || case2 {
+		// ensure that both, the AccessKey and SecretKey are either both set or unset
+		if (len(pkg.ImageCMDOptions.AccessKey) > 0) != (len(pkg.ImageCMDOptions.SecretKey) > 0) {
 			return fmt.Errorf("required both --accesskey and --secretkey values")
 		}
 		return nil
