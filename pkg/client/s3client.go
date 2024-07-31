@@ -48,13 +48,14 @@ const (
 	AuthEndpoint = "https://iam.cloud.ibm.com/identity/token"
 )
 
-// Func NewS3Client accepts apikey, accesskey, secretkey of the bucket and return the s3 client
-// to perform different s3 operations like upload, delete etc.,
-func NewS3Clientwithkeys(accesskey, secretkey, region string) (s3client *S3Client, err error) {
+// Func NewS3ClientWithKeys accepts apikey, accesskey, secretkey of the bucket and returns the s3 client
+// to perform operations like upload, delete, etc.
+func NewS3ClientWithKeys(accesskey, secretkey, region string) (s3client *S3Client, err error) {
 
-	s3client = &S3Client{}
-	s3client.SvcEndpoint = fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region)
-	s3client.StorageClass = fmt.Sprintf("%s-standard", region)
+	s3client = &S3Client{
+		SvcEndpoint:  fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region),
+		StorageClass: fmt.Sprintf("%s-standard", region),
+	}
 	conf := aws.NewConfig().
 		WithRegion(s3client.StorageClass).
 		WithEndpoint(s3client.SvcEndpoint).
@@ -154,7 +155,7 @@ func (c *S3Client) SelectObjects(bucketName string, regex string) ([]string, err
 		klog.Errorf("failed to list objects, err: %v", err)
 		return nil, err
 	}
-	return matchedObjects, err
+	return matchedObjects, nil
 }
 
 // Func CheckBucketLocationConstraint will verify the existence of the bucket in the particular locationConstraint
@@ -221,14 +222,13 @@ func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName strin
 		CopySource: aws.String(srcBucketName + "/" + objectName),
 		Key:        aws.String(objectName),
 	}
-	_, err := c.S3Session.CopyObject(&copyParams)
-	if err != nil {
+	if _, err := c.S3Session.CopyObject(&copyParams); err != nil {
 		klog.Errorf("unable to copy object %s from bucket %s, to bucket %s, err: %v", objectName, srcBucketName, destBucketName, err)
 		return err
 	}
 
 	klog.Infof("Copy successful for object: %s from bucket: %s to bucket: %s", objectName, srcBucketName, destBucketName)
-	return err
+	return nil
 }
 
 type CustomReader struct {
@@ -257,7 +257,7 @@ func (r *CustomReader) ReadAt(p []byte, off int64) (int, error) {
 		r.signMap[off] = struct{}{}
 	}
 	r.mux.Unlock()
-	return n, err
+	return n, nil
 }
 
 func (r *CustomReader) Seek(offset int64, whence int) (int64, error) {
@@ -304,5 +304,5 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	}
 	fmt.Println()
 	klog.Infof("Upload completed successfully in %f seconds to location %s", time.Since(startTime).Seconds(), result.Location)
-	return err
+	return nil
 }

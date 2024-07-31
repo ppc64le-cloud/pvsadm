@@ -49,7 +49,7 @@ function standardize_object_name() {
 }
 
 #-------------------------------------------------------------------------
-# Creates the ova image and import into pvs instance
+# Creates the ova image and import into PowerVS workspace
 #-------------------------------------------------------------------------
 function create_and_upload_image() {
   local url=$1

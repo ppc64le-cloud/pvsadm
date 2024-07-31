@@ -29,12 +29,11 @@ type Client struct {
 }
 
 func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client {
-	c := &Client{
+	return &Client{
 		session:    sess,
 		instanceID: powerinstanceid,
+		client:     instance.NewIBMPIJobClient(context.Background(), sess, powerinstanceid),
 	}
-	c.client = instance.NewIBMPIJobClient(context.Background(), sess, powerinstanceid)
-	return c
 }
 
 func (c *Client) Get(id string) (*models.Job, error) {

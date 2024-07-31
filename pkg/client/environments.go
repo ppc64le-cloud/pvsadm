@@ -23,7 +23,7 @@ import (
 
 const DefaultEnv = "prod"
 
-var EnvironmentNotFound = errors.New("environment not found")
+var ErrEnvironmentNotFound = errors.New("error environment not found")
 
 var Environments = map[string]map[string]string{
 	"test": {
@@ -47,7 +47,7 @@ func ListEnvironments() (keys []string) {
 
 func GetEnvironment(env string) (map[string]string, error) {
 	if _, ok := Environments[env]; !ok {
-		return nil, EnvironmentNotFound
+		return nil, ErrEnvironmentNotFound
 	}
 	return Environments[env], nil
 }

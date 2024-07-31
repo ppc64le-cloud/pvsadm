@@ -32,9 +32,9 @@ import (
 
 // Test case constants
 const (
-	noOfSources          = 3
-	noOfTargetsPerSource = 3
-	noOfObjects          = 200
+	numSources          = 3
+	numTargetsPerSource = 3
+	numObjects          = 200
 )
 
 func TestCalculateChannels(t *testing.T) {
@@ -47,8 +47,8 @@ func TestCalculateChannels(t *testing.T) {
 		mockSyncClient := mocksync.NewMockSyncClient(mockCtrl)
 
 		// test case setup
-		mockSetBucketLocationConstraint(mockSyncClient, noOfSources, true, "")
-		mockSetSelectedObjects(mockSyncClient, noOfObjects, noOfSources)
+		mockSetBucketLocationConstraint(mockSyncClient, numSources, true, "")
+		mockSetSelectedObjects(mockSyncClient, numObjects, numSources)
 
 		// generating spec slice
 		spec := mockCreateSpec()
@@ -59,7 +59,7 @@ func TestCalculateChannels(t *testing.T) {
 		// test case verification section
 		totalChannels, err := calculateChannels(spec, instanceList)
 		require.NoError(t, err, "Error calculating channels")
-		assert.Equal(t, noOfObjects*noOfSources*noOfTargetsPerSource, totalChannels)
+		assert.Equal(t, numObjects*numSources*numTargetsPerSource, totalChannels)
 	})
 }
 
@@ -129,11 +129,11 @@ func TestSync(t *testing.T) {
 				return mockCreateSpec()
 			},
 			setup: func(mockSyncClient *mocksync.MockSyncClient) {
-				mockSetBucketLocationConstraint(mockSyncClient, noOfSources, true, "")
-				mockSetSelectedObjects(mockSyncClient, noOfObjects, noOfSources)
-				mockSetSelectedObjects(mockSyncClient, noOfObjects, noOfSources)
-				mockSetBucketLocationConstraint(mockSyncClient, noOfSources*noOfTargetsPerSource, true, "")
-				mockSetCopyObjectToBucket(mockSyncClient, noOfObjects*noOfSources*noOfTargetsPerSource, "")
+				mockSetBucketLocationConstraint(mockSyncClient, numSources, true, "")
+				mockSetSelectedObjects(mockSyncClient, numObjects, numSources)
+				mockSetSelectedObjects(mockSyncClient, numObjects, numSources)
+				mockSetBucketLocationConstraint(mockSyncClient, numSources*numTargetsPerSource, true, "")
+				mockSetCopyObjectToBucket(mockSyncClient, numObjects*numSources*numTargetsPerSource, "")
 
 			},
 			expectedError: "",
@@ -152,10 +152,10 @@ func TestSync(t *testing.T) {
 				return mockCreateSpec()
 			},
 			setup: func(mockSyncClient *mocksync.MockSyncClient) {
-				mockSetBucketLocationConstraint(mockSyncClient, noOfSources, true, "")
-				mockSetSelectedObjects(mockSyncClient, 0, noOfSources)
-				mockSetSelectedObjects(mockSyncClient, 0, noOfSources)
-				mockSetBucketLocationConstraint(mockSyncClient, noOfSources*noOfTargetsPerSource, true, "")
+				mockSetBucketLocationConstraint(mockSyncClient, numSources, true, "")
+				mockSetSelectedObjects(mockSyncClient, 0, numSources)
+				mockSetSelectedObjects(mockSyncClient, 0, numSources)
+				mockSetBucketLocationConstraint(mockSyncClient, numSources*numTargetsPerSource, true, "")
 				mockSetCopyObjectToBucket(mockSyncClient, 0, "")
 
 			},
@@ -193,9 +193,9 @@ func TestSync(t *testing.T) {
 				return mockCreateSpec()
 			},
 			setup: func(mockSyncClient *mocksync.MockSyncClient) {
-				mockSetBucketLocationConstraint(mockSyncClient, noOfSources, true, "")
-				mockSetSelectedObjects(mockSyncClient, noOfObjects, noOfSources)
-				mockSetSelectedObjects(mockSyncClient, noOfObjects, 1)
+				mockSetBucketLocationConstraint(mockSyncClient, numSources, true, "")
+				mockSetSelectedObjects(mockSyncClient, numObjects, numSources)
+				mockSetSelectedObjects(mockSyncClient, numObjects, 1)
 				mockSetBucketLocationConstraint(mockSyncClient, 1, false, "Failed to verify bucket location constriant")
 			},
 			expectedError: "bucket location constraint verification failed",
@@ -234,11 +234,11 @@ func TestSync(t *testing.T) {
 
 func mockCreateInstances(mockSyncClient *mocksync.MockSyncClient) []InstanceItem {
 	var instanceList []InstanceItem
-	for i := 0; i < noOfSources; i++ {
+	for i := 0; i < numSources; i++ {
 		instance := InstanceItem{}
 		instance.Source = mockSyncClient
 
-		for j := 0; j < noOfTargetsPerSource; j++ {
+		for j := 0; j < numTargetsPerSource; j++ {
 			instance.Target = append(instance.Target, mockSyncClient)
 		}
 		instanceList = append(instanceList, instance)
@@ -249,8 +249,8 @@ func mockCreateInstances(mockSyncClient *mocksync.MockSyncClient) []InstanceItem
 func mockCreateSpec() []pkg.Spec {
 	klog.V(1).Info("STEP: Generating Spec")
 	specSlice := make([]pkg.Spec, 0)
-	for i := 0; i < noOfSources; i++ {
-		specSlice = append(specSlice, utils.GenerateSpec(noOfTargetsPerSource))
+	for i := 0; i < numSources; i++ {
+		specSlice = append(specSlice, utils.GenerateSpec(numTargetsPerSource))
 	}
 	return specSlice
 }
