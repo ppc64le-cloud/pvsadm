@@ -16,12 +16,11 @@ package client
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
-	"github.com/IBM/go-sdk-core/v5/core"
-	"k8s.io/klog/v2"
+	"github.com/IBM/go-sdk-core/core"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
+	"k8s.io/utils/ptr"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/cloudconnection"
@@ -58,46 +57,39 @@ type PVMClient struct {
 	VolumeClient          *volume.Client
 }
 
-func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, error) {
-	pvmclient := &PVMClient{}
-	if instanceID == "" {
-		svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-			Type: "service_instance",
-		})
-		if err != nil {
-			return pvmclient, fmt.Errorf("failed to list the resource instances: %v", err)
-		}
-		found := false
-		for _, svc := range svcs {
-			klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", svc.Guid, svc.RegionID, svc.Name)
-			klog.V(3).Infof("crn: %v", svc.Crn)
-			if svc.Name == instanceName {
-				instanceID = svc.Guid
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, fmt.Errorf("instance: %s not found", instanceName)
-		}
+func NewPVMClient(c *Client, instanceID, instanceName string, ep map[string]string) (*PVMClient, error) {
+	listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
+		// TODO: possibility of workspaces to either be of type service_instance or composite_instance.
+		// Type: ptr.To(serviceInstance),
+		Name: ptr.To(instanceName),
+		GUID: ptr.To(instanceID),
 	}
 
-	pvmclient.InstanceID = instanceID
-	svc, err := c.ResourceClientV2.GetInstance(instanceID)
+	workspaces, _, err := c.ResourceControllerClient.ListResourceInstances(listServiceInstanceOptions)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get a service with ID: %s, err: %v", instanceID, err)
+		return nil, fmt.Errorf("failed to list the resource instances: %v", err)
+	}
+	instanceIDorName := instanceID
+	if instanceIDorName == "" {
+		instanceIDorName = instanceName
+	}
+	if len(workspaces.Resources) == 0 {
+		return nil, fmt.Errorf("no resource instances are available to be listed for ID/Name: %s", instanceIDorName)
+	}
+	pvmclient := &PVMClient{
+		InstanceName: *workspaces.Resources[0].Name,
+		InstanceID:   *workspaces.Resources[0].GUID,
+		Zone:         *workspaces.Resources[0].RegionID,
 	}
 
-	pvmclient.InstanceName = svc.Name
-	pvmclient.Zone = svc.RegionID
-
-	authenticator := &core.IamAuthenticator{ApiKey: c.Config.BluemixAPIKey, URL: *c.Config.TokenProviderEndpoint}
-
-	if power_api_endpoint := os.Getenv("IBMCLOUD_POWER_API_ENDPOINT"); power_api_endpoint == "" {
-		os.Setenv("IBMCLOUD_POWER_API_ENDPOINT", ep)
+	pvmclientOptions := ibmpisession.IBMPIOptions{
+		Authenticator: &core.IamAuthenticator{ApiKey: pkg.Options.APIKey},
+		Debug:         pkg.Options.Debug,
+		UserAccount:   c.User.Account,
+		URL:           ep[PIEndpoint],
+		Zone:          pvmclient.Zone,
 	}
 
-	pvmclientOptions := ibmpisession.IBMPIOptions{Authenticator: authenticator, Debug: pkg.Options.Debug, Region: pvmclient.Region, UserAccount: c.User.Account, Zone: pvmclient.Zone}
 	pvmclient.PISession, err = ibmpisession.NewIBMPISession(&pvmclientOptions)
 	if err != nil {
 		return nil, err
@@ -116,21 +108,18 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 	return pvmclient, nil
 }
 
-func NewGenericPVMClient(c *Client, instanceID, instanceName, ep string, session *ibmpisession.IBMPISession) (*PVMClient, error) {
-	pvmclient := &PVMClient{}
-	pvmclient.InstanceID = instanceID
-	svc, err := c.ResourceClientV2.GetInstance(instanceID)
+func NewGenericPVMClient(c *Client, instanceID string, session *ibmpisession.IBMPISession) (*PVMClient, error) {
+	getServiceInstanceOptions := &resourcecontrollerv2.GetResourceInstanceOptions{
+		// Possibility of workspaces to either be of type service_instance or composite_instance for Type, hence filter by ID.
+		ID: ptr.To(instanceID),
+	}
+
+	workspace, _, err := c.ResourceControllerClient.GetResourceInstance(getServiceInstanceOptions)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get a service with ID: %s, err: %v", instanceID, err)
+		return nil, fmt.Errorf("failed to list the resource instances: %v", err)
 	}
 
-	pvmclient.InstanceName = svc.Name
-	pvmclient.Zone = svc.RegionID
-	if power_api_endpoint := os.Getenv("IBMCLOUD_POWER_API_ENDPOINT"); power_api_endpoint == "" {
-		os.Setenv("IBMCLOUD_POWER_API_ENDPOINT", ep)
-	}
-
-	pvmclient.PISession = session
+	pvmclient := &PVMClient{InstanceID: instanceID, InstanceName: *workspace.Name, Zone: *workspace.RegionID, PISession: session}
 	pvmclient.CloudConnectionClient = cloudconnection.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }

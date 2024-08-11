@@ -87,7 +87,7 @@ pvsadm purge --help for information
 							}
 						}
 					}
-					klog.Infof("Deleting the %s, and ID: %s", *network.Name, *network.NetworkID)
+					klog.Infof("Deleting network: %s with ID: %s", *network.Name, *network.NetworkID)
 					err = pvmclient.NetworkClient.Delete(*network.NetworkID)
 					if err != nil {
 						if opt.IgnoreErrors {

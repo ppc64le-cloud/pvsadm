@@ -37,6 +37,10 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
+func RetrieveValFromMap[K comparable, V any](m map[K]V, key K) V {
+	return m[key]
+}
+
 // PollUntil validates if a certain condition is met at defined poll intervals.
 // If a timeout is reached, an associated error is returned to the caller.
 // condition contains the use-case specific code that returns true when a certain condition is achieved.
