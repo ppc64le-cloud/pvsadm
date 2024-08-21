@@ -33,6 +33,7 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/job"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/key"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/network"
+	"github.com/ppc64le-cloud/pvsadm/pkg/client/storagetier"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client/volume"
 )
 
@@ -53,6 +54,7 @@ type PVMClient struct {
 	JobClient             *job.Client
 	KeyClient             *key.Client
 	NetworkClient         *network.Client
+	StorageTierClient     *storagetier.Client
 	VolumeClient          *volume.Client
 }
 
@@ -109,6 +111,7 @@ func NewPVMClient(c *Client, instanceID, instanceName, ep string) (*PVMClient, e
 	pvmclient.JobClient = job.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, instanceID)
 	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.StorageTierClient = storagetier.NewClient(pvmclient.PISession, pvmclient.InstanceID)
 	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, instanceID)
 	return pvmclient, nil
 }
