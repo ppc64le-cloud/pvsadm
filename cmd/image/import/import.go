@@ -16,7 +16,6 @@ package _import
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -60,6 +59,31 @@ func findCOSInstanceDetails(resources []models.ServiceInstanceV2, bxCli *client.
 		}
 	}
 	return "", "", crn.CRN{}
+}
+
+// checkStorageTierAvailability confirms if the provided cloud instance ID supports the required storageType.
+func checkStorageTierAvailability(pvsClient *client.PVMClient, storageType string) error {
+	// Supported tiers are Tier0, Tier1, Tier3 and Tier 5k
+	// The use of fixed IOPS is limited to volumes with a size of 200 GB or less, which is the break even size with Tier 0
+	// (200 GB @ 25 IOPS/GB = 5000 IOPS).
+	// Ref: https://cloud.ibm.com/docs/power-iaas?topic=power-iaas-on-cloud-architecture#storage-tiers
+	// API Docs for Storagetypes: https://cloud.ibm.com/docs/power-iaas?topic=power-iaas-on-cloud-architecture#IOPS-api
+
+	validStorageType := []string{"tier3", "tier1", "tier0", "tier5k"}
+	if !utils.Contains(validStorageType, storageType) {
+		return fmt.Errorf("provide valid StorageType. Allowable values are %v", validStorageType)
+	}
+
+	storageTiers, err := pvsClient.StorageTierClient.GetAll()
+	if err != nil {
+		return fmt.Errorf("an error occured while retriving the Storage tier availability. err:%v", err)
+	}
+	for _, storageTier := range storageTiers {
+		if storageTier.Name == storageType && *storageTier.State == "inactive" {
+			return fmt.Errorf("the requested storage tier is not available in the provided cloud instance. Please retry with a different tier")
+		}
+	}
+	return nil
 }
 
 var Cmd = &cobra.Command{
@@ -107,16 +131,18 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.ImageCMDOptions
 		apikey := pkg.Options.APIKey
-		//validate inputs
-		validStorageType := []string{"tier3", "tier1"}
-
-		if !utils.Contains(validStorageType, strings.ToLower(opt.StorageType)) {
-			klog.Errorf("provide valid StorageType. Allowable values are [tier1, tier3]")
-			os.Exit(1)
-		}
 
 		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
+			return err
+		}
+
+		pvmclient, err := client.NewPVMClientWithEnv(bxCli, opt.WorkspaceID, opt.WorkspaceName, pkg.Options.Environment)
+		if err != nil {
+			return err
+		}
+
+		if err := checkStorageTierAvailability(pvmclient, opt.StorageType); err != nil {
 			return err
 		}
 
@@ -172,10 +198,6 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			opt.SecretKey = cred["secret_access_key"].(string)
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(bxCli, opt.WorkspaceID, opt.WorkspaceName, pkg.Options.Environment)
-		if err != nil {
-			return err
-		}
 		//By default Bucket Access is private
 		bucketAccess := "private"
 
@@ -259,7 +281,12 @@ func init() {
 	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Public, "public-bucket", "p", false, "Cloud Object Storage public bucket.")
 	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Watch, "watch", "w", false, "After image import watch for image to be published and ready to use")
 	Cmd.Flags().DurationVar(&pkg.ImageCMDOptions.WatchTimeout, "watch-timeout", 1*time.Hour, "watch timeout")
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", "PowerVS Storage type, accepted values are [tier1, tier3].")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", `PowerVS Storage type, accepted values are [tier1, tier3, tier0, tier5k].
+																						Tier 0            | 25 IOPS/GB
+																						Tier 1            | 10 IOPS/GB
+																						Tier 3            | 3 IOPS/GB
+																						Fixed IOPS/Tier5k |	5000 IOPS regardless of size
+																						Note: The use of fixed IOPS is limited to volumes with a size of 200 GB or less, which is the break even size with Tier 0 (200 GB @ 25 IOPS/GB = 5000 IOPS).`)
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "cos-service-cred", "", "IBM COS Service Credential name to be auto generated(default \""+serviceCredPrefix+"-<COS Name>\")")
 
 	_ = Cmd.MarkFlagRequired("bucket")
