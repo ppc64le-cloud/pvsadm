@@ -32,9 +32,6 @@ const (
 	UseExistingPromptMessage = "Would you like to use an existing COS Instance for creating bucket?"
 	CreatePromptMessage      = "Would you like to create a new COS Instance?"
 	ResourceGroupAPIRegion   = "global"
-	// CosResourceID is IBM COS service id, can be retrieved using ibmcloud cli
-	// ibmcloud catalog service cloud-object-storage.
-	CosResourceID = "dff97f5c-bc5e-4455-b470-411c3edbe49c"
 )
 
 var Cmd = &cobra.Command{
@@ -113,7 +110,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 			return err
 		}
 
-		instances, err := pvsClient.ListServiceInstances(CosResourceID)
+		instances, err := pvsClient.ListServiceInstances(utils.CosResourceID)
 		if err != nil {
 			return err
 		}

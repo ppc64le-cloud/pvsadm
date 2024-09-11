@@ -17,15 +17,14 @@ package networks
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
+
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
-	"github.com/spf13/cobra"
-	"k8s.io/klog/v2"
 )
-
-const deletePromptMessage = "Deleting all the above networks, networks can't be claimed back once deleted. Do you really want to continue?"
 
 var (
 	deletePorts, deleteInstances bool
@@ -49,9 +48,13 @@ pvsadm purge --help for information
 		if err != nil {
 			return err
 		}
-		klog.Infof("Purging the networks for the instance: %v", pvmclient.InstanceID)
+		if pkg.Options.WorkspaceName != "" {
+			klog.Infof("Purge networks for the workspace: %s", pkg.Options.WorkspaceName)
+		} else {
+			klog.Infof("Purge networks for the workspace ID: %s", pkg.Options.WorkspaceID)
+		}
 
-		networks, err := pvmclient.NetworkClient.GetAllPurgeable(opt.Before, opt.Since, opt.Expr)
+		networks, err := pvmclient.NetworkClient.GetAllPurgeable(opt.Expr)
 		if err != nil {
 			return fmt.Errorf("failed to get the list of networks: %v", err)
 		}
@@ -59,7 +62,7 @@ pvsadm purge --help for information
 
 		table.Render(networks, []string{"href"})
 		if !opt.DryRun && len(networks) != 0 {
-			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(fmt.Sprintf(utils.DeletePromptMessage, "networks")) {
 				for _, network := range networks {
 					if deleteInstances || deletePorts {
 						ports, err := pvmclient.NetworkClient.GetAllPorts(*network.NetworkID)

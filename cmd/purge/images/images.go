@@ -17,15 +17,14 @@ package images
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
+
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
-	"github.com/spf13/cobra"
-	"k8s.io/klog/v2"
 )
-
-const deletePromptMessage = "Deleting all the above images, images can't be claimed back once deleted. Do you really want to continue?"
 
 var Cmd = &cobra.Command{
 	Use:   "images",
@@ -34,7 +33,12 @@ var Cmd = &cobra.Command{
 pvsadm purge --help for information
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		klog.Infof("Purge the images for the workspace: %v", pkg.Options.WorkspaceID)
+		if pkg.Options.WorkspaceName != "" {
+			klog.Infof("Purge images for the workspace: %s", pkg.Options.WorkspaceName)
+		} else {
+			klog.Infof("Purge images for the workspace ID: %s", pkg.Options.WorkspaceID)
+		}
+
 		opt := pkg.Options
 
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
@@ -56,7 +60,7 @@ pvsadm purge --help for information
 
 		table.Render(images, []string{"href", "specifications"})
 		if !opt.DryRun && len(images) != 0 {
-			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(fmt.Sprintf(utils.DeletePromptMessage, "images")) {
 				for _, image := range images {
 					klog.Infof("Deleting image: %s with ID: %s", *image.Name, *image.ImageID)
 					err = pvmclient.ImgClient.Delete(*image.ImageID)

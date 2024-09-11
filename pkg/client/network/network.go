@@ -18,15 +18,10 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"time"
 
 	"github.com/IBM-Cloud/power-go-client/clients/instance"
-	"github.com/IBM-Cloud/power-go-client/errors"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
-	"github.com/IBM-Cloud/power-go-client/power/client/p_cloud_networks"
 	"github.com/IBM-Cloud/power-go-client/power/models"
-	"github.com/ppc64le-cloud/pvsadm/pkg"
-	"k8s.io/klog/v2"
 )
 
 type Client struct {
@@ -52,22 +47,14 @@ func (c *Client) GetAllPublic() (*models.Networks, error) {
 }
 
 func (c *Client) GetAll() (*models.Networks, error) {
-	params := p_cloud_networks.NewPcloudNetworksGetallParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(c.instanceID)
-	resp, err := c.session.Power.PCloudNetworks.PcloudNetworksGetall(params, c.session.AuthInfo(c.instanceID))
-
-	if err != nil || resp.Payload == nil {
-		klog.Errorf("failed to perform the operation, err: %v", err)
-		return nil, errors.ToError(err)
-	}
-
-	return resp.Payload, nil
+	return c.client.GetAll()
 }
 
 func (c *Client) Delete(id string) error {
 	return c.client.Delete(id)
 }
 
-func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*models.NetworkReference, error) {
+func (c *Client) GetAllPurgeable(expr string) ([]*models.NetworkReference, error) {
 	networks, err := c.GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the list of instances: %v", err)

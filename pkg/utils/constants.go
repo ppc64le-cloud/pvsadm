@@ -37,3 +37,7 @@ var CosResourcePlanIDs = map[string]string{
 	"lite":     "2fdf0c08-2d32-4f46-84b5-32e0c92fffd8",
 	"standard": "744bfc56-d12c-4866-88d5-dac9139e0e5d",
 }
+
+const (
+	DeletePromptMessage = "Deleting all the above %s and the action is irreversible. Do you really want to continue?"
+)

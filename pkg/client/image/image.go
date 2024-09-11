@@ -58,7 +58,7 @@ func (c *Client) CreateCosImage(body models.CreateCosImageImportJob) (*models.Jo
 	return c.client.CreateCosImage(&body)
 }
 
-// func ImportImage imports image from S3 Instance
+// ImportImage imports image from S3 Instance
 func (c *Client) ImportImage(imageName, s3Filename, region, accessKey, secretKey, bucketName, storageType, bucketAccess string) (*models.JobReference, error) {
 
 	var body = models.CreateCosImageImportJob{
@@ -83,7 +83,7 @@ func (c *Client) ImportImage(imageName, s3Filename, region, accessKey, secretKey
 func (c *Client) GetAllPurgeable(before, since time.Duration, expr string) ([]*models.ImageReference, error) {
 	images, err := c.GetAll()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get the list of instances: %v", err)
+		return nil, fmt.Errorf("failed to get the list of images: %v", err)
 	}
 
 	var candidates []*models.ImageReference

@@ -70,11 +70,10 @@ func NewS3ClientWithKeys(accesskey, secretkey, region string) (s3client *S3Clien
 
 }
 
-// Func NewS3Client accepts apikey, instanceid of the IBM COS instance and return the s3 client
+// NewS3Client accepts apikey, instanceid of the IBM COS instance and return the s3 client
 // to perform different s3 operations like upload, delete etc.,
 func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, err error) {
 	s3client = &S3Client{}
-	var instanceID string
 
 	listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
 		Type: ptr.To(serviceInstance),
@@ -90,7 +89,7 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 		klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", *svc.ID, *svc.RegionID, *svc.Name)
 		klog.V(3).Infof("crn: %v", *svc.CRN)
 		if *svc.Name == instanceName {
-			instanceID = *svc.GUID
+			s3client.InstanceID = *svc.GUID
 			found = true
 			break
 		}
@@ -98,13 +97,13 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 	if !found {
 		return nil, fmt.Errorf("instance: %s not found", instanceName)
 	}
-	s3client.InstanceID = instanceID
 
 	if pkg.Options.APIKey == "" {
 		s3client.ApiKey = os.Getenv("IBMCLOUD_API_KEY")
 	} else {
 		s3client.ApiKey = pkg.Options.APIKey
 	}
+
 	s3client.SvcEndpoint = fmt.Sprintf("https://s3.%s.cloud-object-storage.appdomain.cloud", region)
 	s3client.StorageClass = fmt.Sprintf("%s-standard", region)
 	conf := aws.NewConfig().
@@ -119,7 +118,7 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 	return s3client, nil
 }
 
-// Func CheckBucketExists will verify for the existence of the bucket in the particular account
+// CheckBucketExists will verify for the existence of the bucket in the particular account
 func (c *S3Client) CheckBucketExists(bucketName string) (bool, error) {
 	result, err := c.S3Session.ListBuckets(nil)
 	if err != nil {
@@ -201,7 +200,7 @@ func (c *S3Client) CheckIfObjectExists(bucketName, objectName string) (bool, err
 	return true, nil
 }
 
-// To create a new bucket in the provided instance
+// CreateBucket creates a new bucket in the provided instance
 func (c *S3Client) CreateBucket(bucketName string) error {
 	_, err := c.S3Session.CreateBucket(&s3.CreateBucketInput{
 		Bucket: aws.String(bucketName), // New Bucket Name
@@ -219,7 +218,7 @@ func (c *S3Client) CreateBucket(bucketName string) error {
 	return err
 }
 
-// To copy the object from src bucket to target bucket
+// CopyObjectToBucket copies the object from src bucket to target bucket
 func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName string, objectName string) error {
 	copyParams := s3.CopyObjectInput{
 		Bucket:     aws.String(destBucketName),

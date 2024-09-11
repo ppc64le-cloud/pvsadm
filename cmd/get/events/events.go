@@ -15,7 +15,6 @@
 package events
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -35,10 +34,7 @@ var Cmd = &cobra.Command{
 	Short: "Get Powervs events",
 	Long:  `Get the PowerVS events`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.Options.WorkspaceID == "" && pkg.Options.WorkspaceName == "" {
-			return fmt.Errorf("--workspace-id or --workspace-name required")
-		}
-		return nil
+		return utils.EnsureWorkspaceIDorNameIsSet(pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
