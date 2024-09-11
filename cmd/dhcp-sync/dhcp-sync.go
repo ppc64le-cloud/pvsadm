@@ -87,7 +87,7 @@ func syncDHCPD() {
 		klog.Fatalf("failed to create a session with IBM cloud: %v", err)
 	}
 
-	pvmclient, err := client.NewPVMClientWithEnv(c, pkg.Options.WorkspaceID, "", "prod")
+	pvmclient, err := client.NewPVMClientWithEnv(c, pkg.Options.WorkspaceID, "", client.DefaultEnvProd)
 	if err != nil {
 		klog.Fatalf("failed to create a PVM client: %v", err)
 	}
@@ -161,9 +161,6 @@ var Cmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.WorkspaceID == "" {
 			return fmt.Errorf("--workspace-id is required")
-		}
-		if pkg.Options.APIKey == "" {
-			return fmt.Errorf("api-key can't be empty, pass the token via --api-key or set IBMCLOUD_API_KEY environment variable")
 		}
 		return nil
 	},

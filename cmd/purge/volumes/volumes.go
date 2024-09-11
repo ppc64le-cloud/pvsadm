@@ -66,7 +66,7 @@ pvsadm purge --help for information
 			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
 				for _, volume := range volumes {
 					if *volume.State == "available" {
-						klog.Infof("Deleting the %s, and ID: %s", *volume.Name, *volume.VolumeID)
+						klog.Infof("Deleting volume: %s with ID: %s", *volume.Name, *volume.VolumeID)
 						err = pvmclient.VolumeClient.DeleteVolume(*volume.VolumeID)
 						if err != nil {
 							if opt.IgnoreErrors {

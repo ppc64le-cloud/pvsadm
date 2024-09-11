@@ -46,11 +46,30 @@ Integrated with the IBM Cloud platform for on-demand provisioning.
 This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.APIKey == "" {
-			if key := os.Getenv("IBMCLOUD_API_KEY"); key != "" {
+			// TODO : deprecate IBMCLOUD_API_KEY for IBMCLOUD_APIKEY
+			// The GetAuthenticatorFromEnvironment requires "IBMCLOUD_APIKEY" to be set, apart from IBMCLOUD_API_KEY used in the project.
+			// In order to use the resourcecontrollerv2's functionality, the IBMCLOUD_API_KEY is re-exported as IBMCLOUD_APIKEY.
+			// Ref: github.com/ibm/go-sdk-core/v5@v5.17.2/core/config_utils.go, which is available from either from a credentials file, environment or VCAP service.
+			if pkg.Options.APIKey = os.Getenv("IBMCLOUD_API_KEY"); pkg.Options.APIKey != "" {
+				klog.Warning("IBMCLOUD_API_KEY will be deprecated in future releases. Use IBMCLOUD_APIKEY instead.")
 				klog.V(1).Info("Using an API key from IBMCLOUD_API_KEY environment variable")
-				pkg.Options.APIKey = key
+				os.Setenv("IBMCLOUD_APIKEY", pkg.Options.APIKey)
 			}
 		}
+		if key := os.Getenv("IBMCLOUD_APIKEY"); key != "" {
+			pkg.Options.APIKey = key
+		}
+
+		// If the API-key was set through flags, export it under IBMCLOUD_APIKEY.
+		if pkg.Options.APIKey != "" {
+			os.Setenv("IBMCLOUD_APIKEY", pkg.Options.APIKey)
+		}
+
+		// If the API-key is still unset, it's highly likely that the API key was neither set through the environment variable nor the flag.
+		if pkg.Options.APIKey == "" {
+			return fmt.Errorf("api-key can't be empty, pass the token via --api-key or set IBMCLOUD_APIKEY environment variable")
+		}
+
 		if _, err := client.GetEnvironment(pkg.Options.Environment); err != nil {
 			return fmt.Errorf("invalid \"%s\" IBM Cloud Environment passed, valid values are: %s", pkg.Options.Environment, strings.Join(client.ListEnvironments(), ", "))
 		}
@@ -77,8 +96,8 @@ func init() {
 	rootCmd.AddCommand(deletecmd.Cmd)
 	rootCmd.AddCommand(dhcp.Cmd)
 	rootCmd.AddCommand(dhcpserver.Cmd)
-	rootCmd.PersistentFlags().StringVarP(&pkg.Options.APIKey, "api-key", "k", "", "IBMCLOUD API Key(env name: IBMCLOUD_API_KEY)")
-	rootCmd.PersistentFlags().StringVar(&pkg.Options.Environment, "env", client.DefaultEnv, "IBM Cloud Environments, supported are: ["+strings.Join(client.ListEnvironments(), ", ")+"]")
+	rootCmd.PersistentFlags().StringVarP(&pkg.Options.APIKey, "api-key", "k", "", "IBMCLOUD API Key(env name: IBMCLOUD_APIKEY)")
+	rootCmd.PersistentFlags().StringVar(&pkg.Options.Environment, "env", client.DefaultEnvProd, "IBM Cloud Environments, supported are: ["+strings.Join(client.ListEnvironments(), ", ")+"]")
 	rootCmd.PersistentFlags().BoolVar(&pkg.Options.Debug, "debug", false, "Enable PowerVS debug option(ATTENTION: dev only option, may print sensitive data from APIs)")
 	rootCmd.PersistentFlags().StringVar(&pkg.Options.AuditFile, "audit-file", "pvsadm_audit.log", "Audit logs for the tool")
 	rootCmd.Flags().SortFlags = false

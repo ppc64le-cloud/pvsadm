@@ -22,7 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
 	"github.com/IBM/ibm-cos-sdk-go/aws"
 	"github.com/IBM/ibm-cos-sdk-go/aws/awserr"
 	"github.com/IBM/ibm-cos-sdk-go/aws/credentials"
@@ -30,8 +29,10 @@ import (
 	"github.com/IBM/ibm-cos-sdk-go/aws/session"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3/s3manager"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 )
 
 type S3Client struct {
@@ -74,19 +75,22 @@ func NewS3ClientWithKeys(accesskey, secretkey, region string) (s3client *S3Clien
 func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, err error) {
 	s3client = &S3Client{}
 	var instanceID string
-	svcs, err := c.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-		Type: "service_instance",
-		Name: instanceName,
-	})
+
+	listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
+		Type: ptr.To(serviceInstance),
+		Name: ptr.To(instanceName),
+	}
+
+	s3Services, _, err := c.ResourceControllerClient.ListResourceInstances(listServiceInstanceOptions)
 	if err != nil {
 		return s3client, fmt.Errorf("failed to list the resource instances, err: %v", err)
 	}
 	found := false
-	for _, svc := range svcs {
-		klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", svc.Guid, svc.RegionID, svc.Name)
-		klog.V(3).Infof("crn: %v", svc.Crn)
-		if svc.Name == instanceName {
-			instanceID = svc.Guid
+	for _, svc := range s3Services.Resources {
+		klog.V(3).Infof("Service ID: %s, region_id: %s, Name: %s", *svc.ID, *svc.RegionID, *svc.Name)
+		klog.V(3).Infof("crn: %v", *svc.CRN)
+		if *svc.Name == instanceName {
+			instanceID = *svc.GUID
 			found = true
 			break
 		}

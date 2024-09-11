@@ -76,7 +76,7 @@ pvsadm purge --help for information
 		if !opt.DryRun && len(instances) != 0 {
 			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
 				for _, instance := range instances {
-					klog.Infof("Deleting the %s, and ID: %s", *instance.ServerName, *instance.PvmInstanceID)
+					klog.Infof("Deleting instance: %s with ID: %s", *instance.ServerName, *instance.PvmInstanceID)
 					err = pvmclient.InstanceClient.Delete(*instance.PvmInstanceID)
 					if err != nil {
 						if opt.IgnoreErrors {

@@ -58,7 +58,7 @@ pvsadm purge --help for information
 		if !opt.DryRun && len(images) != 0 {
 			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
 				for _, image := range images {
-					klog.Infof("Deleting the %s, and ID: %s", *image.Name, *image.ImageID)
+					klog.Infof("Deleting image: %s with ID: %s", *image.Name, *image.ImageID)
 					err = pvmclient.ImgClient.Delete(*image.ImageID)
 					if err != nil {
 						if opt.IgnoreErrors {

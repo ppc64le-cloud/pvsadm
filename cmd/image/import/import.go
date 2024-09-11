@@ -19,13 +19,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev1/controller"
-	"github.com/IBM-Cloud/bluemix-go/api/resource/resourcev2/controllerv2"
-	"github.com/IBM-Cloud/bluemix-go/crn"
-	"github.com/IBM-Cloud/bluemix-go/models"
 	pmodels "github.com/IBM-Cloud/power-go-client/power/models"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
@@ -33,32 +31,57 @@ import (
 )
 
 const (
+	accessKeyId          = "access_key_id"
+	cosHmacKeys          = "cos_hmac_keys"
+	crnServiceRoleWriter = "crn:v1:bluemix:public:iam::::serviceRole:Writer"
+	imageStateActive     = "active"
+	jobStateCompleted    = "completed"
+	jobStateFailed       = "failed"
+	secretAccessKey      = "secret_access_key"
+	// CosResourceID is IBM COS service id, can be retrieved using ibmcloud cli
+	// ibmcloud catalog service cloud-object-storage.
 	serviceCredPrefix = "pvsadm-service-cred"
-	imageStateActive  = "active"
-	jobStateCompleted = "completed"
-	jobStateFailed    = "failed"
 )
 
-// Find COSINSTANCE details of the Provided bucket
-func findCOSInstanceDetails(resources []models.ServiceInstanceV2, bxCli *client.Client) (string, string, crn.CRN) {
+// findCOSInstance retrieves the service instance in which the bucket is present.
+func findCOSInstanceDetails(resources []resourcecontrollerv2.ResourceInstance, pvsClient *client.Client) *resourcecontrollerv2.ResourceInstance {
 	for _, resource := range resources {
-		if resource.Crn.ServiceName == "cloud-object-storage" {
-			s3client, err := client.NewS3Client(bxCli, resource.Name, pkg.ImageCMDOptions.Region)
-			if err != nil {
-				continue
-			}
-			buckets, err := s3client.S3Session.ListBuckets(nil)
-			if err != nil {
-				continue
-			}
-			for _, bucket := range buckets.Buckets {
-				if *bucket.Name == pkg.ImageCMDOptions.BucketName {
-					return resource.Name, resource.Guid, resource.Crn
-				}
+		s3client, err := client.NewS3Client(pvsClient, *resource.Name, pkg.ImageCMDOptions.Region)
+		if err != nil {
+			klog.Warningf("cannot create a new s3 client. err: %v", err)
+			continue
+		}
+		buckets, err := s3client.S3Session.ListBuckets(nil)
+		if err != nil {
+			klog.Warningf("cannot list buckets in the resource instance. err: %v", err)
+			continue
+		}
+		for _, bucket := range buckets.Buckets {
+			if *bucket.Name == pkg.ImageCMDOptions.BucketName {
+				return &resource
 			}
 		}
 	}
-	return "", "", crn.CRN{}
+	return nil
+}
+
+// createNewCredentialsWithHMAC generates the service credentials in the given COS instance with HMAC keys.
+func createNewCredentialsWithHMAC(pvsClient *client.Client, cosCRN, serviceCredName string) (*resourcecontrollerv2.ResourceKey, error) {
+	klog.V(2).Infof("Auto generating COS service credentials to import image: %s", serviceCredName)
+	params := &resourcecontrollerv2.ResourceKeyPostParameters{}
+	params.SetProperty("HMAC", true)
+	key, _, err := pvsClient.ResourceControllerClient.CreateResourceKey(
+		&resourcecontrollerv2.CreateResourceKeyOptions{
+			Name:       ptr.To(serviceCredName),
+			Parameters: params,
+			Role:       ptr.To(crnServiceRoleWriter),
+			Source:     ptr.To(cosCRN),
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create resource key for service instance: %v", err.Error())
+	}
+	return key, nil
 }
 
 // checkStorageTierAvailability confirms if the provided cloud instance ID supports the required storageType.
@@ -95,9 +118,9 @@ pvsadm image import --help for information
 # Set the API key or feed the --api-key commandline argument
 export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
 
-# To Import the image across the two different IBM account use accesskey and secretkey options
+# To Import the image across the two different IBM account use "--accesskey" and "--secretkey" options
 
-# To Import the image from public bucket use public-bucket option
+# To Import the image from public bucket use the "--public-bucket" or "-p" option
 
 Examples:
 
@@ -132,12 +155,12 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		opt := pkg.ImageCMDOptions
 		apikey := pkg.Options.APIKey
 
-		bxCli, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+		pvsClient, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
 			return err
 		}
 
-		pvmclient, err := client.NewPVMClientWithEnv(bxCli, opt.WorkspaceID, opt.WorkspaceName, pkg.Options.Environment)
+		pvmclient, err := client.NewPVMClientWithEnv(pvsClient, opt.WorkspaceID, opt.WorkspaceName, pkg.Options.Environment)
 		if err != nil {
 			return err
 		}
@@ -148,54 +171,87 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 
 		//Create AccessKey and SecretKey for the bucket provided if bucket access is private
 		if (opt.AccessKey == "" || opt.SecretKey == "") && (!opt.Public) {
-			//Find CosInstance of the bucket
-			var svcs []models.ServiceInstanceV2
-			svcs, err = bxCli.ResourceClientV2.ListInstances(controllerv2.ServiceInstanceQuery{
-				Type: "service_instance",
-			})
-			if err != nil {
-				return err
+			// Find COS instance of the bucket
+			listServiceInstanceOptions := &resourcecontrollerv2.ListResourceInstancesOptions{
+				ResourceID: ptr.To(utils.CosResourceID),
 			}
-			cosInstanceName, cosID, crn := findCOSInstanceDetails(svcs, bxCli)
-			if cosInstanceName == "" {
+
+			workspaces, _, err := pvsClient.ResourceControllerClient.ListResourceInstances(listServiceInstanceOptions)
+			if err != nil {
+				return fmt.Errorf("failed to list the resource instances: %v", err)
+			}
+			if len(workspaces.Resources) == 0 {
+				return fmt.Errorf("no service instances were found")
+			}
+
+			cosInstance := findCOSInstanceDetails(workspaces.Resources, pvsClient)
+			if cosInstance == nil {
 				return fmt.Errorf("failed to find the COS instance for the bucket mentioned: %s", opt.BucketName)
 			}
 
-			keys, err := bxCli.GetResourceKeys(cosID)
+			klog.Infof("Identified bucket %q in service instance: %s", opt.BucketName, *cosInstance.Name)
+			listResourceKeysInstanceOptions := &resourcecontrollerv2.ListResourceKeysForInstanceOptions{
+				ID: cosInstance.GUID,
+			}
+			keys, _, err := pvsClient.ResourceControllerClient.ListResourceKeysForInstance(listResourceKeysInstanceOptions)
 			if err != nil {
-				return fmt.Errorf("failed to list the service credentials: %v", err)
+				return fmt.Errorf("cannot list the resource keys for instance. err: %v", err)
 			}
 
-			var cred map[string]interface{}
-			var ok bool
-			if len(keys) == 0 {
-				if opt.ServiceCredName == "" {
-					opt.ServiceCredName = serviceCredPrefix + "-" + cosInstanceName
-				}
+			var ok, credentialsPresent bool
+			var hmacKeys map[string]interface{}
+			var key *resourcecontrollerv2.ResourceKey
 
-				// Create the service credential if does not exist
-				klog.V(2).Infof("Auto Generating the COS Service credential for importing the image with name: %s", opt.ServiceCredName)
-				CreateServiceKeyRequest := controller.CreateServiceKeyRequest{
-					Name:       opt.ServiceCredName,
-					SourceCRN:  crn,
-					Parameters: map[string]interface{}{"HMAC": true},
+			if opt.ServiceCredName == "" {
+				opt.ServiceCredName = serviceCredPrefix + "-" + *cosInstance.Name
+			}
+
+			// Create the service credential if does not exist
+			if len(keys.Resources) == 0 {
+				if key, err = createNewCredentialsWithHMAC(pvsClient, *cosInstance.CRN, opt.ServiceCredName); err != nil {
+					return fmt.Errorf("error while creating HMAC credentials. err: %v", err)
 				}
-				newKey, err := bxCli.ResourceServiceKey.CreateKey(CreateServiceKeyRequest)
-				if err != nil {
-					return err
-				}
-				cred, ok = newKey.Credentials["cos_hmac_keys"].(map[string]interface{})
 			} else {
-				// Use the service credential already created
 				klog.V(2).Info("Reading the existing service credential")
-				cred, ok = keys[0].Credentials["cos_hmac_keys"].(map[string]interface{})
+				// Use the service credential already created. There may be a possibility that multiple credentials exist, but the HMAC credentials may not be present.
+				// In such case, manually re-create the credentials.
+
+				for _, serviceCredential := range keys.Resources {
+					key, _, err = pvsClient.ResourceControllerClient.GetResourceKey(
+						&resourcecontrollerv2.GetResourceKeyOptions{
+							ID: serviceCredential.ID,
+						},
+					)
+					if err != nil {
+						return fmt.Errorf("an error occured while retriving the resource key. err: %v", err)
+					}
+					// if the current credential has COS HMAC keys, reuse the same for importing the image
+					if prop := key.Credentials.GetProperty(cosHmacKeys); prop != nil {
+						klog.Infof("HMAC keys are available from the credential %q, re-using the same for image upload", *key.Name)
+						credentialsPresent = true
+						break
+					}
+					klog.Infof("No credentials found in the key %q.", *key.Name)
+				}
+				// if all the available service credentials do not have HMAC, create one with HMAC.
+				if !credentialsPresent {
+					if key, err = createNewCredentialsWithHMAC(pvsClient, *cosInstance.CRN, opt.ServiceCredName); err != nil {
+						return fmt.Errorf("error while creating HMAC credentials. err: %v", err)
+					}
+				}
 			}
-			if !ok {
-				return fmt.Errorf("failed to get the accessKey and secretKey from service credential")
+
+			prop := key.Credentials.GetProperty(cosHmacKeys)
+			if prop == nil {
+				return fmt.Errorf("unable to retrieve COS HMAC keys")
 			}
-			//Assign the Access Key and Secret Key for further operation
-			opt.AccessKey = cred["access_key_id"].(string)
-			opt.SecretKey = cred["secret_access_key"].(string)
+
+			if hmacKeys, ok = prop.(map[string]interface{}); !ok {
+				return fmt.Errorf("type assertion for HMAC keys failed")
+			}
+			// Assign the Access Key and Secret Key for further operation
+			opt.AccessKey = hmacKeys[accessKeyId].(string)
+			opt.SecretKey = hmacKeys[secretAccessKey].(string)
 		}
 
 		//By default Bucket Access is private
@@ -231,7 +287,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 		}
 
 		var image *pmodels.ImageReference = &pmodels.ImageReference{}
-		klog.V(1).Info("Retrieving image details")
+		klog.Info("Retrieving image details")
 
 		if image.ImageID == nil {
 			image, err = pvmclient.ImgClient.GetImageByName(opt.ImageName)

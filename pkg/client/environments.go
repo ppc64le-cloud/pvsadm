@@ -16,25 +16,30 @@ package client
 
 import (
 	"errors"
-	"os"
 
-	"github.com/IBM-Cloud/power-go-client/ibmpisession"
+	"github.com/IBM/platform-services-go-sdk/iamidentityv1"
+	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 )
 
-const DefaultEnv = "prod"
+const (
+	DefaultEnvProd = "prod"
+	TPEndpoint     = "TPEndpoint"
+	PIEndpoint     = "PIEndpoint"
+	RCEndpoint     = "RCEndpoint"
+)
 
 var ErrEnvironmentNotFound = errors.New("error environment not found")
 
 var Environments = map[string]map[string]string{
 	"test": {
-		"TPEndpoint": "https://iam.test.cloud.ibm.com",
-		"RCEndpoint": "https://resource-controller.test.cloud.ibm.com",
-		"PIEndpoint": "power-iaas.test.cloud.ibm.com",
+		TPEndpoint: "https://iam.test.cloud.ibm.com",
+		RCEndpoint: "https://resource-controller.test.cloud.ibm.com",
+		PIEndpoint: "power-iaas.test.cloud.ibm.com",
 	},
 	"prod": {
-		"TPEndpoint": "https://iam.cloud.ibm.com",
-		"RCEndpoint": "https://resource-controller.cloud.ibm.com",
-		"PIEndpoint": "power-iaas.cloud.ibm.com",
+		TPEndpoint: iamidentityv1.DefaultServiceURL,
+		RCEndpoint: resourcecontrollerv2.DefaultServiceURL,
+		PIEndpoint: "power-iaas.cloud.ibm.com",
 	},
 }
 
@@ -57,15 +62,7 @@ func NewPVMClientWithEnv(c *Client, instanceID, instanceName, env string) (*PVMC
 	if err != nil {
 		return nil, err
 	}
-	return NewPVMClient(c, instanceID, instanceName, e["PIEndpoint"])
-}
-
-func NewGenericPVMClientWithEnv(c *Client, instanceID, instanceName, env string, piSession *ibmpisession.IBMPISession) (*PVMClient, error) {
-	e, err := GetEnvironment(env)
-	if err != nil {
-		return nil, err
-	}
-	return NewGenericPVMClient(c, instanceID, instanceName, e["PIEndpoint"], piSession)
+	return NewPVMClient(c, instanceID, instanceName, e)
 }
 
 func NewClientWithEnv(apikey, env string, debug bool) (*Client, error) {
@@ -73,6 +70,5 @@ func NewClientWithEnv(apikey, env string, debug bool) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	os.Setenv("IBMCLOUD_RESOURCE_CONTROLLER_API_ENDPOINT", e["RCEndpoint"])
-	return NewClient(apikey, e["TPEndpoint"], debug)
+	return NewClient(apikey, e, debug)
 }
