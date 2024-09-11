@@ -4,7 +4,6 @@ go 1.22.4
 
 require (
 	github.com/IBM-Cloud/power-go-client v1.7.1
-	github.com/IBM/go-sdk-core v1.1.0
 	github.com/IBM/go-sdk-core/v5 v5.17.5
 	github.com/IBM/ibm-cos-sdk-go v1.11.0
 	github.com/IBM/platform-services-go-sdk v0.69.0
@@ -40,7 +39,6 @@ require (
 	github.com/charmbracelet/x/term v0.2.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
@@ -91,7 +89,6 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
-	gopkg.in/go-playground/validator.v9 v9.30.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
