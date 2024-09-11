@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
-	"github.com/IBM/go-sdk-core/core"
+	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
 	"k8s.io/utils/ptr"
 
