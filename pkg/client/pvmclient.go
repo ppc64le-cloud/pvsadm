@@ -95,16 +95,16 @@ func NewPVMClient(c *Client, instanceID, instanceName string, ep map[string]stri
 		return nil, err
 	}
 
-	pvmclient.DatacenterClient = datacenter.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.DHCPClient = dhcp.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.EventsClient = events.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.ImgClient = image.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.InstanceClient = instance.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.JobClient = job.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, instanceID)
-	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.DatacenterClient = datacenter.NewClient(pvmclient.PISession, pvmclient.InstanceID)
+	pvmclient.DHCPClient = dhcp.NewClient(pvmclient.PISession, pvmclient.InstanceID)
+	pvmclient.EventsClient = events.NewClient(pvmclient.PISession, pvmclient.InstanceID)
+	pvmclient.ImgClient = image.NewClient(pvmclient.PISession, pvmclient.InstanceID)
+	pvmclient.InstanceClient = instance.NewClient(pvmclient.PISession, pvmclient.InstanceID)
+	pvmclient.JobClient = job.NewClient(pvmclient.PISession, pvmclient.InstanceID)
+	pvmclient.KeyClient = key.NewClient(pvmclient.PISession, pvmclient.InstanceID)
+	pvmclient.NetworkClient = network.NewClient(pvmclient.PISession, pvmclient.InstanceID)
 	pvmclient.StorageTierClient = storagetier.NewClient(pvmclient.PISession, pvmclient.InstanceID)
-	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, instanceID)
+	pvmclient.VolumeClient = volume.NewClient(pvmclient.PISession, pvmclient.InstanceID)
 	return pvmclient, nil
 }
 
