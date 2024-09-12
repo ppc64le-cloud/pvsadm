@@ -16,8 +16,6 @@ package volumes
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
@@ -25,10 +23,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 )
-
-var before time.Duration
-
-const deletePromptMessage = "Deleting all the volumes in available state, volumes can't be claimed back once deleted. Do you really want to continue?"
 
 var Cmd = &cobra.Command{
 	Use:   "volumes",
@@ -62,8 +56,8 @@ pvsadm purge --help for information
 		t.Table.Render()
 
 		if !opt.DryRun && len(volumes) != 0 {
-			klog.Infof("Deleting all the volumes in available state")
-			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(fmt.Sprintf(utils.DeletePromptMessage, "volumes")) {
+				klog.Infof("Deleting all the volumes in available state")
 				for _, volume := range volumes {
 					if *volume.State == "available" {
 						klog.Infof("Deleting volume: %s with ID: %s", *volume.Name, *volume.VolumeID)

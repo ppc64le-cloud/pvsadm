@@ -74,7 +74,7 @@ func RenderMeta(imageName string) (string, error) {
 	return wr.String(), nil
 }
 
-// bundles the dir into a OVA image
+// CreateTarArchive bundles the dir into a OVA image
 func CreateTarArchive(dir string, target string, targetDiskSize int64, imageDist string, volumeDiskName string) error {
 	ovf := filepath.Join(dir, volumeDiskName)
 	info, err := os.Stat(ovf)

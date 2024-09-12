@@ -286,7 +286,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return err
 		}
 
-		var image *pmodels.ImageReference = &pmodels.ImageReference{}
+		var image = &pmodels.ImageReference{}
 		klog.Info("Retrieving image details")
 
 		if image.ImageID == nil {

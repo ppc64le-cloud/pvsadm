@@ -15,7 +15,6 @@
 package peravailability
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -23,6 +22,7 @@ import (
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
+	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
 const powerEdgeRouter = "power-edge-router"
@@ -32,13 +32,10 @@ var Cmd = &cobra.Command{
 	Short: "List regions that support PER",
 	Long:  "List regions that support Power Edge Router (PER)",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.Options.WorkspaceID == "" && pkg.Options.WorkspaceName == "" {
-			return fmt.Errorf("--workspace-id or --workspace-name required")
-		}
-		return nil
+		return utils.EnsureWorkspaceIDorNameIsSet(pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var perEnabledRegions = []string{}
+		var perEnabledRegions []string
 		opt := pkg.Options
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {

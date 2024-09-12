@@ -22,13 +22,11 @@ import (
 	"time"
 
 	"github.com/IBM-Cloud/power-go-client/clients/instance"
-	"github.com/IBM-Cloud/power-go-client/errors"
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
-	"github.com/IBM-Cloud/power-go-client/power/client/p_cloud_volumes"
 	"github.com/IBM-Cloud/power-go-client/power/models"
 	"github.com/go-openapi/strfmt"
+
 	"github.com/ppc64le-cloud/pvsadm/pkg"
-	"k8s.io/klog/v2"
 )
 
 type Client struct {
@@ -54,13 +52,7 @@ func (c *Client) DeleteVolume(id string) error {
 }
 
 func (c *Client) GetAll() (*models.Volumes, error) {
-	klog.V(1).Info("Calling the Power Volumes GetAll Method")
-	params := p_cloud_volumes.NewPcloudCloudinstancesVolumesGetallParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(c.instanceID)
-	resp, err := c.session.Power.PCloudVolumes.PcloudCloudinstancesVolumesGetall(params, c.session.AuthInfo(c.instanceID))
-	if err != nil {
-		return nil, errors.ToError(err)
-	}
-	return resp.Payload, nil
+	return c.client.GetAll()
 }
 
 func (c *Client) getAllPurgeable(field string, before, since time.Duration, expr string) ([]*models.VolumeReference, error) {

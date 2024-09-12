@@ -26,8 +26,6 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const deletePromptMessage = "Deleting all the above instances, instances can't be claimed back once deleted. Do you really want to continue?"
-
 var Cmd = &cobra.Command{
 	Use:   "vms",
 	Short: "Purge the PowerVS vms",
@@ -74,7 +72,7 @@ pvsadm purge --help for information
 		}
 		t.Table.Render()
 		if !opt.DryRun && len(instances) != 0 {
-			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(fmt.Sprintf(utils.DeletePromptMessage, "instances")) {
 				for _, instance := range instances {
 					klog.Infof("Deleting instance: %s with ID: %s", *instance.ServerName, *instance.PvmInstanceID)
 					err = pvmclient.InstanceClient.Delete(*instance.PvmInstanceID)

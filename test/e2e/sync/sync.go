@@ -51,10 +51,8 @@ var (
 // Test case constants
 const (
 	debug                  = false
-	recursive              = false
 	resourceGroupAPIRegion = "global"
 	servicePlan            = "standard"
-	typeServiceInstance    = "service_instance"
 )
 
 // Test configurations

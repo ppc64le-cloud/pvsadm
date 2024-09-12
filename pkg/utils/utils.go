@@ -37,6 +37,13 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
+func EnsureWorkspaceIDorNameIsSet(workspaceID, workspaceName string) error {
+	if workspaceID == "" && workspaceName == "" {
+		return fmt.Errorf("--workspace-id or --workspace-name required")
+	}
+	return nil
+}
+
 func RetrieveValFromMap[K comparable, V any](m map[K]V, key K) V {
 	return m[key]
 }

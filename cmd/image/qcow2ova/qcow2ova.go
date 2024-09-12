@@ -16,7 +16,6 @@ package qcow2ova
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -98,7 +97,7 @@ Qcow2 images location:
 				return fmt.Errorf("--prep-template option is not supported for coreos distro")
 			} else {
 				klog.V(2).Info("Overriding with the user defined image preparation template.")
-				content, err := ioutil.ReadFile(opt.PrepTemplate)
+				content, err := os.ReadFile(opt.PrepTemplate)
 				if err != nil {
 					return err
 				}

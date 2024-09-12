@@ -27,13 +27,6 @@ type ResourceControllerV2 struct {
 	ResourceControllerV2 *rcv2.ResourceControllerV2
 }
 
-func NewResourceControllerV2(r *rcv2.ResourceControllerV2Options) (*ResourceControllerV2, error) {
-	rc, err := rcv2.NewResourceControllerV2(r)
-	return &ResourceControllerV2{
-		rc,
-	}, err
-}
-
 func (resourceController *ResourceControllerV2) CreateResourceKey(createResourceKeyOptions *CreateResourceKeyOptions) (result *rcv2.ResourceKey, response *core.DetailedResponse, err error) {
 	return resourceController.CreateResourceKeyWithContext(context.Background(), createResourceKeyOptions)
 }

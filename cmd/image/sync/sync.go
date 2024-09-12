@@ -251,12 +251,11 @@ Sample spec.yaml file:
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		var apikey string = pkg.Options.APIKey
 		opt := pkg.ImageCMDOptions
 		start := time.Now()
 
-		//Create bluemix client
-		pvsClient, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+		// Create resource controller client
+		pvsClient, err := client.NewClientWithEnv(pkg.Options.APIKey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
 			return err
 		}

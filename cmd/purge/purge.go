@@ -24,6 +24,7 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/vms"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/volumes"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
+	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -84,10 +85,7 @@ Examples:
 		if pkg.Options.Since != 0 && pkg.Options.Before != 0 {
 			return fmt.Errorf("--since and --before options can not be set at a time")
 		}
-		if pkg.Options.WorkspaceID == "" && pkg.Options.WorkspaceName == "" {
-			return fmt.Errorf("--workspace-id or --workspace-name required")
-		}
-		return nil
+		return utils.EnsureWorkspaceIDorNameIsSet(pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 }
 

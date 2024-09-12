@@ -25,12 +25,10 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
-const deletePromptMessage = "Deleting all the above ssh key/key's, Do you really want to continue?"
-
 var Cmd = &cobra.Command{
 	Use:   "keys",
-	Short: "Delete PowerVS ssh key/keys",
-	Long: `Delete PowerVS ssh key/keys matching regex
+	Short: "Delete PowerVS SSH key(s)",
+	Long: `Delete PowerVS SSH key(s) matching regex
 pvsadm purge --help for information
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -43,6 +41,12 @@ pvsadm purge --help for information
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
+
+		if pkg.Options.WorkspaceName != "" {
+			klog.Infof("Purge SSH keys for the workspace: %s", pkg.Options.WorkspaceName)
+		} else {
+			klog.Infof("Purge SSH keys for the workspace ID: %s", pkg.Options.WorkspaceID)
+		}
 
 		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
 		if err != nil {
@@ -62,7 +66,7 @@ pvsadm purge --help for information
 
 		klog.Infof("keys matched are %s", keys)
 		if len(keys) != 0 {
-			if opt.NoPrompt || utils.AskConfirmation(deletePromptMessage) {
+			if opt.NoPrompt || utils.AskConfirmation(fmt.Sprintf(utils.DeletePromptMessage, "keys")) {
 				for _, key := range keys {
 					err = pvmclient.KeyClient.Delete(key)
 					if err != nil {

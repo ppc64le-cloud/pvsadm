@@ -19,7 +19,7 @@ import (
 	"encoding/base64"
 )
 
-// Generates the password of length n
+// GeneratePassword generates the password of length n
 func GeneratePassword(n int) (b64Password string, err error) {
 	b := make([]byte, n)
 	_, err = rand.Read(b)
