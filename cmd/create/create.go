@@ -33,4 +33,7 @@ func init() {
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceID, "instance-id", "i", "", "Instance ID of the PowerVS instance")
 	Cmd.PersistentFlags().MarkDeprecated("instance-id", "instance-id is deprecated, workspace-id should be used")
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceID, "workspace-id", "", "", "Workspace ID of the PowerVS workspace")
+	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceName, "instance-name", "n", "", "Instance name of the PowerVS instance")
+	Cmd.PersistentFlags().MarkDeprecated("instance-name", "instance-name is deprecated, workspace-name should be used")
+	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceName, "workspace-name", "", "", "Workspace name of the PowerVS workspace")
 }
