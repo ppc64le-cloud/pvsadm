@@ -35,7 +35,7 @@ var Cmd = &cobra.Command{
 	Short: "Get PowerVS network ports",
 	Long:  `Get PowerVS network ports`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return utils.EnsureWorkspaceIDorNameIsSet(pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
+		return utils.EnsurePrerequisitesAreSet(pkg.Options.APIKey, pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options

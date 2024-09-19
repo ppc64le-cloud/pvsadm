@@ -32,7 +32,7 @@ var Cmd = &cobra.Command{
 	Short: "List regions that support PER",
 	Long:  "List regions that support Power Edge Router (PER)",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return utils.EnsureWorkspaceIDorNameIsSet(pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
+		return utils.EnsurePrerequisitesAreSet(pkg.Options.APIKey, pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var perEnabledRegions []string

@@ -140,22 +140,17 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-10032020.ova.gz --pvs-image-name test-image -r <REGION> --public-bucket
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if pkg.ImageCMDOptions.WorkspaceID == "" && pkg.ImageCMDOptions.WorkspaceName == "" {
-			return fmt.Errorf("--workspace-name or --workspace-id required")
-		}
-
 		// ensure that both, the AccessKey and SecretKey are either both set or unset
 		if (len(pkg.ImageCMDOptions.AccessKey) > 0) != (len(pkg.ImageCMDOptions.SecretKey) > 0) {
 			return fmt.Errorf("required both --accesskey and --secretkey values")
 		}
-		return nil
+		return utils.EnsurePrerequisitesAreSet(pkg.Options.APIKey, pkg.ImageCMDOptions.WorkspaceID, pkg.ImageCMDOptions.WorkspaceName)
 	},
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.ImageCMDOptions
-		apikey := pkg.Options.APIKey
 
-		pvsClient, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+		pvsClient, err := client.NewClientWithEnv(pkg.Options.APIKey, pkg.Options.Environment, pkg.Options.Debug)
 		if err != nil {
 			return err
 		}

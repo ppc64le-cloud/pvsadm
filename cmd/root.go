@@ -18,6 +18,7 @@ import (
 	goflag "flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -31,15 +32,17 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/cmd/get"
 	"github.com/ppc64le-cloud/pvsadm/cmd/image"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge"
-	"github.com/ppc64le-cloud/pvsadm/cmd/version"
+	versioncmd "github.com/ppc64le-cloud/pvsadm/cmd/version"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
+	"github.com/ppc64le-cloud/pvsadm/pkg/version"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "pvsadm",
-	Short: "pvsadm is a command line tool for managing IBM Cloud PowerVS infrastructure",
+	Use:     "pvsadm",
+	Version: version.Version + " " + fmt.Sprintf("GoVersion: %s\n", runtime.Version()),
+	Short:   "pvsadm is a command line tool for managing IBM Cloud PowerVS infrastructure",
 	Long: `Power Systems Virtual Server projects deliver flexible compute capacity for Power Systems workloads.
 Integrated with the IBM Cloud platform for on-demand provisioning.
 
@@ -65,11 +68,6 @@ This is a tool built for the Power Systems Virtual Server helps managing and mai
 			os.Setenv("IBMCLOUD_APIKEY", pkg.Options.APIKey)
 		}
 
-		// If the API-key is still unset, it's highly likely that the API key was neither set through the environment variable nor the flag.
-		if pkg.Options.APIKey == "" {
-			return fmt.Errorf("api-key can't be empty, pass the token via --api-key or set IBMCLOUD_APIKEY environment variable")
-		}
-
 		if _, err := client.GetEnvironment(pkg.Options.Environment); err != nil {
 			return fmt.Errorf("invalid \"%s\" IBM Cloud Environment passed, valid values are: %s", pkg.Options.Environment, strings.Join(client.ListEnvironments(), ", "))
 		}
@@ -82,6 +80,7 @@ func init() {
 	klog.InitFlags(nil)
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
+	rootCmd.SetVersionTemplate(`Version: {{.Version}}`)
 	rootCmd.AddGroup(&cobra.Group{ID: "resource", Title: "Resource Management Commands:"})
 	rootCmd.AddGroup(&cobra.Group{ID: "dhcp", Title: "DHCP Commands:"})
 	rootCmd.AddGroup(&cobra.Group{ID: "image", Title: "Image Commands:"})
@@ -90,7 +89,8 @@ func init() {
 	rootCmd.SetCompletionCommandGroupID("admin")
 	rootCmd.AddCommand(purge.Cmd)
 	rootCmd.AddCommand(get.Cmd)
-	rootCmd.AddCommand(version.Cmd)
+	// TODO : Remove the version command in a future release.
+	rootCmd.AddCommand(versioncmd.Cmd)
 	rootCmd.AddCommand(image.Cmd)
 	rootCmd.AddCommand(create.Cmd)
 	rootCmd.AddCommand(deletecmd.Cmd)
