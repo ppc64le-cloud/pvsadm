@@ -75,6 +75,7 @@ function install_pvsadm() {
 
     if command -v "pvsadm" &> /dev/null; then
         echo "pvsadm is already installed!"
+        # TODO: move to pvsadm --version for future releases.
         pvsadm version
         exit 1
     fi
@@ -91,7 +92,7 @@ function install_pvsadm() {
     fi
 
     chmod +x /usr/local/bin/pvsadm
-    pvsadm version
+    pvsadm --version
 }
 
 function run (){

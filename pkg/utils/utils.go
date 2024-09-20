@@ -37,7 +37,12 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
-func EnsureWorkspaceIDorNameIsSet(workspaceID, workspaceName string) error {
+// Ensure that either the workspaceID or the workspaceName is set, along with the API Key.
+func EnsurePrerequisitesAreSet(apiKey, workspaceID, workspaceName string) error {
+	if apiKey == "" {
+		return fmt.Errorf("api-key can't be empty, pass the token via --api-key or set IBMCLOUD_APIKEY environment variable")
+	}
+
 	if workspaceID == "" && workspaceName == "" {
 		return fmt.Errorf("--workspace-id or --workspace-name required")
 	}

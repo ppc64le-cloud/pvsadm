@@ -85,7 +85,8 @@ Examples:
 		if pkg.Options.Since != 0 && pkg.Options.Before != 0 {
 			return fmt.Errorf("--since and --before options can not be set at a time")
 		}
-		return utils.EnsureWorkspaceIDorNameIsSet(pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
+
+		return utils.EnsurePrerequisitesAreSet(pkg.Options.APIKey, pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 }
 

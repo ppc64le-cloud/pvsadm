@@ -24,9 +24,10 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:     "version",
-	Short:   "Print the version number",
-	GroupID: "admin",
+	Use:        "version",
+	Short:      "Print the version number",
+	Deprecated: "Please use pvsadm --version instead.",
+	GroupID:    "admin",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Version: %s, GoVersion: %s\n", version.Get(), runtime.Version())
 	},

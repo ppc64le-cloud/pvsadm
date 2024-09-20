@@ -23,7 +23,7 @@ IMP: Please don't mention any credentials or API keys
 **Anything else we need to know?**:
 
 **Environment**:
-- pvsadm version (use `pvsadm version`):
+- pvsadm version (use `pvsadm --version`):
 - Environment - On-Prem or IBM PowerVS:
 - OS (e.g: `cat /etc/os-release`):
 - Kernel (e.g. `uname -a`):

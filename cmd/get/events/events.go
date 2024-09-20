@@ -34,7 +34,7 @@ var Cmd = &cobra.Command{
 	Short: "Get Powervs events",
 	Long:  `Get the PowerVS events`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return utils.EnsureWorkspaceIDorNameIsSet(pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
+		return utils.EnsurePrerequisitesAreSet(pkg.Options.APIKey, pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
