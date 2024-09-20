@@ -212,7 +212,7 @@ var Cmd = &cobra.Command{
 pvsadm image sync --help for information
 
 # Set the API key or feed the --api-key commandline argument
-export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
+export IBMCLOUD_APIKEY=<IBMCLOUD_APIKEY>
 
 Examples:
 

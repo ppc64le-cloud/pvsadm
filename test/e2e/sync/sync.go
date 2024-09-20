@@ -43,7 +43,7 @@ var (
 	err               error
 	s3client          *client.Client
 	serviceInstance   *resourcecontrollerv2.ResourceInstance
-	APIKey            = os.Getenv("IBMCLOUD_API_KEY")
+	APIKey            = os.Getenv("IBMCLOUD_APIKEY")
 	objectsFolderName = "tempFolder"
 	SpecFileName      = "spec/spec.yaml"
 )
