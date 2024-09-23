@@ -306,6 +306,6 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 		return err
 	}
 	fmt.Println()
-	klog.Infof("Upload completed successfully in %f seconds to location %s", time.Since(startTime).Seconds(), result.Location)
+	klog.Infof("Upload completed successfully in %s seconds to location %s", time.Since(startTime).Round(time.Second), result.Location)
 	return nil
 }
