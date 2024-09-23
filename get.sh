@@ -67,6 +67,16 @@ function check_connectivity() {
 
 function install_pvsadm() {
 
+    local major=0
+    local minor=0
+    local patch=0
+
+    if [[ "$VERSION" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+        major=${BASH_REMATCH[1]}
+        minor=${BASH_REMATCH[2]}
+        patch=${BASH_REMATCH[3]}
+    fi
+
     if [[ "${FORCE}" -eq 1 ]]; then
        if command -v "pvsadm" &> /dev/null; then
            rm -f /usr/local/bin/pvsadm
@@ -75,8 +85,7 @@ function install_pvsadm() {
 
     if command -v "pvsadm" &> /dev/null; then
         echo "pvsadm is already installed!"
-        # TODO: move to pvsadm --version for future releases.
-        pvsadm version
+        print_version $major $minor $patch
         exit 1
     fi
 
@@ -92,7 +101,21 @@ function install_pvsadm() {
     fi
 
     chmod +x /usr/local/bin/pvsadm
-    pvsadm --version
+    print_version $major $minor $patch
+}
+
+function print_version() {
+    # check if version is < 0.1.17, which uses the pvsadm subcommand
+    local major=$1
+    local minor=$2
+    local patch=$3
+    if [ $major -lt 1 ] && [ $minor -lt 2 ] && [ $patch -lt 17 ];
+    then
+        pvsadm version
+    # the more recent releases support the version flag
+    else
+        pvsadm --version
+    fi
 }
 
 function run (){
