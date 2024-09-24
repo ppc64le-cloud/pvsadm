@@ -56,7 +56,7 @@ func copyWorker(copyJobs <-chan copyWorkload, results chan<- bool, workerId int)
 			klog.Errorf("copy object %s failed, err: %v", copyJob.srcObject, err)
 			results <- false
 		}
-		duration := time.Since(start)
+		duration := time.Since(start).Round(time.Second)
 		klog.Infof("Copying object: %s from bucket: %s to bucket: %s took %v", copyJob.srcObject, copyJob.srcBucket, copyJob.tgtBucket, duration)
 		results <- true
 	}
@@ -279,7 +279,7 @@ Sample spec.yaml file:
 		}
 
 		// Calculate total elapsed time
-		duration := time.Since(start)
+		duration := time.Since(start).Round(time.Second)
 		klog.Infof("Total elapsed time: %v", duration)
 		return nil
 	},
