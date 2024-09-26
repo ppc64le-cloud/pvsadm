@@ -312,6 +312,12 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 }
 
 func init() {
+	const (
+		tier0     = "Tier 0            | 25 IOPS/GB"
+		tier1     = "Tier 1            | 10 IOPS/GB"
+		tier3     = "Tier 3            | 3 IOPS/GB"
+		fixedIOPS = "Fixed IOPS/Tier5k | 5000 IOPS upto 200GB"
+	)
 	// TODO pvs-instance-name and pvs-instance-id is deprecated and will be removed in a future release
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceName, "pvs-instance-name", "n", "", "PowerVS Instance name.")
 	Cmd.Flags().MarkDeprecated("pvs-instance-name", "pvs-instance-name is deprecated, workspace-name should be used")
@@ -331,14 +337,18 @@ func init() {
 	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Public, "public-bucket", "p", false, "Cloud Object Storage public bucket.")
 	Cmd.Flags().BoolVarP(&pkg.ImageCMDOptions.Watch, "watch", "w", false, "After image import watch for image to be published and ready to use")
 	Cmd.Flags().DurationVar(&pkg.ImageCMDOptions.WatchTimeout, "watch-timeout", 1*time.Hour, "watch timeout")
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", `PowerVS Storage type, accepted values are [tier1, tier3, tier0, tier5k].
-																						Tier 0            | 25 IOPS/GB
-																						Tier 1            | 10 IOPS/GB
-																						Tier 3            | 3 IOPS/GB
-																						Fixed IOPS/Tier5k |	5000 IOPS regardless of size
-																						Note: The use of fixed IOPS is limited to volumes with a size of 200 GB or less, which is the break even size with Tier 0 (200 GB @ 25 IOPS/GB = 5000 IOPS).`)
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "cos-service-cred", "", "IBM COS Service Credential name to be auto generated(default \""+serviceCredPrefix+"-<COS Name>\")")
 
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.StorageType, "pvs-storagetype", "tier3", fmt.Sprintf("PowerVS Storage type, accepted values are [tier0, tier1, tier3, tier5k].\n%s\n%s\n%s\n%s\nNote: The use of fixed IOPS is limited to volumes with a size of 200 GB or less, which is the break even size with Tier 0 (200 GB @ 25 IOPS/GB = 5000 IOPS).", tier0, tier1, tier3, fixedIOPS))
+	// The help section against --pvs-storagetype generates the following output:
+	/*
+			--pvs-storagetype string    PowerVS Storage type, accepted values are [tier0, tier1, tier3, tier5k].
+		                                Tier 0            | 25 IOPS/GB
+		                                Tier 1            | 10 IOPS/GB
+		                                Tier 3            | 3 IOPS/GB
+		                                Fixed IOPS/Tier5k | 5000 IOPS upto 200GB
+		                                Note: The use of fixed IOPS is limited to volumes with a size of 200 GB or less, which is the break even size with Tier 0 (200 GB @ 25 IOPS/GB = 5000 IOPS). (default "tier3")
+	*/
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ServiceCredName, "cos-service-cred", "", "IBM COS Service Credential name to be auto generated(default \""+serviceCredPrefix+"-<COS Name>\")")
 	_ = Cmd.MarkFlagRequired("bucket")
 	_ = Cmd.MarkFlagRequired("bucket-region")
 	_ = Cmd.MarkFlagRequired("pvs-image-name")
