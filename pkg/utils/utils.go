@@ -61,12 +61,11 @@ func PollUntil(pollInterval, timeOut <-chan time.Time, condition func() (bool, e
 		select {
 		case <-timeOut:
 			return fmt.Errorf("timed out while waiting for job to complete")
-		case <-pollInterval:
-			if done, err := condition(); err != nil {
+		default:
+			if done, err := condition(); err != nil || done {
 				return err
-			} else if done {
-				return nil
 			}
+			<-pollInterval
 		}
 	}
 }
