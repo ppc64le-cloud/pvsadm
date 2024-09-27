@@ -4,7 +4,7 @@ This guide talks about how to upload image file to Cloud object Storage instance
 # Prerequisite
 - pvsadm tool
 - Image file(RHEL/CENTOS/CoreOS)
-- IBMCLOUD_API_KEY. [How to create api key](https://cloud.ibm.com/docs/account?topic=account-userapikey#create_user_key)
+- IBMCLOUD_APIKEY. [How to create api key](https://cloud.ibm.com/docs/account?topic=account-userapikey#create_user_key)
 
 # Image upload command help:
 ```shell

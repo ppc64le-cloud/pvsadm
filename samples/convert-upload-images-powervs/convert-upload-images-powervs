@@ -128,9 +128,9 @@ function variables {
   rm -f "$VAR_TEMPLATE" "$VAR_FILE"
 
   debug_switch
-  [ "${IBMCLOUD_API_KEY}" == "" ] && error "Please export IBMCLOUD_API_KEY"
-  log "Trying to login with the provided IBMCLOUD_API_KEY..."
-  $CLI_PATH login --apikey "$IBMCLOUD_API_KEY" -q --no-region > /dev/null
+  [ "${IBMCLOUD_APIKEY}" == "" ] && error "Please export IBMCLOUD_APIKEY"
+  log "Trying to login with the provided IBMCLOUD_APIKEY..."
+  $CLI_PATH login --apikey "$IBMCLOUD_APIKEY" -q --no-region > /dev/null
   debug_switch
 
   service_instance=$SERVICE_NAME
@@ -427,7 +427,7 @@ function upload_image_remote {
   for i in $(seq 1 "$NO_OF_RETRY"); do
     echo "Attempt: $i/$NO_OF_RETRY"
     LOG_FILE="logs/upload_image_remote_${i}_${LOGFILE}.log"
-    ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "cd \"$REMOTE_TEMP_DIR\"; pvsadm image upload --api-key \"$IBMCLOUD_API_KEY\"  --bucket \"$cos_bucket_name\" --file \"$image_name\" --bucket-region \"$cos_region_name\" 2>&1" > $LOG_FILE || true
+    ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 10' -i $VAR_PRIVATE_KEY_FILE root@${BASTION_PUBLIC_IP} "cd \"$REMOTE_TEMP_DIR\"; pvsadm image upload --api-key \"$IBMCLOUD_APIKEY\"  --bucket \"$cos_bucket_name\" --file \"$image_name\" --bucket-region \"$cos_region_name\" 2>&1" > $LOG_FILE || true
     if grep -c "object already exists in the $cos_bucket_name bucket" "$LOG_FILE" >/dev/null; then
       warn "$image_name object already exists in the $cos_bucket_name bucket. Skipping upload"
       time_taken "$message"
@@ -493,7 +493,7 @@ function import_image_remote {
   for i in $(seq 1 "$NO_OF_RETRY"); do
     echo "Attempt: $i/$NO_OF_RETRY"
     LOG_FILE="logs/import_image_remote_${service_name}_${i}_${LOGFILE}.log"
-    import_cmd="cd \"$REMOTE_TEMP_DIR\"; pvsadm image import --workspace-name \"$service_name\" --bucket \"$cos_bucket_name\" --bucket-region \"$cos_bucket_region\" --object \"$object_name\" --pvs-image-name \"$image_name\" --api-key \"$IBMCLOUD_API_KEY\" -w  --watch-timeout 2h "
+    import_cmd="cd \"$REMOTE_TEMP_DIR\"; pvsadm image import --workspace-name \"$service_name\" --bucket \"$cos_bucket_name\" --bucket-region \"$cos_bucket_region\" --object \"$object_name\" --pvs-image-name \"$image_name\" --api-key \"$IBMCLOUD_APIKEY\" -w  --watch-timeout 2h "
     if [ -n "${access_key}" ] && [ -n "${secret_key}" ] ; then
       import_cmd+="--accesskey \"$access_key\" --secretkey \"$secret_key\" "
     fi

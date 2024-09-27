@@ -34,7 +34,7 @@ var Cmd = &cobra.Command{
 	Long: `Purge the PowerVS resources
 
 # Set the API key or feed the --api-key commandline argument
-export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
+export IBMCLOUD_APIKEY=<IBMCLOUD_APIKEY>
 
 Examples:
   # Delete all the virtual machines which are created before 4hrs

@@ -49,9 +49,7 @@ Integrated with the IBM Cloud platform for on-demand provisioning.
 This is a tool built for the Power Systems Virtual Server helps managing and maintaining the resources easily`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if pkg.Options.APIKey == "" {
-			// TODO : deprecate IBMCLOUD_API_KEY for IBMCLOUD_APIKEY
-			// The GetAuthenticatorFromEnvironment requires "IBMCLOUD_APIKEY" to be set, apart from IBMCLOUD_API_KEY used in the project.
-			// In order to use the resourcecontrollerv2's functionality, the IBMCLOUD_API_KEY is re-exported as IBMCLOUD_APIKEY.
+			// The GetAuthenticatorFromEnvironment requires "IBMCLOUD_APIKEY" to be set.
 			// Ref: github.com/ibm/go-sdk-core/v5@v5.17.2/core/config_utils.go, which is available from either from a credentials file, environment or VCAP service.
 			if pkg.Options.APIKey = os.Getenv("IBMCLOUD_API_KEY"); pkg.Options.APIKey != "" {
 				klog.Warning("IBMCLOUD_API_KEY will be deprecated in future releases. Use IBMCLOUD_APIKEY instead.")

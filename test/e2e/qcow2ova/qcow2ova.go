@@ -36,7 +36,7 @@ var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 
 	BeforeSuite(func() {
 		var err error
-		Expect(os.Getenv("IBMCLOUD_API_KEY")).NotTo(BeEmpty(), "IBMCLOUD_API_KEY must be set before running \"make test\"")
+		Expect(os.Getenv("IBMCLOUD_APIKEY")).NotTo(BeEmpty(), "IBMCLOUD_APIKEY must be set before running \"make test\"")
 		image, err = os.CreateTemp("", "qcow2ova")
 		Expect(err).NotTo(HaveOccurred())
 		_, err = image.WriteString("some dummy image")

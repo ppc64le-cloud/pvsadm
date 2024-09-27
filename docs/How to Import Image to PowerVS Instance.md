@@ -3,7 +3,7 @@ This guide talks about how to import image to PowerVS workspace using pvsadm.
 
 # Prerequisite
 - pvsadm tool
-- IBMCLOUD_API_KEY. [How to create API key](https://cloud.ibm.com/docs/account?topic=account-userapikey#create_user_key)
+- IBMCLOUD_APIKEY. [How to create API key](https://cloud.ibm.com/docs/account?topic=account-userapikey#create_user_key)
 - S3 BucketName, Bucket Region, ObjectName
 - PowerVS Workspace Name/PowerVS Workspace ID.
 
@@ -30,7 +30,7 @@ Flags:
 
 Set the API key variable
 ```shell
-$export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
+$export IBMCLOUD_APIKEY=<IBMCLOUD_APIKEY>
 ```
 
 ### case 1:
