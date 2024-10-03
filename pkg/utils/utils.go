@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/briandowns/spinner"
 )
 
 func FormatProcessor(proc *float64) string {
@@ -67,6 +69,45 @@ func PollUntil(pollInterval, timeOut <-chan time.Time, condition func() (bool, e
 			} else if done {
 				return nil
 			}
+		}
+	}
+}
+
+// SpinnerPollUntil validates if a certain condition is met at defined poll intervals.
+// until the condition is met, a loading spinner is displayed
+// If a timeout is reached, an associated error is returned to the caller.
+// condition contains the use-case specific code that returns true when a certain condition is achieved.
+func SpinnerPollUntil(pollInterval, timeOut <-chan time.Time, condition func() (string, bool, error)) error {
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Color("cyan")
+	startTime := time.Now()
+
+	var message string
+	var done bool
+	var err error
+	secondTicker := time.NewTicker(1 * time.Second)
+	defer secondTicker.Stop()
+
+	_, done, err = condition()
+	if err != nil {
+		return fmt.Errorf("initial condition check failed: %w", err)
+	}
+	s.Start()
+	for {
+		select {
+		case <-secondTicker.C:
+			s.Suffix = fmt.Sprintf(" %s (Time elapsed: %s)", message, time.Since(startTime).Round(time.Second))
+		case <-pollInterval:
+			message, done, err = condition()
+			if err != nil || done {
+				s.Stop()
+				return err
+			}
+		case <-timeOut:
+			s.Stop()
+			s.Suffix = " timed out while waiting for job to complete"
+			return fmt.Errorf("timed out while waiting for job to complete")
+
 		}
 	}
 }
