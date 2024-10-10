@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/briandowns/spinner"
 )
 
 func FormatProcessor(proc *float64) string {
@@ -56,17 +58,42 @@ func RetrieveValFromMap[K comparable, V any](m map[K]V, key K) V {
 // PollUntil validates if a certain condition is met at defined poll intervals.
 // If a timeout is reached, an associated error is returned to the caller.
 // condition contains the use-case specific code that returns true when a certain condition is achieved.
-func PollUntil(pollInterval, timeOut <-chan time.Time, condition func() (bool, error)) error {
+func PollUntil(pollInterval, timeOut <-chan time.Time, condition func() (string, bool, error)) error {
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Color("cyan")
+	startTime := time.Now()
+
+	var message string
+	var done bool
+	var err error
+	var totalElapsed time.Duration
+	secondTicker := time.NewTicker(1 * time.Second)
+	defer secondTicker.Stop()
+
+	message, done, err = condition()
+	if err != nil {
+		return fmt.Errorf("initial condition check failed: %w", err)
+	} else if done {
+		fmt.Printf("Operation completed successfully. Message: %s (Total time: %s)\n", message, totalElapsed.Round(time.Second))
+		return nil
+	}
+	s.Start()
 	for {
 		select {
-		case <-timeOut:
-			return fmt.Errorf("timed out while waiting for job to complete")
+		case <-secondTicker.C:
+			s.Suffix = fmt.Sprintf(" %s (Time elapsed: %s)", message, time.Since(startTime).Round(time.Second))
 		case <-pollInterval:
-			if done, err := condition(); err != nil {
+			message, done, err = condition()
+			if err != nil || done {
+				s.Stop()
 				return err
-			} else if done {
-				return nil
 			}
+		case <-timeOut:
+			s.Stop()
+			timeoutMessage := " timed out while waiting for job to complete"
+			s.Suffix = timeoutMessage
+			return fmt.Errorf("timed out while waiting for job to complete")
+
 		}
 	}
 }
