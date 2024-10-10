@@ -156,3 +156,19 @@ jobs:
         asset_path: pvsadm-binaries.tar.gz
         asset_name: pvsadm-binaries.tar.gz
         asset_content_type: application/tar+gzip
+
+    - name: Update Homebrew formula
+      uses: dawidd6/action-homebrew-bump-formula@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        no_fork: true
+        tap: ppc64le-cloud/homebrew-pvsadm
+        formula: |
+            pvsadm_darwin_amd64
+            pvsadm_darwin_arm64
+            pvsadm_linux_amd64
+  
+        livecheck: true
+        tag: ${{ steps.get_version.outputs.VERSION }}
+        revision: ${{github.sha}}
+        force: false
