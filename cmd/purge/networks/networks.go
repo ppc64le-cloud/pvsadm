@@ -73,20 +73,27 @@ pvsadm purge --help for information
 						// Clean up instances and ports associated with the network instance
 						for _, port := range ports.Ports {
 							pvminstance := port.PvmInstance
-							portID := port.PortID
-							if deleteInstances && pvminstance != nil {
+							if deleteInstances && (pvminstance != nil) {
 								err = pvmclient.InstanceClient.Delete(pvminstance.PvmInstanceID)
 								if err != nil {
-									return fmt.Errorf("failed to delete the instance: %v", err)
+									if opt.IgnoreErrors {
+										klog.Errorf("error occurred while deleting PVMInstance: %s associated with network %s : %v", pvminstance.PvmInstanceID, *network.Name, err)
+									} else {
+										return err
+									}
 								}
 								klog.Infof("Successfully deleted a instance %s using network '%s'", pvminstance.PvmInstanceID, *network.Name)
 							}
 							if deletePorts {
-								err = pvmclient.NetworkClient.DeletePort(*network.NetworkID, *portID)
+								err = pvmclient.NetworkClient.DeletePort(*network.NetworkID, *port.PortID)
 								if err != nil {
-									return fmt.Errorf("failed to delete a port, err: %v", err)
+									if opt.IgnoreErrors {
+										klog.Errorf("error occurred while deleting port: %s associated with network %s : %v", *port.PortID, *network.Name, err)
+									} else {
+										return err
+									}
 								}
-								klog.Infof("Successfully deleted a port %s using network '%s'", *portID, *network.Name)
+								klog.Infof("Successfully deleted a port %s using network '%s'", *port.PortID, *network.Name)
 							}
 						}
 					}
@@ -108,6 +115,6 @@ pvsadm purge --help for information
 }
 
 func init() {
-	Cmd.PersistentFlags().BoolVar(&deletePorts, "ports", false, "Delete ports")
-	Cmd.PersistentFlags().BoolVar(&deleteInstances, "instances", false, "Delete instances")
+	Cmd.PersistentFlags().BoolVar(&deletePorts, "ports", false, "Delete ports that are associated with the network")
+	Cmd.PersistentFlags().BoolVar(&deleteInstances, "instances", false, "Delete instances that are associated with the network")
 }

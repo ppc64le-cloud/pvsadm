@@ -16,6 +16,7 @@ package keys
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
@@ -82,4 +83,10 @@ pvsadm purge --help for information
 		}
 		return nil
 	},
+}
+
+func init() {
+	Cmd.PersistentFlags().DurationVar(&pkg.Options.Since, "since", 0*time.Second, "Remove resources since mentioned duration(format: 99h99m00s), mutually exclusive with --before")
+	Cmd.PersistentFlags().DurationVar(&pkg.Options.Before, "before", 0*time.Second, "Remove resources before mentioned duration(format: 99h99m00s), mutually exclusive with --since")
+	Cmd.MarkFlagsMutuallyExclusive("since", "before")
 }

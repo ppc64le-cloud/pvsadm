@@ -15,8 +15,7 @@
 package purge
 
 import (
-	"fmt"
-	"time"
+	"github.com/spf13/cobra"
 
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/images"
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/keys"
@@ -25,7 +24,6 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/cmd/purge/volumes"
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 var Cmd = &cobra.Command{
@@ -81,11 +79,6 @@ Examples:
 		if err := root.PersistentPreRunE(cmd, args); err != nil {
 			return err
 		}
-
-		if pkg.Options.Since != 0 && pkg.Options.Before != 0 {
-			return fmt.Errorf("--since and --before options can not be set at a time")
-		}
-
 		return utils.EnsurePrerequisitesAreSet(pkg.Options.APIKey, pkg.Options.WorkspaceID, pkg.Options.WorkspaceName)
 	},
 }
@@ -103,8 +96,6 @@ func init() {
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceID, "workspace-id", "", "", "Workspace ID of the PowerVS workspace")
 	Cmd.PersistentFlags().StringVarP(&pkg.Options.WorkspaceName, "workspace-name", "", "", "Workspace name of the PowerVS workspace")
 	Cmd.PersistentFlags().BoolVar(&pkg.Options.DryRun, "dry-run", false, "dry run the action and don't delete the actual resources")
-	Cmd.PersistentFlags().DurationVar(&pkg.Options.Since, "since", 0*time.Second, "Remove resources since mentioned duration(format: 99h99m00s), mutually exclusive with --before")
-	Cmd.PersistentFlags().DurationVar(&pkg.Options.Before, "before", 0*time.Second, "Remove resources before mentioned duration(format: 99h99m00s), mutually exclusive with --since")
 	Cmd.PersistentFlags().BoolVar(&pkg.Options.NoPrompt, "no-prompt", false, "Show prompt before doing any destructive operations")
 	Cmd.PersistentFlags().BoolVar(&pkg.Options.IgnoreErrors, "ignore-errors", false, "Ignore any errors during the operations")
 	Cmd.PersistentFlags().StringVar(&pkg.Options.Expr, "regexp", "", "Regular Expressions for filtering the selection")
