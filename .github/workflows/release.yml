@@ -156,3 +156,19 @@ jobs:
         asset_path: pvsadm-binaries.tar.gz
         asset_name: pvsadm-binaries.tar.gz
         asset_content_type: application/tar+gzip
+
+    - name: Update Homebrew formula
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+        GH_TOKEN: ${{ secrets.GH_TOKEN}}
+      run: |
+        cd ci/
+        chmod +x brew_formula_updater.sh
+        git config --global user.name "pvsadm GitHub Actions"
+        git config --global user.email "pvsadmactions@github.com"
+        GET_VERSION_OUTPUT="${{ steps.get_version.outputs.VERSION }}"
+        NEW_VERSION=${GET_VERSION_OUTPUT#v}
+        BASE_REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+        BREW_TAP_REPO_URL="https://github.com/ppc64le-cloud/homebrew-pvsadm"
+        FORMULA_FILE="pvsadm.rb"
+        ./brew_formula_updater.sh "$BASE_REPO_URL" "$NEW_VERSION" "$BREW_TAP_REPO_URL" "$FORMULA_FILE"
