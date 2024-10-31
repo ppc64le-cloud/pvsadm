@@ -8,7 +8,7 @@ require (
 	github.com/IBM/ibm-cos-sdk-go v1.11.1
 	github.com/IBM/platform-services-go-sdk v0.71.0
 	github.com/charmbracelet/huh v0.6.0
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/go-openapi/strfmt v0.23.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/klauspost/pgzip v1.2.6
