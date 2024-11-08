@@ -262,20 +262,19 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return err
 		}
 		start := time.Now()
-		err = utils.PollUntil(time.Tick(2*time.Minute), time.After(opt.WatchTimeout), func() (bool, error) {
+		err = utils.SpinnerPollUntil(time.Tick(2*time.Minute), time.After(opt.WatchTimeout), func() (string, bool, error) {
 			job, err := pvmclient.JobClient.Get(*jobRef.ID)
 			if err != nil {
-				return false, fmt.Errorf("image import job failed to complete, err: %v", err)
+				return "", false, fmt.Errorf("image import job failed to complete, err: %v", err)
 			}
 			if *job.Status.State == jobStateCompleted {
-				klog.V(2).Infof("Image uploaded successfully, took %s", time.Since(start).Round(time.Second))
-				return true, nil
+				return "", true, nil
 			}
 			if *job.Status.State == jobStateFailed {
-				return false, fmt.Errorf("image import job failed to complete, err: %v", job.Status.Message)
+				return "", false, fmt.Errorf("image import job failed to complete, err: %v", job.Status.Message)
 			}
-			klog.Infof("Image import is in-progress, current state: %s", *job.Status.State)
-			return false, nil
+			message := fmt.Sprintf("Image import is in-progress, current state: %s", *job.Status.State)
+			return message, false, nil
 		})
 		if err != nil {
 			return err
@@ -296,17 +295,17 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			return nil
 		}
 		klog.Infof("Waiting for image %s to be active. Please wait...", opt.ImageName)
-		return utils.PollUntil(time.Tick(10*time.Second), time.After(opt.WatchTimeout), func() (bool, error) {
+		return utils.SpinnerPollUntil(time.Tick(10*time.Second), time.After(opt.WatchTimeout), func() (string, bool, error) {
 			img, err := pvmclient.ImgClient.Get(*image.ImageID)
 			if err != nil {
-				return false, fmt.Errorf("failed to import the image, err: %v\n\nRun the command \"pvsadm get events -i %s\" to get more information about the failure", err, pvmclient.InstanceID)
+				return "", false, fmt.Errorf("failed to import the image, err: %v\n\nRun the command \"pvsadm get events -i %s\" to get more information about the failure", err, pvmclient.InstanceID)
 			}
 			if img.State == imageStateActive {
 				klog.Infof("Successfully imported the image: %s with ID: %s Total time taken: %s", *image.Name, *image.ImageID, time.Since(start).Round(time.Second))
-				return true, nil
+				return "", true, nil
 			}
-			klog.Infof("Waiting for image to be active. Current state: %s", img.State)
-			return false, nil
+			message := fmt.Sprintf("Waiting for image to be active. Current state: %s", img.State)
+			return message, false, nil
 		})
 	},
 }
