@@ -1,0 +1,41 @@
+name: Update Homebrew Formula on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-homebrew:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Get GitHub App User ID and setup the git environment
+      id: get-user-id
+      run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+      env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+    - run: |
+        git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+        git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com>'
+
+    - name: Generate GitHub App Token
+      uses: actions/create-github-app-token@v1
+      id: app-token
+      with:
+        app-id: ${{ vars.APP_ID }}
+        private-key: ${{ secrets.PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+
+    - name: Update Homebrew formula
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      run: |
+        RELEASE_VERSION=${{ github.event.release.tag_name#v }}
+        BASE_REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+        BREW_TAP_REPO_URL="https://github.com/ppc64le-cloud/homebrew-pvsadm"
+        FORMULA_FILE="pvsadm.rb"
+        ./ci/brew_formula_updater.sh "$BASE_REPO_URL" "$RELEASE_VERSION" "$BREW_TAP_REPO_URL" "$FORMULA_FILE"
