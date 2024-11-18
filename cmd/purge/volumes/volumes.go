@@ -16,12 +16,14 @@ package volumes
 
 import (
 	"fmt"
+
+	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
+
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"github.com/ppc64le-cloud/pvsadm/pkg/audit"
 	"github.com/ppc64le-cloud/pvsadm/pkg/client"
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
-	"github.com/spf13/cobra"
-	"k8s.io/klog/v2"
 )
 
 var Cmd = &cobra.Command{
@@ -46,6 +48,11 @@ pvsadm purge --help for information
 		volumes, err := pvmclient.VolumeClient.GetAllPurgeableByLastUpdateDate(opt.Before, opt.Since, opt.Expr)
 		if err != nil {
 			return fmt.Errorf("failed to get the list of volumes: %v", err)
+		}
+
+		if len(volumes) == 0 {
+			klog.Info("\n--NO DATA FOUND--")
+			return nil
 		}
 
 		t := utils.NewTable()

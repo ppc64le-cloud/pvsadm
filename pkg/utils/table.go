@@ -16,13 +16,15 @@ package utils
 
 import (
 	"fmt"
-	"github.com/go-openapi/strfmt"
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/go-openapi/strfmt"
+	"github.com/olekukonko/tablewriter"
+	"k8s.io/klog/v2"
 )
 
 type Table struct {
@@ -49,9 +51,8 @@ func (t *Table) Render(rows interface{}, exclude []string) {
 		s := reflect.ValueOf(rows)
 		for i := 0; i < s.Len(); i++ {
 			noData = false
-			var headers []string
+			var headers, row []string
 			val := s.Index(i).Elem()
-			var row []string
 			for i := 0; i < val.NumField(); i++ {
 				if f := strings.ToLower(val.Type().Field(i).Name); Contains(exclude, f) {
 					continue
@@ -65,7 +66,7 @@ func (t *Table) Render(rows interface{}, exclude []string) {
 		}
 	}
 	if noData {
-		fmt.Println("\n--NO DATA FOUND--")
+		klog.Info("\n--NO DATA FOUND--")
 	}
 	t.Table.Render()
 }
