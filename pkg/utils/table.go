@@ -66,7 +66,7 @@ func (t *Table) Render(rows interface{}, exclude []string) {
 		}
 	}
 	if noData {
-		klog.Info("\n--NO DATA FOUND--")
+		klog.Info("No data found to display")
 	}
 	t.Table.Render()
 }

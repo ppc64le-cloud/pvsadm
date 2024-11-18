@@ -51,7 +51,7 @@ pvsadm purge --help for information
 		}
 
 		if len(volumes) == 0 {
-			klog.Info("\n--NO DATA FOUND--")
+			klog.Info("No data found to display")
 			return nil
 		}
 
