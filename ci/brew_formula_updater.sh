@@ -22,9 +22,9 @@ if [ "$#" -ne 4 ]; then
     exit 1
 fi
 
-# Ensure GitHub token and GH CLI token are set
-if [[ -z "$GITHUB_TOKEN" || -z "$GH_TOKEN" ]]; then
-    echo "Error: Required tokens are not set."
+# Ensure GitHub app token is set
+if [[ -z "$GH_TOKEN" ]]; then
+    echo "Error: Required token is not set."
     exit 1
 fi
 
@@ -146,15 +146,12 @@ fi
 # Commit and push updated formula file to remote tap repository
 git add "$FORMULA_FILE"
 git commit -m "Update formula to version $NEW_VERSION"
-git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@${BREW_TAP_REPO_URL#https://}
+git remote set-url origin https://x-access-token:${GH_TOKEN}@${BREW_TAP_REPO_URL#https://}
 
 if ! git push origin "$BRANCH_NAME"; then
     echo "Error: Failed to push branch $BRANCH_NAME"
     exit 1
 fi
-
-# Need to unset GITHUB_TOKEN for gh cli to use GH_TOKEN instead
-unset GITHUB_TOKEN
 
 # Create PR
 if gh pr create --head "$BRANCH_NAME" \
