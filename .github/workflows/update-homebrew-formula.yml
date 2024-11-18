@@ -34,7 +34,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
         GH_TOKEN: ${{ steps.app-token.outputs.token }}
       run: |
-        RELEASE_VERSION=${{ github.event.release.tag_name#v }}
+        RELEASE_VERSION=${{ github.event.release.tag_name }}
+        RELEASE_VERSION=${RELEASE_VERSION#v}
         BASE_REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
         BREW_TAP_REPO_URL="https://github.com/ppc64le-cloud/homebrew-pvsadm"
         FORMULA_FILE="pvsadm.rb"
