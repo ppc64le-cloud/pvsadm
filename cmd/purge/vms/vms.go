@@ -52,6 +52,11 @@ pvsadm purge --help for information
 			return err
 		}
 
+		if len(instances) == 0 {
+			klog.Info("No data found to display")
+			return nil
+		}
+
 		t := utils.NewTable()
 		t.SetHeader([]string{"Name", "IP Addresses", "Image", "CPUS", "RAM", "STATUS", "Creation Date"})
 		for _, instance := range instances {
