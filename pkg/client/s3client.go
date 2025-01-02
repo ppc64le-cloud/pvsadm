@@ -17,6 +17,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"sync"
@@ -30,6 +31,9 @@ import (
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3/s3manager"
 	"github.com/IBM/platform-services-go-sdk/resourcecontrollerv2"
+	"github.com/vbauerster/mpb/v8"
+	"github.com/vbauerster/mpb/v8/decor"
+
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
@@ -235,11 +239,37 @@ func (c *S3Client) CopyObjectToBucket(srcBucketName string, destBucketName strin
 }
 
 type CustomReader struct {
-	fp      *os.File
-	size    int64
-	read    int64
-	signMap map[int64]struct{}
-	mux     sync.Mutex
+	fp              *os.File
+	size            int64
+	read            int64
+	mux             sync.Mutex
+	progresstracker *ProgressTracker
+	signMap         map[int64]struct{}
+}
+
+type ProgressTracker struct {
+	progress *mpb.Progress
+	bar      *mpb.Bar
+	isBarSet bool
+	counter  *formattedCounter
+}
+
+type formattedCounter struct {
+	read  *int64
+	total int64
+}
+
+func (f *formattedCounter) Decor(stat decor.Statistics) (string, int) {
+	str := fmt.Sprintf("%s/%s", formatBytes(*f.read), formatBytes(f.total))
+	return str, len(str)
+}
+
+func (f *formattedCounter) Format(string) (string, int) {
+	return "", 0
+}
+
+func (f *formattedCounter) Sync() (chan int, bool) {
+	return nil, false
 }
 
 func (r *CustomReader) Read(p []byte) (int, error) {
@@ -249,18 +279,41 @@ func (r *CustomReader) Read(p []byte) (int, error) {
 func (r *CustomReader) ReadAt(p []byte, off int64) (int, error) {
 	n, err := r.fp.ReadAt(p, off)
 	if err != nil {
+		if err == io.EOF {
+			return n, nil
+		}
 		return n, err
 	}
 	r.mux.Lock()
 	if _, ok := r.signMap[off]; ok {
 		r.read += int64(n)
-		progress := int(float32(r.read*100) / float32(r.size))
-		fmt.Printf("\rUploading: Total read(bytes):%d    progress:%d%%", r.read, progress)
+		r.progresstracker.counter.read = &r.read
 	} else {
 		r.signMap[off] = struct{}{}
 	}
+	r.progresstracker.bar.SetCurrent(r.read)
 	r.mux.Unlock()
 	return n, nil
+}
+
+// Format the bytes to a human-readable string
+func formatBytes(size int64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+	)
+
+	switch {
+	case size >= GB:
+		return fmt.Sprintf("%.2f GB", float64(size)/GB)
+	case size >= MB:
+		return fmt.Sprintf("%.2f MB", float64(size)/MB)
+	case size >= KB:
+		return fmt.Sprintf("%.2f KB", float64(size)/KB)
+	default:
+		return fmt.Sprintf("%d Bytes", size)
+	}
 }
 
 func (r *CustomReader) Seek(offset int64, whence int) (int64, error) {
@@ -269,8 +322,8 @@ func (r *CustomReader) Seek(offset int64, whence int) (int64, error) {
 
 // To upload a object to S3 bucket
 func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
-	klog.Infof("uploading the file %s", fileName)
-	//Read the content of the file
+	klog.Infof("Uploading the file %s", fileName)
+	// Read the content of the file
 	file, err := os.Open(fileName)
 	if err != nil {
 		return fmt.Errorf("err opening file %s, err: %s", fileName, err)
@@ -280,13 +333,33 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("failed to stat file %v, err: %v", fileName, err)
-
 	}
+
+	// Create the custom reader for file reading and progress tracking
 	reader := &CustomReader{
 		fp:      file,
 		size:    fileInfo.Size(),
 		signMap: map[int64]struct{}{},
 	}
+
+	// Initialize progress tracker
+	progressTracker := &ProgressTracker{
+		progress: mpb.New(),
+		counter:  &formattedCounter{read: new(int64), total: reader.size},
+	}
+
+	bar := progressTracker.progress.AddBar(reader.size,
+		mpb.PrependDecorators(
+			decor.Name("Uploading: ", decor.WC{W: 15}),
+			progressTracker.counter,
+		),
+		mpb.AppendDecorators(
+			decor.Percentage(),
+		),
+	)
+	reader.progresstracker = progressTracker
+	reader.progresstracker.bar = bar
+
 	// Create an uploader with S3 client
 	uploader := s3manager.NewUploaderWithClient(c.S3Session, func(u *s3manager.Uploader) {
 		u.PartSize = 64 * 1024 * 1024
@@ -299,13 +372,15 @@ func (c *S3Client) UploadObject(fileName, objectName, bucketName string) error {
 		Body:   reader,
 	}
 
-	// Perform an upload.
+	// Perform an upload
 	startTime := time.Now()
 	result, err := uploader.Upload(upParams)
 	if err != nil {
-		return err
+		return fmt.Errorf("upload failed: %v", err)
 	}
-	fmt.Println()
-	klog.Infof("Upload completed successfully in %s seconds to location %s", time.Since(startTime).Round(time.Second), result.Location)
+
+	progressTracker.progress.Wait()
+
+	klog.Infof("Upload completed successfully in %s to location %s", time.Since(startTime).Round(time.Second), result.Location)
 	return nil
 }
