@@ -4,9 +4,9 @@ go 1.22.4
 
 require (
 	github.com/IBM-Cloud/power-go-client v1.9.0
-	github.com/IBM/go-sdk-core/v5 v5.18.3
+	github.com/IBM/go-sdk-core/v5 v5.18.5
 	github.com/IBM/ibm-cos-sdk-go v1.12.0
-	github.com/IBM/platform-services-go-sdk v0.72.0
+	github.com/IBM/platform-services-go-sdk v0.73.0
 	github.com/briandowns/spinner v1.23.1
 	github.com/charmbracelet/huh v0.6.0
 	github.com/fsnotify/fsnotify v1.8.0
@@ -87,11 +87,11 @@ require (
 	go.opentelemetry.io/otel v1.17.0 // indirect
 	go.opentelemetry.io/otel/metric v1.17.0 // indirect
 	go.opentelemetry.io/otel/trace v1.17.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/term v0.27.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
