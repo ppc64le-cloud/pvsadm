@@ -8,151 +8,66 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { os: darwin, arch: amd64 }
+          - { os: darwin, arch: arm64 }
+          - { os: linux, arch: amd64 }
+          - { os: linux, arch: ppc64le }
+          - { os: windows, arch: amd64 }
     steps:
-    - name: Get the target release version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
 
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version-file: 'go.mod'
-    - run: go version
+      - name: Get the target release version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-    - name: Build
-      run: |
-        mkdir -p bin
-        VERSION=${{ steps.get_version.outputs.VERSION }}
-        STATIC_FLAG='-w -extldflags "-static"'
-        for platform in darwin/amd64 darwin/arm64 linux/amd64 linux/ppc64le windows/amd64
-        do
-          os_name=$(echo "$platform" | cut -d "/" -f 1)
-          arch=$(echo "$platform" | cut -d "/" -f 2)
-          CGO_ENABLED=0 GOOS=${os_name} GOARCH=${arch} go build -a -tags netgo -ldflags "-X github.com/ppc64le-cloud/pvsadm/pkg/version.Version=${VERSION} ${STATIC_FLAG}" -o bin/${os_name}-${arch}/pvsadm .
-          tar -czvf pvsadm-${os_name}-${arch}.tar.gz -C bin/${os_name}-${arch} pvsadm
-        done
-        tar -czvf pvsadm-binaries.tar.gz bin/
+      - name: Build
+        run: |
+          mkdir -p bin/
+          STATIC_FLAG='-w -extldflags "-static"'
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          CGO_ENABLED=0 GOOS=${{ matrix.platform.os }} GOARCH=${{ matrix.platform.arch }} \
+            go build -a -tags netgo -ldflags "-X github.com/ppc64le-cloud/pvsadm/pkg/version.Version=${VERSION} ${STATIC_FLAG}" \
+            -o bin/pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
+          tar -czvf pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}.tar.gz -C bin/ pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ steps.get_version.outputs.VERSION }}
-        draft: true
-        prerelease: true
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
+          path: |
+            bin/pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
+            pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}.tar.gz
 
-    - name: Upload linux - amd64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/linux-amd64/pvsadm
-        asset_name: pvsadm-linux-amd64
-        asset_content_type: application/octet-stream
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded-artifacts
 
-    - name: Upload linux - amd64 - tar.gz
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: pvsadm-linux-amd64.tar.gz
-        asset_name: pvsadm-linux-amd64.tar.gz
-        asset_content_type: application/tar+gzip
-
-    - name: Upload linux - ppc64le
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/linux-ppc64le/pvsadm
-        asset_name: pvsadm-linux-ppc64le
-        asset_content_type: application/octet-stream
-
-    - name: Upload linux - ppc64le - tar.gz
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: pvsadm-linux-ppc64le.tar.gz
-        asset_name: pvsadm-linux-ppc64le.tar.gz
-        asset_content_type: application/tar+gzip
-
-    - name: Upload darwin/amd64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/darwin-amd64/pvsadm
-        asset_name: pvsadm-darwin-amd64
-        asset_content_type: application/octet-stream
-
-    - name: Upload darwin/amd64 - tar.gz
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: pvsadm-darwin-amd64.tar.gz
-        asset_name: pvsadm-darwin-amd64.tar.gz
-        asset_content_type: application/tar+gzip
-
-    - name: Upload darwin/arm64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/darwin-arm64/pvsadm
-        asset_name: pvsadm-darwin-arm64
-        asset_content_type: application/octet-stream
-
-    - name: Upload darwin/arm64 - tar.gz
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: pvsadm-darwin-arm64.tar.gz
-        asset_name: pvsadm-darwin-arm64.tar.gz
-        asset_content_type: application/tar+gzip
-
-    - name: Upload Windows - amd64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/windows-amd64/pvsadm
-        asset_name: pvsadm-windows-amd64
-        asset_content_type: application/octet-stream
-
-    - name: Upload Windows - amd64 - tar.gz
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: pvsadm-windows-amd64.tar.gz
-        asset_name: pvsadm-windows-amd64.tar.gz
-        asset_content_type: application/tar+gzip
-
-    - name: Upload all
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: pvsadm-binaries.tar.gz
-        asset_name: pvsadm-binaries.tar.gz
-        asset_content_type: application/tar+gzip
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          draft: true
+          prerelease: true
+          generate_release_notes: true
+          files: |
+            ./downloaded-artifacts/**
