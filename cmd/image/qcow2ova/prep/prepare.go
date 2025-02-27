@@ -105,7 +105,7 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	}
 
 	// Verify /boot is mounted properly and files are present.
-	bootDirFiles := []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.gz", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
+	bootDirFiles := []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.*", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
 	for _, file := range bootDirFiles {
 		exist, err := checkFileExists(filepath.Join(mnt, "boot", file))
 		if err != nil {
