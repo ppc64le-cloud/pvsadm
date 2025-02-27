@@ -359,8 +359,8 @@ github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyC
 github.com/valyala/fasthttp v1.2.0/go.mod h1:4vX61m6KN+xDduDNwXrhIAVZaZaZiQ1luJk8LWSxF3s=
 github.com/valyala/quicktemplate v1.2.0/go.mod h1:EH+4AkTd43SvgIbQHYu59/cJyxDoOVRUAfrukLPuGJ4=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV9WzVtRmSR+PDvWpU/qWl4Wa5LApYYX4ZtKbio=
-github.com/vbauerster/mpb/v8 v8.9.2 h1:kb91+D643Qg040bbICYtzpjgZ9ypVO/+sjv4Jcm6si4=
-github.com/vbauerster/mpb/v8 v8.9.2/go.mod h1:hxS8Hz4C6ijnppDSIX6LjG8FYJSoPo9iIOcE53Zik0c=
+github.com/vbauerster/mpb/v8 v8.9.3 h1:PnMeF+sMvYv9u23l6DO6Q3+Mdj408mjLRXIzmUmU2Z8=
+github.com/vbauerster/mpb/v8 v8.9.3/go.mod h1:hxS8Hz4C6ijnppDSIX6LjG8FYJSoPo9iIOcE53Zik0c=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
