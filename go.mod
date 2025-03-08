@@ -1,10 +1,11 @@
 module github.com/ppc64le-cloud/pvsadm
 
 go 1.22.4
+toolchain go1.23.7
 
 require (
 	github.com/IBM-Cloud/power-go-client v1.10.0
-	github.com/IBM/go-sdk-core/v5 v5.18.5
+	github.com/IBM/go-sdk-core/v5 v5.19.0
 	github.com/IBM/ibm-cos-sdk-go v1.12.1
 	github.com/IBM/platform-services-go-sdk v0.78.0
 	github.com/briandowns/spinner v1.23.2
@@ -90,12 +91,12 @@ require (
 	go.opentelemetry.io/otel v1.17.0 // indirect
 	go.opentelemetry.io/otel/metric v1.17.0 // indirect
 	go.opentelemetry.io/otel/trace v1.17.0 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/term v0.29.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/term v0.30.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
