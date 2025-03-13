@@ -6,7 +6,7 @@ toolchain go1.23.7
 require (
 	github.com/IBM-Cloud/power-go-client v1.11.0
 	github.com/IBM/go-sdk-core/v5 v5.19.0
-	github.com/IBM/ibm-cos-sdk-go v1.12.1
+	github.com/IBM/ibm-cos-sdk-go v1.12.2
 	github.com/IBM/platform-services-go-sdk v0.78.1
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/huh v0.6.0
