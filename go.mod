@@ -1,6 +1,7 @@
 module github.com/ppc64le-cloud/pvsadm
 
-go 1.22.4
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -12,7 +13,7 @@ require (
 	github.com/charmbracelet/huh v0.6.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-openapi/strfmt v0.23.0
-	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/klauspost/pgzip v1.2.6
 	github.com/manifoldco/promptui v0.9.0
 	github.com/olekukonko/tablewriter v0.0.5
