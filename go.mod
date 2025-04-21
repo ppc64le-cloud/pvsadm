@@ -6,9 +6,9 @@ toolchain go1.24.1
 
 require (
 	github.com/IBM-Cloud/power-go-client v1.11.0
-	github.com/IBM/go-sdk-core/v5 v5.19.0
+	github.com/IBM/go-sdk-core/v5 v5.19.1
 	github.com/IBM/ibm-cos-sdk-go v1.12.2
-	github.com/IBM/platform-services-go-sdk v0.79.0
+	github.com/IBM/platform-services-go-sdk v0.79.1
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/huh v0.7.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -54,7 +54,7 @@ require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.21.5 // indirect
-	github.com/go-openapi/errors v0.22.0 // indirect
+	github.com/go-openapi/errors v0.22.1 // indirect
 	github.com/go-openapi/jsonpointer v0.20.1 // indirect
 	github.com/go-openapi/jsonreference v0.20.3 // indirect
 	github.com/go-openapi/loads v0.21.3 // indirect
@@ -64,7 +64,7 @@ require (
 	github.com/go-openapi/validate v0.22.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.24.0 // indirect
+	github.com/go-playground/validator/v10 v10.26.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -103,4 +103,5 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )
