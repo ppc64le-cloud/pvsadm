@@ -40,7 +40,7 @@ func NewTable() *Table {
 
 func (t *Table) SetHeader(keys []string) {
 	t.doOnce.Do(func() {
-		t.Table.SetHeader(keys)
+		t.Table.Header(keys)
 	})
 }
 
