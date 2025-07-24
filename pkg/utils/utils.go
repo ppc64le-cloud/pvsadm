@@ -15,8 +15,11 @@
 package utils
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -110,4 +113,25 @@ func SpinnerPollUntil(pollInterval, timeOut <-chan time.Time, condition func() (
 
 		}
 	}
+}
+
+// Checks if "btrfs" is listed in /proc/filesystems
+func IsBtrfsSupported() (bool, error) {
+	file, err := os.Open("/proc/filesystems")
+	if err != nil {
+		return false, fmt.Errorf("failed to open /proc/filesystems: %v", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "btrfs") {
+			return true, nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return false, fmt.Errorf("error reading /proc/filesystems: %v", err)
+	}
+	return false, nil
 }
