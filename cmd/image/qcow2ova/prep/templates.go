@@ -85,7 +85,7 @@ subscription-manager clean
 rpm -e ibm-power-repo-*.noarch
 
 mv /etc/resolv.conf.orig /etc/resolv.conf || true
-touch /.autorelabel
+setfiles -F /etc/selinux/targeted/contexts/files/file_contexts /
 `
 
 var CloudConfig = `# latest file from cloud-init-22.1-1.el8.noarch
