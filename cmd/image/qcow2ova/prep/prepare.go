@@ -25,9 +25,11 @@ import (
 	"github.com/ppc64le-cloud/pvsadm/pkg/utils"
 )
 
-var (
-	hostPartitions = []string{"/proc", "/dev", "/sys", "/var/run/", "/etc/machine-id"}
-)
+var hostPartitions = map[string][]string{
+	"centos": {"/proc", "/dev", "/sys", "/var/run/", "/etc/machine-id"},
+	"rhel":   {"/proc", "/dev", "/sys", "/var/run/", "/etc/machine-id"},
+	"fedora": {"/proc", "/dev", "/sys", "/run/", "/etc/machine-id"},
+}
 
 // prepare is a function prepares the CentOS or RHEL image for capturing, this includes
 // - Installs the cloud-init
@@ -35,14 +37,14 @@ var (
 // - Install all the required modules for PowerVM
 // - Sets the root password
 func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
+	// Setup loop device and cleanup on exit
 	lo, err := setupLoop(volume)
 	if err != nil {
 		return err
 	}
 	defer removeLoop(lo)
 
-	err = partprobe(lo)
-	if err != nil {
+	if err = partprobe(lo); err != nil {
 		return err
 	}
 
@@ -51,63 +53,73 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 		return err
 	}
 
-	partDev := lo + "p" + partition
-
-	err = mount("nouuid", partDev, mnt)
-	if err != nil {
-		return err
-	}
-	defer Umount(mnt)
-
-	err = growpart(lo, partition)
-	if err != nil {
-		return err
-	}
-
+	partDev := fmt.Sprintf("%sp%s", lo, partition)
 	fsType, err := getFSType(partDev)
 	if err != nil {
+		return err
+
+	}
+	switch fsType {
+	case "btrfs":
+		if err = mount("defaults,subvol=root", partDev, filepath.Join(mnt)); err != nil {
+			return err
+		}
+		defer Umount(mnt)
+	case "ext2", "ext3", "ext4", "xfs":
+		if err = mount("nouuid", partDev, mnt); err != nil {
+			return err
+		}
+		defer Umount(mnt)
+	}
+
+	// Resize partition
+	if err = growpart(lo, partition); err != nil {
 		return err
 	}
 
 	switch fsType {
 	case "xfs":
-		err = xfsGrow(partDev)
-		if err != nil {
+		if err = xfsGrow(partDev); err != nil {
 			return err
 		}
 	case "ext2", "ext3", "ext4":
-		err = resize2fs(partDev)
-		if err != nil {
+		if err = resize2fs(partDev); err != nil {
+			return err
+		}
+	case "btrfs":
+		if err = growBtrfs(filepath.Join(mnt, "root"), "max"); err != nil {
 			return err
 		}
 	default:
 		return fmt.Errorf("unable to handle the %s filesystem for %s", fsType, partDev)
 	}
 
+	// Mount boot partition
 	fstabPath := filepath.Join(mnt, "etc", "fstab")
-
-	//get the boot partition name
-	deviceuuid, err := bootDeviceuuid(fstabPath)
-	if err != nil {
+	bootMount := filepath.Join(mnt, "boot")
+	if deviceuuid, err := bootDeviceuuid(fstabPath); err == nil && deviceuuid != "" {
+		if bootDev, err := findDevice(deviceuuid); err == nil {
+			if fsType == "btrfs" {
+				if err = mount("defaults", bootDev, bootMount); err != nil {
+					return err
+				}
+			} else {
+				if err = mount("nouuid", bootDev, bootMount); err != nil {
+					return err
+				}
+			}
+			defer Umount(bootMount)
+		} else {
+			return err
+		}
+	} else if err != nil {
 		return err
-	}
-
-	if deviceuuid != "" {
-		bootDev, err := findDevice(deviceuuid)
-		if err != nil {
-			return err
-		}
-		err = mount("nouuid", bootDev, filepath.Join(mnt, "boot"))
-		if err != nil {
-			return err
-		}
-		defer Umount(filepath.Join(mnt, "boot"))
 	}
 
 	// Verify /boot is mounted properly and files are present.
 	bootDirFiles := []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.*", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
 	for _, file := range bootDirFiles {
-		exist, err := checkFileExists(filepath.Join(mnt, "boot", file))
+		exist, err := checkFileExists(filepath.Join(bootMount, file))
 		if err != nil {
 			return fmt.Errorf("error while validating contents of /boot directory. %v", err)
 		}
@@ -117,41 +129,38 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	}
 
 	// mount the host partitions
-	for _, p := range hostPartitions {
+	for _, p := range hostPartitions[dist] {
 		err = mount("bind", p, filepath.Join(mnt, p))
 		if err != nil {
 			return err
 		}
 	}
-	defer UmountHostPartitions(mnt)
+	defer UmountHostPartitions(mnt, dist)
 
-	setupStr, err := Render(dist, rhnuser, rhnpasswd, rootpasswd)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(mnt, "setup.sh"), []byte(setupStr), 0744)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(CloudConfig), 0644)
-	if err != nil {
+	if setupStr, err := Render(dist, rhnuser, rhnpasswd, rootpasswd); err == nil {
+		if err = os.WriteFile(filepath.Join(mnt, "setup.sh"), []byte(setupStr), 0744); err != nil {
+			return err
+		}
+	} else {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(mnt, "/etc/cloud/ds-identify.cfg"), []byte(dsIdentify), 0644)
-	if err != nil {
-		return err
+	files := map[string]string{
+		"/etc/cloud/cloud.cfg":       CloudConfig,
+		"/etc/cloud/ds-identify.cfg": dsIdentify,
+	}
+	for path, content := range files {
+		if err := os.WriteFile(filepath.Join(mnt, path), []byte(content), 0644); err != nil {
+			return err
+		}
 	}
 
-	err = Chroot(mnt)
-	if err != nil {
+	if err = Chroot(mnt); err != nil {
 		return err
 	}
 	defer ExitChroot()
 
-	err = os.Chdir("/")
-	if err != nil {
+	if err = os.Chdir("/"); err != nil {
 		return err
 	}
 
@@ -163,8 +172,8 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	return nil
 }
 
-func UmountHostPartitions(mnt string) {
-	for _, p := range hostPartitions {
+func UmountHostPartitions(mnt, dist string) {
+	for _, p := range hostPartitions[dist] {
 		Umount(filepath.Join(mnt, p))
 	}
 }
@@ -176,7 +185,7 @@ func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) e
 	//}
 	//defer os.Chdir(cwd)
 	switch dist := strings.ToLower(dist); dist {
-	case "rhel", "centos":
+	case "rhel", "centos", "fedora":
 		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd)
 	case "coreos":
 		klog.Info("No image preparation required for the coreos.")

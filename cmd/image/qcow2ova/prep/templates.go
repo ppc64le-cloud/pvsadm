@@ -39,8 +39,6 @@ yum install -y cloud-init
 yum reinstall grub2-common -y
 rm -rf /etc/systemd/system/multi-user.target.wants/firewalld.service
 rpm -vih --nodeps https://public.dhe.ibm.com/software/server/POWER/Linux/yum/download/ibm-power-repo-latest.noarch.rpm
-sed -i 's/^more \/opt\/ibm\/lop\/notice/#more \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
-echo 'y' | /opt/ibm/lop/configure
 {{if eq .Dist "rhel"}}
 # Disable the AT repository due to slowness in nature
 yum-config-manager --disable Advance_Toolchain
@@ -49,6 +47,16 @@ yum-config-manager --disable Advance_Toolchain
 yum-config-manager --add-repo=https://public.dhe.ibm.com/software/server/POWER/Linux/yum/IBM/RHEL/$(rpm -E %{rhel})/ppc64le/
 rpm --import https://public.dhe.ibm.com/software/server/POWER/Linux/yum/IBM/RHEL/$(rpm -E %{rhel})/ppc64le/repodata/repomd.xml.key
 {{end}}
+{{if eq .Dist "fedora"}}
+sed -i 's/^less \/opt\/ibm\/lop\/notice/#less \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
+yum-config-manager --add-repo=https://public.dhe.ibm.com/software/server/POWER/Linux/yum/IBM/Fedora/ppc64le/
+rpm --import https://public.dhe.ibm.com/software/server/POWER/Linux/yum/IBM/Fedora/ppc64le/repodata/repomd.xml.key
+{{else}}
+sed -i 's/^more \/opt\/ibm\/lop\/notice/#more \/opt\/ibm\/lop\/notice/g' /opt/ibm/lop/configure
+{{end}}
+ 
+echo 'y' | /opt/ibm/lop/configure
+
 yum install  powerpc-utils librtas DynamicRM  devices.chrp.base.ServiceRM rsct.opt.storagerm rsct.core rsct.basic rsct.core src -y
 yum install -y device-mapper-multipath
 cat <<EOF > /etc/multipath.conf
@@ -66,10 +74,19 @@ defaults {
 }
 EOF
 sed -i 's/GRUB_TIMEOUT=.*$/GRUB_TIMEOUT=60/g' /etc/default/grub
+{{if eq .Dist "fedora"}}
+sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=.*$/GRUB_CMDLINE_LINUX="console=tty0 console=hvc0,115200n8  biosdevname=0  crashkernel=auto rd.shell rd.debug rd.driver.pre=dm_multipath log_buf_len=1M "/g' /etc/default/grub
+{{else}}
 sed -i 's/GRUB_CMDLINE_LINUX=.*$/GRUB_CMDLINE_LINUX="console=tty0 console=hvc0,115200n8  biosdevname=0  crashkernel=auto rd.shell rd.debug rd.driver.pre=dm_multipath log_buf_len=1M "/g' /etc/default/grub
+{{end}}
 echo 'force_drivers+=" dm-multipath "' >/etc/dracut.conf.d/10-mp.conf
 dracut --regenerate-all --force
-for kernel in $(rpm -q kernel | sort -V | sed 's/kernel-//')
+{{if eq .Dist "fedora"}}
+kernel_pkg="kernel-core"
+{{else}}
+kernel_pkg="kernel"
+{{end}}
+for kernel in $(rpm -q $kernel_pkg | sort -V | sed "s/$kernel_pkg-//")
 do
 	echo "Generating initramfs for kernel version: ${kernel}"
 	dracut --kver ${kernel} --force --add multipath --include /etc/multipath /etc/multipath --include /etc/multipath.conf /etc/multipath.conf
@@ -85,7 +102,7 @@ subscription-manager clean
 rpm -e ibm-power-repo-*.noarch
 
 mv /etc/resolv.conf.orig /etc/resolv.conf || true
-touch /.autorelabel
+setfiles -F /etc/selinux/targeted/contexts/files/file_contexts /
 `
 
 var CloudConfig = `# latest file from cloud-init-22.1-1.el8.noarch
