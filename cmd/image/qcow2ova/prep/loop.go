@@ -99,6 +99,15 @@ func resize2fs(device string) error {
 	return nil
 }
 
+// growBtrfs resizes the mounted Btrfs volume to max size
+func growBtrfs(mountPoint string, size string) error {
+	exitcode, out, err := utils.RunCMD("btrfs", "filesystem", "resize", size, mountPoint)
+	if exitcode != 0 {
+		return fmt.Errorf("failed to grow btrfs volume: %s, exitcode: %d, stdout: %s, err: %s", mountPoint, exitcode, out, err)
+	}
+	return nil
+}
+
 func mount(opts, src, target string) error {
 	exitcode, out, err := utils.RunCMD("mount", "-o", opts, src, target)
 	if exitcode != 0 {
