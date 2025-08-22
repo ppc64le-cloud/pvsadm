@@ -117,6 +117,8 @@ cloud_init_modules:
  - users-groups
  - ssh
 
+Set the default timezone to UTC:
+timezone: UTC
 cloud_config_modules:
  - mounts
  - locale
