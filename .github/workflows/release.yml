@@ -41,7 +41,7 @@ jobs:
           tar -czvf pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}.tar.gz -C bin/ pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pvsadm-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
           path: |
