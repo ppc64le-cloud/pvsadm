@@ -65,7 +65,7 @@ jobs:
     - name: Test
       run: make unit
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: pvsadm-binaries
         path: pvsadm-binaries.tar.gz
