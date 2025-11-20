@@ -6,9 +6,9 @@ toolchain go1.24.1
 
 require (
 	github.com/IBM-Cloud/power-go-client v1.14.3
-	github.com/IBM/go-sdk-core/v5 v5.21.0
+	github.com/IBM/go-sdk-core/v5 v5.21.1
 	github.com/IBM/ibm-cos-sdk-go v1.12.3
-	github.com/IBM/platform-services-go-sdk v0.90.0
+	github.com/IBM/platform-services-go-sdk v0.90.1
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/huh v0.8.0
 	github.com/fsnotify/fsnotify v1.9.0
