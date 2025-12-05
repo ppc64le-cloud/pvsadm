@@ -23,7 +23,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	github.com/vbauerster/mpb/v8 v8.10.2
+	github.com/vbauerster/mpb/v8 v8.11.2
 	go.uber.org/mock v0.6.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.130.1
