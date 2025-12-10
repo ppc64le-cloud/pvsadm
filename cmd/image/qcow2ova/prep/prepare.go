@@ -16,6 +16,7 @@ package prep
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,7 +35,7 @@ var (
 // - Install and configure multipath for rootfs
 // - Install all the required modules for PowerVM
 // - Sets the root password
-func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
+func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath string, writeFilesList []string) error {
 	lo, err := setupLoop(volume)
 	if err != nil {
 		return err
@@ -144,6 +145,27 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 		return err
 	}
 
+	// Write user provided files to given path in the image
+	if len(writeFilesList) > 0 {
+		imageWritePath := filepath.Join(mnt, writeToDirPath)
+		// Clean paths to resolve relative components
+		cleanMnt := filepath.Clean(mnt)
+		cleanImageWritePath := filepath.Clean(imageWritePath)
+		if cleanImageWritePath != cleanMnt && !strings.HasPrefix(cleanImageWritePath, cleanMnt+"/") {
+			return fmt.Errorf("write-to-dir-path %q escapes the image mount root", writeToDirPath)
+		}
+		if err := os.MkdirAll(imageWritePath, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", imageWritePath, err)
+		}
+		for _, filePath := range writeFilesList {
+			base := filepath.Base(filePath)
+			destinationPath := filepath.Join(imageWritePath, base)
+			if err := copyFiles(filePath, destinationPath); err != nil {
+				return err
+			}
+		}
+	}
+
 	err = Chroot(mnt)
 	if err != nil {
 		return err
@@ -169,7 +191,7 @@ func UmountHostPartitions(mnt string) {
 	}
 }
 
-func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
+func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath string, writeFilesList []string) error {
 	//cwd, err := os.Getwd()
 	//if err != nil {
 	//	return err
@@ -177,11 +199,89 @@ func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) e
 	//defer os.Chdir(cwd)
 	switch dist := strings.ToLower(dist); dist {
 	case "rhel", "centos":
-		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd)
+		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath, writeFilesList)
 	case "coreos":
 		klog.Info("No image preparation required for the coreos.")
 		return nil
 	default:
 		return fmt.Errorf("not a supported distro: %s", dist)
 	}
+}
+
+func copyFiles(src, dest string) error {
+	fileInfo, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("symlinks are not supported: %s", src)
+	}
+
+	if fileInfo.IsDir() {
+		return copyDir(src, dest)
+	}
+
+	return copyFile(src, dest, fileInfo)
+}
+
+func copyFile(src, dest string, srcInfo os.FileInfo) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		return err
+	}
+
+	return out.Close()
+}
+
+func copyDir(src, dest string) error {
+	srcInfo, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(dest, srcInfo.Mode()); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", dest, err)
+	}
+
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		destPath := filepath.Join(dest, entry.Name())
+
+		entryInfo, err := entry.Info()
+		if err != nil {
+			return err
+		}
+
+		if entryInfo.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("symlinks are not supported: %s", srcPath)
+		}
+
+		if entry.IsDir() {
+			if err := copyDir(srcPath, destPath); err != nil {
+				return err
+			}
+		} else {
+			if err := copyFile(srcPath, destPath, entryInfo); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
