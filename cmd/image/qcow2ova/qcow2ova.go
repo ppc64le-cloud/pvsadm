@@ -215,7 +215,7 @@ Qcow2 images location:
 			os.Exit(1)
 		}()
 
-		image, err := getImage(tmpDir, opt.ImageURL, 0)
+		image, err := getImage(tmpDir, opt.ImageURL, 0, "")
 		if err != nil {
 			return fmt.Errorf("failed to download the %s into %s, error: %v", opt.ImageURL, tmpDir, err)
 		}

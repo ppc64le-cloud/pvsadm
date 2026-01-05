@@ -15,6 +15,11 @@ limitations under the License.
 set -e
 #set -x
 
+error()   { echo "ERROR: $*" >&2; }
+warn()    { echo "WARN: $*"; }
+success() { echo "SUCCESS: $*"; }
+log()     { echo "LOG: $*"; }
+
 source <(curl -L https://raw.githubusercontent.com/ocp-power-automation/openshift-install-power/92996305e1a8bef69fbe613b912d5561cc753172/openshift-install-powervs 2> /dev/null | sed  's/main "$@"//g')
 
 function help {
@@ -36,7 +41,12 @@ Args:
       --cos-access-key string       Cloud Storage access key(optional)
       --cos-secret-key string       Cloud Storage secret key(optional)
       --skip-os-password            Skip the root user password (optional)
+      --sha256 string          Expected SHA256 checksum for the image(optional)
       --help                        help for upload
+      Environment Variables:
+      DOWNLOAD_MAX_RETRIES          Maximum number of retry attempts if a download fails or the checksum validation fails (default: 3)
+      DOWNLOAD_RETRY_DELAY          Delay between retries in seconds (default: 5)
+
 
 EOF
   exit 0
@@ -61,6 +71,11 @@ REBOOT_TIMEOUT=30
 PVSADM_VERSION="v0.1.11"
 IMAGE_SIZE="11"
 TARGET_DISK_SIZE="120"
+
+# Download retry configuration
+DOWNLOAD_MAX_RETRIES=${DOWNLOAD_MAX_RETRIES:-"3"}
+DOWNLOAD_RETRY_DELAY=${DOWNLOAD_RETRY_DELAY:-"5"}
+DOWNLOAD_TIMEOUT=300
 
 # Default Centos image name
 CENTOS_VM_IMAGE_NAME='CentOS-Stream-8'
@@ -612,16 +627,156 @@ function copy_image_file {
 }
 
 function download_url() {
-  local url=$1
+  local url="$1"
+  local expected_sha256="$2"
   local image_name=${url##*/}
-  rm -rf $image_name
-  retry "curl -fsSL $url -o ./$image_name"
-  if [[ $? -eq 0 ]]; then
-    #IMAGE_PATH=$(realpath ./$image_name)
-    IMAGE_PATH=./$image_name
-    DOWNLOAD_IMAGE_NAME=$image_name
+  local retry_count=0
+  local download_success=false
+  
+  log "========================================="
+  log "Starting download: $(basename "$image_name")"
+  log "Source URL: $url"
+  log "========================================="
+  
+  # Validate URL before attempting download
+  validate_url "$url"
+  
+  # Remove any existing file
+  rm -f "$image_name"
+
+  # Retry loop: focus purely on download
+  while [ $retry_count -lt $DOWNLOAD_MAX_RETRIES ]; do
+    if [ $retry_count -gt 0 ]; then
+      warn "Retry attempt $retry_count of $DOWNLOAD_MAX_RETRIES"
+      sleep $DOWNLOAD_RETRY_DELAY
+    else
+      log "Download attempt $((retry_count + 1)) of $DOWNLOAD_MAX_RETRIES"
+    fi
+
+    log "Downloading $(basename "$image_name")..."
+    if curl -fLSs --retry 2 --retry-delay 2 --connect-timeout 60 \
+      --max-time $DOWNLOAD_TIMEOUT "$url" -o "./$image_name" 2>&1; then
+      download_success=true
+      break
+    else
+      local curl_exit=$?
+      error "Download failed (curl exit code: $curl_exit)"
+      case $curl_exit in
+        1) error "  Could not resolve host (DNS failure)" ;;
+        2) error "  Failed to connect to host" ;;
+        3) error "  Partial file transfer" ;;
+        4) error "  HTTP error (404/403/etc.)" ;;
+        5) error "  Operation timeout" ;;
+        6) error "  SSL connection error" ;;
+        *) error "  See curl manual for exit code $curl_exit" ;;
+      esac
+      rm -f "./$image_name"
+      retry_count=$((retry_count + 1))
+    fi
+  done
+
+  # Verify file existence and content after all download attempts
+  if [ ! -f "./$image_name" ] || [ ! -s "./$image_name" ]; then
+    error "Downloaded file is missing or empty after $DOWNLOAD_MAX_RETRIES attempts."
+    return 1
+  fi
+
+  # Perform verification once, after successful download
+  log "Download completed — running one-time verification checks..."
+
+  if ! verify_file_size "./$image_name" "$url"; then
+    warn "File size verification failed; please verify manually."
+  fi
+
+  if ! verify_sha256 "./$image_name" "$expected_sha256"; then
+    error "Checksum verification failed; downloaded file may be corrupted."
+    return 1
+  fi
+
+  IMAGE_PATH="./$image_name"
+  DOWNLOAD_IMAGE_NAME="$image_name"
+
+  success "========================================="
+  success "✓ Download and verification completed successfully!"
+  success "  File: $(basename "$image_name")"
+  success "  Location: $IMAGE_PATH"
+  success "========================================="
+  return 0
+}
+
+
+  # All retries failed
+  if [ "$download_success" = false ]; then
+    error "========================================="
+    error "✗ Failed to download after $DOWNLOAD_MAX_RETRIES attempts"
+    error "========================================="
+    error "Troubleshooting steps:"
+    error "  1. Check your internet connection"
+    error "  2. Verify the URL is correct and accessible:"
+    error "     $url"
+    error "  3. Ensure special characters in URL are properly escaped"
+    error "  4. Check if the checksum value is correct"
+    error "  5. Try downloading manually to diagnose:"
+    error "     curl -LO \"$url\""
+    error "  6. Increase retry attempts: export DOWNLOAD_MAX_RETRIES=5"
+    return 1
+  fi
+
+
+#-------------------------------------------------------------------------
+# Verify file size matches expected size from HTTP headers
+#-------------------------------------------------------------------------
+function verify_file_size() {
+  local file="$1"
+  local url="$2"
+  
+  log "Verifying file size for $(basename "$file")..."
+  
+  # Get expected size from HTTP headers
+  local expected_size=$(curl -sI "$url" | grep -i "^content-length:" | awk '{print $2}' | tr -d '\r\n')
+  
+  if [ -z "$expected_size" ] || [ "$expected_size" = "0" ]; then
+    warn "Unable to determine expected file size from server, skipping size verification"
+    return 0
+  fi
+  
+  # Get actual file size
+  local actual_size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null)
+  
+  log "Expected size: $(numfmt --to=iec-i --suffix=B $expected_size 2>/dev/null || echo "$expected_size bytes")"
+  log "Actual size:   $(numfmt --to=iec-i --suffix=B $actual_size 2>/dev/null || echo "$actual_size bytes")"
+  
+  # Allow 1% difference for potential metadata differences
+  local size_diff=$((expected_size - actual_size))
+  local size_diff_abs=${size_diff#-}
+  local threshold=$((expected_size / 100))
+  
+  if [ "$size_diff_abs" -le "$threshold" ]; then
+    success "✓ File size verification PASSED"
+    return 0
   else
-    error "Unable to fetch the url"
+    error "✗ File size verification FAILED (difference: $size_diff_abs bytes)"
+    return 1
+  fi
+}
+
+#-------------------------------------------------------------------------
+# Validate URL for common issues
+#-------------------------------------------------------------------------
+function validate_url() {
+  local url="$1"
+  
+  # Check for unescaped ampersands
+  if [[ "$url" =~ [^\\]\&[^\ ] ]]; then
+    warn "⚠ Warning: URL contains unescaped & characters"
+    warn "  This may cause download issues. Consider escaping with \\& or using quotes"
+    warn "  URL: $url"
+  fi
+  
+  # Check if URL is accessible
+  if ! curl -sf --head "$url" >/dev/null 2>&1; then
+    warn "⚠ Warning: Unable to verify URL accessibility"
+    warn "  This might indicate network issues or incorrect URL"
   fi
 }
 
@@ -632,15 +787,15 @@ function download_image {
   if [[ "$1" == "rhel" ]];then
     if echo $RHEL_URL | grep -q -i  'access.cdn.redhat.com' ; then
       log "downloading rhel image"
-      download_url $RHEL_URL
+      download_url "$RHEL_URL" "$IMAGE_SHA256" 
       RHEL_IMAGE=$IMAGE_PATH
       RHEL_DOWNLOADED_IMAGE_NAME=$DOWNLOAD_IMAGE_NAME
       RHEL_NEW_IMAGE_PATH=$IMAGE_NEW_PATH
       COPY_RHEL_IMAGE=1
     fi
   elif [[ "$1" == "rhcos" ]];then
-    download_url $RHCOS_URL
-    RHCOS_IMAGE=IMAGE_PATH
+    download_url "$RHCOS_URL" "$IMAGE_SHA256"
+    RHCOS_IMAGE=$IMAGE_PATH
     RHCOS_DOWNLOAD_IMAGE_NAME=$DOWNLOAD_IMAGE_NAME
     copy_image_file $RHCOS_IMAGE $RHCOS_OBJECT_NAME
     RHCOS_NEW_IMAGE_PATH=$IMAGE_NEW_PATH
@@ -649,6 +804,61 @@ function download_image {
     warn "Unknown image"
   fi
 }
+function calc_sha256() {
+  local f="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$f" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$f" | awk '{print $1}'
+  elif command -v openssl >/dev/null 2>&1; then
+    openssl dgst -sha256 "$f" | awk '{print $NF}'
+  else
+    error "No SHA-256 tool available (need sha256sum, shasum, or openssl)"
+  fi
+}
+
+
+function verify_sha256() {
+  local f="$1"
+  local expected="$2"
+  
+  if [ -z "$expected" ]; then
+    warn "No checksum provided for $(basename "$f"), skipping verification"
+    return 0
+  fi
+  
+  log "Verifying SHA256 checksum for $(basename "$f")..."
+  
+  local actual
+  actual="$(calc_sha256 "$f")"
+  
+  if [ -z "$actual" ]; then
+    error "Failed to calculate checksum for $f"
+    return 1
+  fi
+
+  local actual_lc=$(echo "$actual" | tr '[:upper:]' '[:lower:]')
+  local expected_lc=$(echo "$expected" | tr '[:upper:]' '[:lower:]')
+
+  log "Expected: $expected_lc"
+  log "Actual:   $actual_lc"
+
+  if [[ "$actual_lc" != "$expected_lc" ]]; then
+    error "SHA-256 checksum mismatch for $(basename "$f")"
+    error "  Expected: $expected_lc"
+    error "  Actual:   $actual_lc"
+    error "Possible causes:"
+    error "  - Incomplete download (network interruption)"
+    error "  - Corrupted file during transfer"
+    error "  - Incorrect URL (check for unescaped special characters like &)"
+    error "  - Wrong checksum value provided"
+    return 1
+  fi
+  
+  success "✓ Checksum verification PASSED for $(basename "$f")"
+  return 0
+}
+
 
 function main {
   mkdir -p ./logs
@@ -656,7 +866,7 @@ function main {
 
   # Only use sudo if not running as root
   [ "$(id -u)" -ne 0 ] && SUDO=sudo || SUDO=""
-  platform_checks
+   platform_checks
 
   # Parse commands and arguments
   while [[ $# -gt 0 ]]; do
@@ -702,6 +912,10 @@ function main {
     "--skip-os-password")
       SKIP_OS_PASSWORD="--skip-os-password"
       ;;     
+    "--sha256")
+      shift
+      IMAGE_SHA256="$1"
+      ;;
     "--help")
       help
       ;;
