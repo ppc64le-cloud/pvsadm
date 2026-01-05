@@ -268,7 +268,7 @@ func (f *formattedCounter) Format(string) (string, int) {
 	return "", 0
 }
 
-func (f *formattedCounter) Sync() (chan int, bool) {
+func (f *formattedCounter) Sync() (*decor.Sync, bool) {
 	return nil, false
 }
 
