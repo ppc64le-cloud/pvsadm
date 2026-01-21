@@ -45,14 +45,23 @@ Examples:
   # Converts the CentOS image from the local filesystem with size 50GB
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos --image-size 50 --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2
 
+  # Converts the Fedora image from the local filesystem with size 50GB
+  pvsadm image qcow2ova --image-name fedora-41 --image-dist fedora --image-size 50 --image-url /root/Fedora-Cloud-Base-Generic-41-1.4.ppc64le.qcow2
+
   # Converts the RHEL image from local filesystem
   pvsadm image qcow2ova --image-name rhel-82-29oct --image-dist rhel --rhn-user joesmith@example.com --rhn-password someValidPassword --image-url ./rhel-8.2-update-2-ppc64le-kvm.qcow2
 
   # Converts the CentOS image from the local filesystem with OS password set
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos --os-password s0meC0mplexPassword --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2
 
+  ## Converts the Fedora image from the local filesystem with OS password set
+  pvsadm image qcow2ova --image-name fedora-41 --image-dist fedora --os-password s0meC0mplexPassword --image-url /root/Fedora-Cloud-Base-Generic-41-1.4.ppc64le.qcow2
+
   # Converts the CentOS image from the local filesystem without OS password
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos  --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --skip-os-password
+
+  # Converts the Fedora image from the local filesystem without OS password
+  pvsadm image qcow2ova --image-name fedora-41 --image-dist fedora --image-url /root/Fedora-Cloud-Base-Generic-41-1.4.ppc64le.qcow2 --skip-os-password
 
   # Customize the image preparation script for RHEL/CentOS distro, e.g: add additional yum repository or packages, change name servers etc. 
   # Step 1 - Dump the default image preparation template
@@ -68,14 +77,13 @@ Examples:
   # Step 3 - Run the qcow2ova with the modified cloud config template
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --cloud-config user_cloud.config
 
-
-
 Qcow2 images location:
 
   # CentOS 8:     https://cloud.centos.org/centos/8-stream/ppc64le/images/
   # CentOS 9:     https://cloud.centos.org/centos/9-stream/ppc64le/images/
   # Old Centos:   https://cloud.centos.org/centos/8/ppc64le/images/
   # RHEL image:   https://access.redhat.com/downloads/content/279/ver=/rhel---8/8.3/ppc64le/product-software 
+  # Fedora image: https://archive.fedoraproject.org/pub/fedora-secondary/releases/41/Cloud/ppc64le/images
   # RHCOS images: https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/
 
 `,
@@ -113,9 +121,20 @@ Qcow2 images location:
 			prep.CloudConfig = string(content)
 
 		}
-		if !utils.Contains([]string{"rhel", "centos", "coreos"}, strings.ToLower(opt.ImageDist)) {
-			klog.Errorln("--image-dist is a mandatory flag and one of these [rhel, centos, coreos]")
+		if !utils.Contains([]string{"rhel", "centos", "fedora", "coreos"}, strings.ToLower(opt.ImageDist)) {
+			klog.Errorln("--image-dist is a mandatory flag and valid --image-dist options are [rhel, centos, fedora, coreos]")
 			os.Exit(1)
+		}
+
+		if opt.ImageDist == "fedora" {
+			supported, err := utils.IsBtrfsSupported()
+			if err != nil {
+				return err
+			}
+			if !supported {
+				klog.Errorln("to create fedora ova image btrfs support should be available in the kernel]")
+				os.Exit(1)
+			}
 		}
 
 		//Read the RHNUser and RHNPassword if empty
@@ -179,6 +198,7 @@ Qcow2 images location:
 
 		}
 
+		klog.Info("before perflight check validations")
 		// preflight checks validations
 		return validate.Validate()
 	},
@@ -209,7 +229,7 @@ Qcow2 images location:
 			<-c
 			klog.Info("Received an interrupt, exiting.")
 			prep.ExitChroot()
-			prep.UmountHostPartitions(mnt)
+			prep.UmountHostPartitions(mnt, opt.ImageDist)
 			_ = prep.Umount(mnt)
 			_ = os.RemoveAll(tmpDir)
 			os.Exit(1)
@@ -292,7 +312,7 @@ Qcow2 images location:
 func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageName, "image-name", "", "Name of the resultant OVA image")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageURL, "image-url", "", "URL or absolute local file path to the <QCOW2>.gz image")
-	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageDist, "image-dist", "", "Image Distribution(supported: rhel, centos, coreos)")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.ImageDist, "image-dist", "", "Image Distribution(supported: rhel, centos, fedora, coreos)")
 	Cmd.Flags().Uint64Var(&pkg.ImageCMDOptions.ImageSize, "image-size", 11, "Size (in GB) of the resultant OVA image")
 	Cmd.Flags().Int64Var(&pkg.ImageCMDOptions.TargetDiskSize, "target-disk-size", 120, "Size (in GB) of the target disk volume where OVA will be copied")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.RHNUser, "rhn-user", "", "RedHat Subscription username. Required when Image distribution is rhel")
