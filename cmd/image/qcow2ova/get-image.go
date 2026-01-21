@@ -15,6 +15,8 @@
 package qcow2ova
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,8 +32,34 @@ const (
 	DefaultGetTimeout = 30 * time.Minute
 )
 
+// verifyCheckSum validates SHA256 of a downloaded file
+func verifyCheckSum(filePath, expected string) error {
+	if expected == "" {
+		klog.V(1).Infof("No checksum provided for %s, skipping verification", filePath)
+		return nil
+	}
+	f, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open file for checksum: %v", err)
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return fmt.Errorf("failed to calculate checksum: %v", err)
+	}
+
+	actual := hex.EncodeToString(h.Sum(nil))
+	if actual != expected {
+		return fmt.Errorf("checksum mismatch for %s:\n expected: %s\n actual:	%s", filePath, expected, actual)
+	}
+	klog.V(1).Infof("Checksum verification PASSED FOR %s", filePath)
+	return nil
+}
+
 // Downloads or copy the image into the target dir mentioned
-func getImage(downloadDir string, srcUrl string, timeout time.Duration) (string, error) {
+// Added checksum verification (optional)
+func getImage(downloadDir string, srcUrl string, timeout time.Duration, expectedSha string) (string, error) {
 	if timeout == 0 {
 		timeout = DefaultGetTimeout
 	}
@@ -71,6 +99,11 @@ func getImage(downloadDir string, srcUrl string, timeout time.Duration) (string,
 		}
 		klog.V(1).Info("Download Completed!")
 	}
+	// Verify checksum if provided
+	if err := verifyCheckSum(dest, expectedSha); err != nil {
+		return "", err
+	}
+
 	return dest, nil
 }
 
