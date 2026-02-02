@@ -15,7 +15,9 @@
 package prep
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,7 +36,7 @@ var (
 // - Install and configure multipath for rootfs
 // - Install all the required modules for PowerVM
 // - Sets the root password
-func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
+func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath string, writeFilesList []string) error {
 	lo, err := setupLoop(volume)
 	if err != nil {
 		return err
@@ -144,6 +146,31 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 		return err
 	}
 
+	// Write user provided files to given path in the image
+	imageWritePath := filepath.Join(mnt, writeToDirPath)
+	fileInfo, err := os.Stat(imageWritePath)
+
+	// check if path exists or create it
+	if err == nil && !fileInfo.IsDir() {
+		return fmt.Errorf("path exists but it is a file: %s", imageWritePath)
+	}
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			if err := os.MkdirAll(imageWritePath, 0755); err != nil {
+				return fmt.Errorf("failed to create directory %s: %w", imageWritePath, err)
+			}
+		} else {
+			return err
+		}
+	}
+
+	for _, filePath := range writeFilesList {
+		destinationPath := filepath.Join(imageWritePath, filepath.Base(filePath))
+		if err := copyFiles(filePath, destinationPath); err != nil {
+			return err
+		}
+	}
+
 	err = Chroot(mnt)
 	if err != nil {
 		return err
@@ -169,7 +196,7 @@ func UmountHostPartitions(mnt string) {
 	}
 }
 
-func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
+func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath string, writeFilesList []string) error {
 	//cwd, err := os.Getwd()
 	//if err != nil {
 	//	return err
@@ -177,11 +204,82 @@ func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) e
 	//defer os.Chdir(cwd)
 	switch dist := strings.ToLower(dist); dist {
 	case "rhel", "centos":
-		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd)
+		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath, writeFilesList)
 	case "coreos":
 		klog.Info("No image preparation required for the coreos.")
 		return nil
 	default:
 		return fmt.Errorf("not a supported distro: %s", dist)
 	}
+}
+
+func copyFiles(src, dest string) error {
+	fileInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.IsDir() {
+		return copyDir(src, dest)
+	}
+
+	return copyFile(src, dest)
+
+}
+
+func copyFile(src, dest string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	srcInfo, err := in.Stat()
+	if err != nil {
+		return err
+	}
+
+	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		return err
+	}
+
+	return out.Close()
+}
+
+func copyDir(src, dest string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(dest, srcInfo.Mode()); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", dest, err)
+	}
+
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		destPath := filepath.Join(dest, entry.Name())
+
+		if entry.IsDir() {
+			if err := copyDir(srcPath, destPath); err != nil {
+				return err
+			}
+		} else {
+			if err := copyFile(srcPath, destPath); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
