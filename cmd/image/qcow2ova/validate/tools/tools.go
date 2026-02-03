@@ -16,7 +16,9 @@ package tools
 
 import (
 	"os/exec"
+	"strings"
 
+	"github.com/ppc64le-cloud/pvsadm/pkg"
 	"k8s.io/klog/v2"
 )
 
@@ -34,6 +36,9 @@ func (p *Rule) String() string {
 }
 
 func (p *Rule) Verify() error {
+	if strings.ToLower(pkg.ImageCMDOptions.ImageDist) == "fedora" {
+		commands["btrfs"] = "yum install btrfs-progs -y"
+	}
 	for command := range commands {
 		path, err := exec.LookPath(command)
 		if err != nil {
