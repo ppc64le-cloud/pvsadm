@@ -20,7 +20,6 @@ import (
 	"github.com/IBM-Cloud/power-go-client/ibmpisession"
 	"github.com/IBM-Cloud/power-go-client/power/client/p_cloud_events"
 	"github.com/IBM/go-sdk-core/v5/core"
-	"github.com/ppc64le-cloud/pvsadm/pkg"
 )
 
 type Client struct {
@@ -38,6 +37,6 @@ func NewClient(sess *ibmpisession.IBMPISession, powerinstanceid string) *Client 
 }
 
 func (c *Client) GetPcloudEventsGetsince(since time.Duration) (*p_cloud_events.PcloudEventsGetqueryOK, error) {
-	params := p_cloud_events.NewPcloudEventsGetqueryParamsWithTimeout(pkg.TIMEOUT).WithCloudInstanceID(c.instanceID).WithFromTime(core.StringPtr(time.Now().UTC().Add(-since).Format(time.RFC3339)))
+	params := p_cloud_events.NewPcloudEventsGetqueryParams().WithCloudInstanceID(c.instanceID).WithFromTime(core.StringPtr(time.Now().UTC().Add(-since).Format(time.RFC3339)))
 	return c.client.PcloudEventsGetquery(params, c.session.AuthInfo(c.instanceID))
 }
