@@ -8,7 +8,7 @@ require (
 	github.com/IBM-Cloud/power-go-client v1.14.4
 	github.com/IBM/go-sdk-core/v5 v5.21.2
 	github.com/IBM/ibm-cos-sdk-go v1.13.0
-	github.com/IBM/platform-services-go-sdk v0.94.3
+	github.com/IBM/platform-services-go-sdk v0.95.0
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/huh v0.8.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -46,7 +46,6 @@ require (
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
-	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
