@@ -20,12 +20,10 @@ import (
 )
 
 // GeneratePassword generates the password of length n
-func GeneratePassword(n int) (b64Password string, err error) {
+func GeneratePassword(n int) (string, error) {
 	b := make([]byte, n)
-	_, err = rand.Read(b)
-	if err != nil {
-		return
+	if _, err := rand.Read(b); err != nil {
+		return "", err
 	}
-	b64Password = base64.URLEncoding.EncodeToString(b)
-	return
+	return base64.URLEncoding.EncodeToString(b), nil
 }
