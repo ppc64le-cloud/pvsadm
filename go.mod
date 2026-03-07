@@ -24,7 +24,7 @@ require (
 	github.com/vbauerster/mpb/v8 v8.12.0
 	go.uber.org/mock v0.6.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/klog/v2 v2.130.1
+	k8s.io/klog/v2 v2.140.0
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 )
 
