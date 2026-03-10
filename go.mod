@@ -8,7 +8,7 @@ require (
 	github.com/IBM/ibm-cos-sdk-go v1.14.0
 	github.com/IBM/platform-services-go-sdk v0.96.0
 	github.com/briandowns/spinner v1.23.2
-	github.com/charmbracelet/huh v0.8.0
+	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-openapi/strfmt v0.26.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
