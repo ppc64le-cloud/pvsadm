@@ -3,7 +3,7 @@ module github.com/ppc64le-cloud/pvsadm
 go 1.24.13
 
 require (
-	github.com/IBM-Cloud/power-go-client v1.14.4
+	github.com/IBM-Cloud/power-go-client v1.15.0
 	github.com/IBM/go-sdk-core/v5 v5.21.2
 	github.com/IBM/ibm-cos-sdk-go v1.14.0
 	github.com/IBM/platform-services-go-sdk v0.96.0
