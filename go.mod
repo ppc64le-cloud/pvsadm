@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/IBM-Cloud/power-go-client v1.15.0
-	github.com/IBM/go-sdk-core/v5 v5.21.3
+	github.com/IBM/go-sdk-core/v5 v5.21.4
 	github.com/IBM/ibm-cos-sdk-go v1.14.0
 	github.com/IBM/platform-services-go-sdk v0.98.0
 	github.com/briandowns/spinner v1.23.2
