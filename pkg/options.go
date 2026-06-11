@@ -52,6 +52,8 @@ type imageCMDOptions struct {
 	TempDir             string
 	PrepTemplate        string
 	PrepTemplateDefault bool
+	WriteFilesList      []string
+	WriteToDirPath      string
 	CloudConfig         string
 	CloudConfigDefault  bool
 	OSPasswordSkip      bool

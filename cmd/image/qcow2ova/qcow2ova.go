@@ -60,6 +60,9 @@ Examples:
   # Step 2 - Make the necessary changes to the above generated template file(bash shell script) - image-prep.template
   # Step 3 - Run the qcow2ova with the modified image preparation template
   pvsadm image qcow2ova --image-name centos-82 --image-dist centos --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --prep-template image-prep.template
+  
+  # For adding custom files to the image, run the qcow2ova with flags --write-files-list and --write-to-dir-path
+  pvsadm image qcow2ova --image-name  --image-dist centos --image-url /root/CentOS-8-GenericCloud-8.2.2004-20200611.2.ppc64le.qcow2 --prep-template image-prep.template --write-files-list a.txt,b.log --write-to-dir-path /home/user
  
   # Customize the cloud config and Convert image with user defined cloud config template.
   # Step 1 - Dump the default cloud config template
@@ -263,7 +266,7 @@ Qcow2 images location:
 		klog.Info("Resize completed")
 
 		klog.Info("Preparing the image")
-		err = prep.Prepare4capture(mnt, rawImg, opt.ImageDist, opt.RHNUser, opt.RHNPassword, opt.OSPassword)
+		err = prep.Prepare4capture(mnt, rawImg, opt.ImageDist, opt.RHNUser, opt.RHNPassword, opt.OSPassword, opt.WriteToDirPath, opt.WriteFilesList)
 		if err != nil {
 			return fmt.Errorf("failed while preparing the image for %s distro, err: %v", opt.ImageDist, err)
 		}
@@ -300,6 +303,8 @@ func init() {
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.OSPassword, "os-password", "", "Root user password, will auto-generate the 12 bits password(applicable only for redhat and cento distro)")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.TempDir, "temp-dir", "t", os.TempDir(), "Scratch space to use for OVA generation")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.PrepTemplate, "prep-template", "", "Image preparation script template, use --prep-template-default to print the default template(supported distros: rhel and centos)")
+	Cmd.Flags().StringSliceVar(&pkg.ImageCMDOptions.WriteFilesList, "write-files-list", []string{}, "List of files to be copied to the image")
+	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.WriteToDirPath, "write-to-dir-path", "", "User provided directory path where the provided files will be copied to")
 	Cmd.Flags().BoolVar(&pkg.ImageCMDOptions.PrepTemplateDefault, "prep-template-default", false, "Prints the default image preparation script template, use --prep-template to set the custom template script(supported distros: rhel and centos)")
 	Cmd.Flags().StringSliceVar(&pkg.ImageCMDOptions.PreflightSkip, "skip-preflight-checks", []string{}, "Skip the preflight checks(e.g: diskspace, platform, tools) - dev-only option")
 	Cmd.Flags().BoolVar(&pkg.ImageCMDOptions.OSPasswordSkip, "skip-os-password", false, "Skip the root user password")
