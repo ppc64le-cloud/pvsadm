@@ -15,18 +15,20 @@
 package tools
 
 import (
+	"fmt"
 	"os/exec"
+	"strings"
 
 	"k8s.io/klog/v2"
 )
 
-var commands = map[string]string{
+var imageBinaries = map[string]string{
 	"qemu-img": "yum install qemu-img -y",
 	"growpart": "yum install cloud-utils-growpart -y",
 }
 
 type Rule struct {
-	failedCommand string
+	missingBins []string
 }
 
 func (p *Rule) String() string {
@@ -34,20 +36,27 @@ func (p *Rule) String() string {
 }
 
 func (p *Rule) Verify() error {
-	for command := range commands {
-		path, err := exec.LookPath(command)
+	for binary := range imageBinaries {
+		path, err := exec.LookPath(binary)
 		if err != nil {
-			p.failedCommand = command
-			return err
+			p.missingBins = append(p.missingBins, binary)
+		} else {
+			klog.Infof("%s found at %s", binary, path)
 		}
-		klog.Infof("%s found at %s", command, path)
+	}
+	if len(p.missingBins) > 0 {
+		return fmt.Errorf("executable file(s) not found in $PATH: %s", strings.Join(p.missingBins, ", "))
 	}
 	return nil
 }
 
 func (p *Rule) Hint() string {
-	if p.failedCommand != "" {
-		return commands[p.failedCommand]
+	if len(p.missingBins) > 0 {
+		var hints []string
+		for _, binary := range p.missingBins {
+			hints = append(hints, imageBinaries[binary])
+		}
+		return strings.Join(hints, "\n")
 	}
 	return ""
 }
