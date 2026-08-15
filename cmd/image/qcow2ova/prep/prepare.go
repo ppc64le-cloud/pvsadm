@@ -52,22 +52,27 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	}
 
 	partDev := lo + "p" + partition
-
-	err = mount("nouuid", partDev, mnt)
-	if err != nil {
-		return err
-	}
-	defer Umount(mnt)
-
 	err = growpart(lo, partition)
 	if err != nil {
-		return err
+		klog.Warningf("growpart failed (non-fatal): %v", err)
 	}
 
 	fsType, err := getFSType(partDev)
 	if err != nil {
 		return err
 	}
+
+	mountOpts := "defaults"
+	if fsType == "xfs" {
+		mountOpts = "nouuid"
+	}
+
+	err = mount(mountOpts, partDev, mnt)
+	if err != nil {
+		return err
+	}
+	defer Umount(mnt)
+
 
 	switch fsType {
 	case "xfs":
@@ -105,7 +110,12 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) error {
 	}
 
 	// Verify /boot is mounted properly and files are present.
-	bootDirFiles := []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.*", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
+	var bootDirFiles []string
+	if dist == "ubuntu" {
+		bootDirFiles = []string{"config-*-generic", "grub", "initrd.img-*-generic", "System.map-*-generic", "vmlinux-*-generic"}
+	} else {
+		bootDirFiles = []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.*", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
+	}
 	for _, file := range bootDirFiles {
 		exist, err := checkFileExists(filepath.Join(mnt, "boot", file))
 		if err != nil {
@@ -176,7 +186,7 @@ func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd string) e
 	//}
 	//defer os.Chdir(cwd)
 	switch dist := strings.ToLower(dist); dist {
-	case "rhel", "centos":
+	case "rhel", "centos", "ubuntu":
 		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd)
 	case "coreos":
 		klog.Info("No image preparation required for the coreos.")

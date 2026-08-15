@@ -113,8 +113,8 @@ Qcow2 images location:
 			prep.CloudConfig = string(content)
 
 		}
-		if !utils.Contains([]string{"rhel", "centos", "coreos"}, strings.ToLower(opt.ImageDist)) {
-			klog.Errorln("--image-dist is a mandatory flag and one of these [rhel, centos, coreos]")
+		if !utils.Contains([]string{"rhel", "centos", "coreos", "ubuntu"}, strings.ToLower(opt.ImageDist)) {
+			klog.Errorln("--image-dist is a mandatory flag and one of these [rhel, centos, coreos, ubuntu]")
 			os.Exit(1)
 		}
 

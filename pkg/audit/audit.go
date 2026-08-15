@@ -75,10 +75,15 @@ func (a *Audit) Log(name, op, value string) {
 func Delete(file string) {
 	check_file, err := os.Stat(file)
 	if err != nil {
-		klog.Errorf("cannot retrieve file stats, err: %v", err)
+		if os.IsNotExist(err) {
+			return
+		}
+		klog.V(2).Infof("cannot retrieve file stats, err: %v", err)
 		return
 	}
 	if check_file.Size() == 0 {
-		os.Remove(file)
+		if err := os.Remove(file); err != nil {
+			klog.V(2).Infof("failed to remove empty audit file: %v", err)
+		}
 	}
 }

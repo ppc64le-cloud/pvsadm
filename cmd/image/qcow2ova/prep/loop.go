@@ -55,14 +55,19 @@ func partprobe(device string) error {
 	return nil
 }
 
-// get partition number of the image
+// get partition number of the image - returns the largest partition (typically root)
 func getPartition(device string) (string, error) {
-	args := fmt.Sprintf("fdisk -l %s | grep ^/dev | wc -l", device)
+	// Use fdisk to get partition info and find the largest one
+	args := fmt.Sprintf("fdisk -l %s | grep '^%s' | awk '{print $1, $4}' | sort -k2 -n | tail -1 | awk '{print $1}' | sed 's/.*p//'", device, device)
 	exitcode, out, err := utils.RunCMD("bash", "-c", args)
 	if exitcode != 0 {
 		return "", fmt.Errorf("failed to get partition for device: %s, exitcode: %d, stdout: %s, err: %s", device, exitcode, out, err)
 	}
-	return strings.TrimSpace(out), nil
+	partition := strings.TrimSpace(out)
+	if partition == "" {
+		return "", fmt.Errorf("no partition found for device: %s", device)
+	}
+	return partition, nil
 }
 
 // growpart resizes the partition
