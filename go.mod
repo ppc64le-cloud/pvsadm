@@ -6,7 +6,7 @@ require (
 	github.com/IBM-Cloud/power-go-client v1.16.2
 	github.com/IBM/go-sdk-core/v5 v5.23.3
 	github.com/IBM/ibm-cos-sdk-go v1.14.1
-	github.com/IBM/platform-services-go-sdk v0.103.0
+	github.com/IBM/platform-services-go-sdk v0.103.1
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/huh v1.0.0
 	github.com/fsnotify/fsnotify v1.10.1
