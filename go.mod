@@ -19,7 +19,7 @@ require (
 	github.com/onsi/gomega v1.44.0
 	github.com/sayotte/iscdhcp v0.0.0-20190926162140-d6be84ba9969
 	github.com/spf13/cobra v1.10.2
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/stretchr/testify v1.12.1
 	github.com/vbauerster/mpb/v8 v8.16.3
 	go.uber.org/mock v0.6.0
