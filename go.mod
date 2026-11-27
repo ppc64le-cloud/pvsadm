@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/IBM-Cloud/power-go-client v1.17.0
 	github.com/IBM/go-sdk-core/v5 v5.25.1
-	github.com/IBM/ibm-cos-sdk-go v1.14.1
+	github.com/IBM/ibm-cos-sdk-go v1.15.2
 	github.com/IBM/platform-services-go-sdk v0.103.5
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/huh v1.0.0
@@ -49,7 +49,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fatih/color v1.18.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.16 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect
