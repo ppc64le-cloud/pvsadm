@@ -15,6 +15,7 @@
 package qcow2ova
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"net/http"
@@ -66,10 +67,17 @@ func Test_getImage(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	// Generate SHA256 for tmpfile (for checksum test)
+	h := sha256.New()
+	h.Write(content)
+	validSHA := fmt.Sprintf("%x", h.Sum(nil))
+	invalidSHA := "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+
 	type args struct {
 		dir     string
 		src     string
 		timeout time.Duration
+		sha     string
 	}
 	tests := []struct {
 		name    string
@@ -78,45 +86,51 @@ func Test_getImage(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "getImage of type file",
-			args:    args{destDir, tmpfn, 0},
+			name:    "getImage of type file with valid checksum",
+			args:    args{destDir, tmpfn, 0, validSHA},
 			want:    filepath.Join(destDir, "tmpfile"),
 			wantErr: false,
 		},
 		{
+			name:    "getImage of type file with invalid checksum",
+			args:    args{destDir, tmpfn, 0, invalidSHA},
+			want:    "",
+			wantErr: true,
+		},
+		{
 			name:    "getImage does not exist",
-			args:    args{destDir, "/file/doesnot/exist", 0},
+			args:    args{destDir, "/file/doesnot/exist", 0, ""},
 			want:    "",
 			wantErr: true,
 		},
 		{
 			name:    "getImage of type URL",
-			args:    args{destDir, ts.URL + "/file1", httpProcessingTime * 2},
+			args:    args{destDir, ts.URL + "/file1", httpProcessingTime * 2, ""},
 			want:    filepath.Join(destDir, "file1"),
 			wantErr: false,
 		},
 		{
 			name:    "getImage of type URL with default timeout",
-			args:    args{destDir, ts.URL + "/file2", 0},
+			args:    args{destDir, ts.URL + "/file2", 0, ""},
 			want:    filepath.Join(destDir, "file2"),
 			wantErr: false,
 		},
 		{
 			name:    "getImage of type URL - timeout failure",
-			args:    args{destDir, ts.URL + "/file", httpProcessingTime / 2},
+			args:    args{destDir, ts.URL + "/file", httpProcessingTime / 2, ""},
 			want:    "",
 			wantErr: true,
 		},
 		{
 			name:    "getImage of type URL - server side error",
-			args:    args{destDir, ts.URL + "/fail", 0},
+			args:    args{destDir, ts.URL + "/fail", 0, ""},
 			want:    "",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getImage(tt.args.dir, tt.args.src, tt.args.timeout)
+			got, err := getImage(tt.args.dir, tt.args.src, tt.args.timeout, tt.args.sha)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getImage() error = %v, wantErr %v", err, tt.wantErr)
 				return
